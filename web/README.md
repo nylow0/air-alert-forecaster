@@ -1,47 +1,34 @@
-# Svelte + TS + Vite
+# Air Alert Forecaster dashboard
 
-This template should help get you started developing with Svelte and TypeScript in Vite.
+Run these commands from `web/`:
 
-## Recommended IDE Setup
-
-[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode).
-
-## Need an official Svelte framework?
-
-Check out [SvelteKit](https://github.com/sveltejs/kit#readme), which is also powered by Vite. Deploy anywhere with its serverless-first approach and adapt to various platforms, with out of the box support for TypeScript, SCSS, and Less, and easily-added support for mdsvex, GraphQL, PostCSS, Tailwind CSS, and more.
-
-## Technical considerations
-
-**Why use this over SvelteKit?**
-
-- It brings its own routing solution which might not be preferable for some users.
-- It is first and foremost a framework that just happens to use Vite under the hood, not a Vite app.
-
-This template contains as little as possible to get started with Vite + TypeScript + Svelte, while taking into account the developer experience with regards to HMR and intellisense. It demonstrates capabilities on par with the other `create-vite` templates and is a good starting point for beginners dipping their toes into a Vite + Svelte project.
-
-Should you later need the extended capabilities and extensibility provided by SvelteKit, the template has been structured similarly to SvelteKit so that it is easy to migrate.
-
-**Why `global.d.ts` instead of `compilerOptions.types` inside `jsconfig.json` or `tsconfig.json`?**
-
-Setting `compilerOptions.types` shuts out all other types not explicitly listed in the configuration. Using triple-slash references keeps the default TypeScript setting of accepting type information from the entire workspace, while also adding `svelte` and `vite/client` type information.
-
-**Why include `.vscode/extensions.json`?**
-
-Other templates indirectly recommend extensions via the README, but this file allows VS Code to prompt the user to install the recommended extension upon opening the project.
-
-**Why enable `allowJs` in the TS template?**
-
-While `allowJs: false` would indeed prevent the use of `.js` files in the project, it does not prevent the use of JavaScript syntax in `.svelte` files. In addition, it would force `checkJs: false`, bringing the worst of both worlds: not being able to guarantee the entire codebase is TypeScript, and also having worse typechecking for the existing JavaScript. In addition, there are valid use cases in which a mixed codebase may be relevant.
-
-**Why is HMR not preserving my local component state?**
-
-HMR state preservation comes with a number of gotchas! It has been disabled by default in both `svelte-hmr` and `@sveltejs/vite-plugin-svelte` due to its often surprising behavior. You can read the details [here](https://github.com/rixo/svelte-hmr#svelte-hmr).
-
-If you have state that's important to retain within a component, consider creating an external store which would not be replaced by HMR.
-
-```ts
-// store.ts
-// An extremely simple external store
-import { writable } from 'svelte/store'
-export default writable(0)
+```powershell
+bun install
+bun run dev:mock
+bun run check
+bun run build
 ```
+
+`dev:mock` loads `.env.mock`, which sets `VITE_MOCK_API=1`. The dev-only middleware in `dev/mock-api.ts` serves the API fixtures. `/api/raions` reads `../data/geo/raions.geojson` on each request when it exists, otherwise it uses the fixture geometry. Its `X-Airalert-Geometry` response header identifies the source.
+
+The browser always calls `/api/*` through `src/lib/api.ts`. To use the backend, stop the mock server and run `bun run dev` with `VITE_MOCK_API` unset or set to `0`. Vite proxies `/api` to `http://127.0.0.1:8000`. No component changes are needed. Production builds do not include fixture data or mock routes.
+
+## Replay and keyboard controls
+
+The URL stores `mode`, `horizon`, and `at`. It also preserves `raion`, `view=list`, and `tab=report` when selected. Invalid horizons fall back to 3 h; replay times are clamped to metadata bounds and rounded down to the hour.
+
+Example shared state:
+
+```text
+http://localhost:5173/?mode=replay&horizon=3&at=2026-09-06T03:00:00Z&raion=kharkivska/kharkivskyi
+```
+
+Arrow keys step the replay by an hour. Native range input keys adjust the scrubber. Play advances one hour every 400 ms and stops at the replay end. Focus a polygon and press Enter or Space to select it. Focus the history chart and use Left/Right to inspect hourly probabilities without advancing the replay. Tables have focusable scroll regions and charts include expandable numerical data.
+
+## Mock limitations
+
+Forecast probabilities vary deterministically by replay hour and preserve P1 ≤ P3 ≤ P12. Active and end timestamps shift with the requested time; outcome flags remain those from the replay fixture. History reuses the fixture series and episodes for the requested raion and shifts them to the requested seven-day window. This demonstrates interactions; these are not fitted forecasts or historical evidence. The dashboard and model report say so.
+
+The client keeps the last successful response during refetch, aborts superseded requests, and offers retries after errors. GeoJSON paths only rebuild when geometry or viewport dimensions change; probabilities change path fills.
+
+See [IMPLEMENTATION.md](IMPLEMENTATION.md) for A3's delivered paths, browser verification, and screenshots. Screenshots are local artifacts ignored by `web/.gitignore`.
