@@ -54,7 +54,7 @@ Open the [dashboard](http://localhost:5173).
 | Actual consistency CLI, lead-run at 19:47 | `uv run --no-sync python tests/test_integration.py consistency` checked 119 forecast rows, 33 active raions, zero mismatches and zero persistent local live records in duration inputs. The 19:00 forecast's eligible receipt was `18:59:05Z`, 54.97 seconds before cutoff. |
 | Visual review, lead-run | The lead inspected the live desktop/mobile screenshots from the real browser suite. Yellow layers appeared above red, and both layouts rendered correctly. |
 | Actual hourly rollover, lead-run | At `20:00:11Z`, `/api/meta.latest_at` was `2026-10-12T20:00:00Z`, 23:00 in Kyiv. The consistency CLI checked 119 rows, 79 active raions, zero mismatches and zero persistent local live records in duration inputs. Its pre-hour receipt was `19:59:56.257064Z`, 3.742936 seconds before cutoff. |
-| PNG-aware privacy guard, lead-run | The focused guard tests returned `2 passed in 1.30s`; the full Ruff check remained clean. A real commit attempt containing a synthetic home-path pattern was blocked by the installed guard. |
+| Privacy guard, lead-run | The final focused guard tests returned `2 passed in 1.05s`; the full Ruff check remained clean. The guard covers PNG text metadata and expanded numeric process-identifier wording. A real commit attempt containing a synthetic home-path pattern was blocked by the installed guard. |
 
 Earlier real workflow evidence remains linked in the source reports. Y1
 completed a real poll with 139 polygons, tested a no-op catch-up through
@@ -70,27 +70,26 @@ real browser suite and its reviewed screenshots.
 
 ## Privacy publication status
 
-The first local history rewrite at `5c9fb70` passed the lead's checks below.
-The independent audit then found numeric local process identifiers in five
-reachable historical blobs, using wording the earlier guard did not recognize.
-The lead is expanding that pattern and will repeat the all-ref rewrite, pruning
-and object audit. Privacy remediation is pending; the first pass is not the
-final publishing clearance.
+The local history rewrite passed the lead's and independent structural
+preservation checks. Both independent post-prune scans cleared credentials,
+personal emails, private paths and numeric process identifiers. Owner-name
+redaction and its final name-specific scan remain the publication step in
+progress; GitHub publication is not claimed here.
 
-Parent-verified first-pass evidence is:
-
-- All 171 commits retain their parent relationships and timestamps. All 133
-  refs remain present, including app checkpoints.
-- At rewrite completion, the checked-out tree was byte-identical to the
-  pre-rewrite tree. Hashes for all eight checked frozen report, manifest and
-  lock artifacts were unchanged.
-- Reflogs were expired and unreachable objects pruned. `git fsck --full
-  --no-reflogs` exited 0.
-- The audit covered all 609 stored blobs, 171 commits and 471 trees. It found
-  zero recognized private-pattern matches, nonanonymous metadata entries or
-  ref/tree-name findings.
+- The verified history retains all commits and all 133 refs, including app
+  checkpoints. Dates, timezone offsets, ordered parent links and intended
+  sanitized trees/messages match the structural proof. Contributor identities
+  were normalized, and signatures invalidated by the rewrite were removed.
+- The checked-out tree was unchanged by the rewrite. Hashes for all eight
+  checked frozen report, manifest and lock artifacts were unchanged.
+- Reflogs were expired and obsolete unreachable objects pruned.
+  `git fsck --full --no-reflogs --unreachable` exited 0 with empty output.
+- The lead and both independent auditors scanned the complete stored object
+  set, refs, tracked files and index. They found zero guard-category matches,
+  including expanded numeric process-identifier patterns, nonanonymous metadata
+  or ref/tree-name findings. The post-prune scans found no unreachable objects.
 - The repository-local neutral Git identity and supplied hook are installed.
-  No remote operation or push was performed.
+  No remote operation or push was part of privacy remediation.
 - The API and dashboard still responded after cleanup, including the actual
   20:00 hourly forecast and consistency check above.
 
