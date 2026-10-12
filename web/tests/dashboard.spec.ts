@@ -62,6 +62,13 @@ function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
+// Keep this display oracle independent of the product formatter.
+function probabilityText(value: number): string {
+  if (value < 0.01) return '<0.01'
+  if (value > 0.99) return '>0.99'
+  return value.toFixed(2)
+}
+
 function featureFor(id: string): RaionFeature {
   const feature = geo.features.find(item => item.properties.raion_id === id)
   expect(feature, `A polygon for ${id}`).toBeDefined()
@@ -100,7 +107,7 @@ async function assertLabels(page: Page, response: ForecastResponse, horizon: Hor
   ))
   for (const row of response.rows) {
     expect(labels[row.raion_id], `${row.raion_id} at ${response.at}`).toContain(
-      `${row[probabilityKeys[horizon]].toFixed(2)} probability within ${horizon} hours`,
+      `${probabilityText(row[probabilityKeys[horizon]])} probability within ${horizon} hours`,
     )
   }
 }
@@ -114,13 +121,13 @@ async function assertChangedPaint(page: Page, before: Record<string, string | nu
   await assertLabels(page, current, 3)
 }
 
-async function selectRaion(page: Page, request: APIRequestContext, row: ForecastRow = forecast.rows[0]): Promise<HistoryResponse> {
+async function selectRaion(page: Page, request: APIRequestContext, row: ForecastRow = forecast.rows[0], at = forecast.at): Promise<HistoryResponse> {
   await polygon(page, featureFor(row.raion_id)).click()
   const panel = page.getByRole('complementary', { name: 'Selected raion' })
   await expect(panel.getByRole('heading', { name: featureFor(row.raion_id).properties.name, exact: true })).toBeVisible()
   await expect.poll(() => new URL(page.url()).searchParams.get('raion')).toBe(row.raion_id)
   const history = await api<HistoryResponse>(request,
-    `/api/raion/${row.raion_id}/history?${new URLSearchParams({ from: iso(Date.parse(forecast.at) - 7 * 24 * hour), to: forecast.at })}`,
+    `/api/raion/${row.raion_id}/history?${new URLSearchParams({ from: iso(Date.parse(at) - 7 * 24 * hour), to: at })}`,
   )
   await expect(panel.getByRole('slider', { name: /^Seven-day probability history/ })).toBeVisible()
   return history
@@ -210,6 +217,84 @@ test('all horizon controls update probability colours and the shareable URL', as
   }
 })
 
+test('API extremes use threshold wording in the map, panel, history, and list', async ({ page, request }, testInfo) => {
+  // Use the adjacent hour already sampled from the API, without changing fixtures or forecasts.
+  const response = nextForecast
+  await page.goto(`/?${new URLSearchParams({ mode: 'replay', horizon: '3', at: response.at })}`)
+  await ready(page, response.at)
+  const candidates = response.rows.flatMap(row => horizons.map(horizon => ({ row, horizon, value: row[probabilityKeys[horizon]] })))
+  const samples = []
+  for (const bound of ['lower', 'upper'] as const) {
+    const sample = candidates.find(item => item.value === (bound === 'lower' ? 0 : 1))
+      ?? candidates.find(item => bound === 'lower' ? item.value < 0.01 : item.value > 0.99)
+    if (!sample) {
+      const description = `Skipped ${bound}-extreme UI check: no API probability ${bound === 'lower' ? '< 0.01' : '> 0.99'} at ${response.at}.`
+      testInfo.annotations.push({ type: 'coverage', description })
+      console.info(description)
+      continue
+    }
+    const { row, horizon, value } = sample
+    const wording = bound === 'lower' ? '<0.01' : '>0.99'
+    samples.push({ row, horizon, wording })
+    console.info(`Checking ${wording}: ${row.raion_id}, p_${horizon}=${value}, ${response.at}.`)
+    await page.getByRole('button', { name: `${horizon} h`, exact: true }).click()
+    const path = polygon(page, featureFor(row.raion_id))
+    await expect(path).toHaveAttribute('aria-label', new RegExp(escapeRegex(`${wording} probability within ${horizon} hours`)))
+    await path.focus()
+    await expect(page.getByRole('status').locator('strong')).toHaveText(wording)
+    const history = await selectRaion(page, request, row, response.at)
+    const panel = page.getByRole('complementary', { name: 'Selected raion' })
+    await expect(panel.getByText(`${horizon} h`, { exact: true }).locator('..').locator('strong')).toHaveText(wording)
+    const point = history.series[history.series.length - 1]
+    expect(Date.parse(point.t), 'The inspected history point is the API forecast hour').toBe(Date.parse(response.at))
+    expect(point[probabilityKeys[horizon]]).toBe(value)
+    const chart = panel.getByRole('slider', { name: /^Seven-day probability history/ })
+    await chart.focus()
+    await expect(chart).toHaveAttribute('aria-valuetext', new RegExp(escapeRegex(`probability ${wording}`)))
+    await expect(panel.getByText(`P1 ${probabilityText(point.p_1)} / P3 ${probabilityText(point.p_3)} / P12 ${probabilityText(point.p_12)}`, { exact: true })).toBeVisible()
+    await panel.getByText('History data and episodes', { exact: true }).click()
+    const historyRow = panel.getByRole('region', { name: 'Hourly history data' }).getByRole('row').filter({
+      has: page.getByRole('rowheader', { name: kyivTime(point.t), exact: true }),
+    })
+    await expect(historyRow.getByRole('cell').nth(horizons.indexOf(horizon))).toHaveText(wording)
+    await panel.getByText('History data and episodes', { exact: true }).click()
+  }
+  if (!samples.length) return // Missing extremes were explicitly logged above.
+  await page.getByRole('button', { name: 'List', exact: true }).click()
+  const list = page.getByRole('region', { name: 'Raions sorted by probability' })
+  for (const { row, horizon, wording } of samples) {
+    const feature = featureFor(row.raion_id)
+    const listRow = list.getByRole('row').filter({
+      has: page.getByRole('button', { name: `${feature.properties.name} ${oblastName(feature.properties.oblast_id)}`, exact: true }),
+    })
+    await expect(listRow.getByRole('cell').nth(horizons.indexOf(horizon))).toHaveText(wording)
+  }
+})
+
+test('selection stays violet while API actual onsets retain white outlines', async ({ page, request }, testInfo) => {
+  const onset = forecast.rows.find(row => row.actual_onset_3 === true)
+  const quiet = forecast.rows.find(row => row.actual_onset_3 === false)
+  if (!onset || !quiet) {
+    const description = `Skipped outline comparison: the API needs both an actual onset and a non-onset at ${forecast.at}.`
+    testInfo.annotations.push({ type: 'coverage', description })
+    console.info(description)
+    return
+  }
+  await selectRaion(page, request, quiet)
+  const ring = map(page).locator('path[aria-hidden="true"][fill="none"]')
+  await expect(ring).toHaveCount(1)
+  await expect(ring).toHaveCSS('stroke', 'rgb(189, 164, 255)')
+  await expect(polygon(page, featureFor(quiet.raion_id))).toHaveAttribute('stroke', '#000')
+  const onsetPath = polygon(page, featureFor(onset.raion_id))
+  await expect(onsetPath).toHaveAttribute('stroke', '#f0efec')
+  await expect(onsetPath).toHaveClass(/actual-onset/)
+  await expect(onsetPath).toHaveAttribute('aria-label', /Alert actually started/)
+  await onsetPath.click()
+  await expect(onsetPath).toHaveAttribute('aria-pressed', 'true')
+  await expect(onsetPath).toHaveAttribute('stroke', '#f0efec')
+  await expect(ring).toHaveCSS('stroke', 'rgb(189, 164, 255)')
+})
+
 test('scrubbing to another hour changes time, URL, and forecast colours', async ({ page }) => {
   const before = await fills(page)
   const scrubber = page.getByRole('slider', { name: 'Replay hour', exact: true })
@@ -259,7 +344,7 @@ test('clicking a polygon shows API probabilities, replay outcomes, and history',
   const history = await selectRaion(page, request, row)
   const panel = page.getByRole('complementary', { name: 'Selected raion' })
   for (const horizon of horizons) {
-    await expect(panel.getByText(`${horizon} h`, { exact: true }).locator('..').locator('strong')).toHaveText(row[probabilityKeys[horizon]].toFixed(2))
+    await expect(panel.getByText(`${horizon} h`, { exact: true }).locator('..').locator('strong')).toHaveText(probabilityText(row[probabilityKeys[horizon]]))
     const outcome = row[outcomeKeys[horizon]]
     await expect(panel.getByText(`${horizon} h ${outcome === null ? 'Unknown' : outcome ? 'Yes' : 'No'}`, { exact: true })).toBeVisible()
   }
@@ -267,7 +352,7 @@ test('clicking a polygon shows API probabilities, replay outcomes, and history',
   const historyRows = panel.getByRole('region', { name: 'Hourly history data' }).getByRole('row').filter({ has: page.getByRole('cell') })
   await expect(historyRows).toHaveCount(history.series.length)
   const values = await historyRows.evaluateAll(rows => rows.map(row => [...row.querySelectorAll('th, td')].map(cell => cell.textContent?.trim())))
-  expect(values).toEqual(history.series.map(point => [kyivTime(point.t), point.p_1.toFixed(2), point.p_3.toFixed(2), point.p_12.toFixed(2)]))
+  expect(values).toEqual(history.series.map(point => [kyivTime(point.t), probabilityText(point.p_1), probabilityText(point.p_3), probabilityText(point.p_12)]))
   await panel.getByText('History data and episodes', { exact: true }).click()
   await page.mouse.move(0, 0)
   await page.evaluate(() => document.fonts.ready)
@@ -280,7 +365,7 @@ test('keyboard polygon selection and history exploration preserve the forecast h
   const path = polygon(page, feature)
   await path.focus()
   await expect(page.getByRole('status')).toContainText(feature.properties.name)
-  await expect(page.getByRole('status')).toContainText(row.p_3.toFixed(2))
+  await expect(page.getByRole('status')).toContainText(probabilityText(row.p_3))
   await path.press('Enter')
   await expect(path).toHaveAttribute('aria-pressed', 'true')
   const history = await api<HistoryResponse>(request, `/api/raion/${row.raion_id}/history?${new URLSearchParams({ from: iso(Date.parse(forecast.at) - 7 * 24 * hour), to: forecast.at })}`)
@@ -291,7 +376,8 @@ test('keyboard polygon selection and history exploration preserve the forecast h
   const point = history.series[history.series.length - 2]
   await expect(chart).toHaveAttribute('aria-valuenow', String(history.series.length - 2))
   await expect(chart).toHaveAttribute('aria-valuetext', new RegExp(escapeRegex(kyivTime(point.t))))
-  await expect(page.getByRole('complementary', { name: 'Selected raion' }).getByText(`P1 ${point.p_1.toFixed(2)} / P3 ${point.p_3.toFixed(2)} / P12 ${point.p_12.toFixed(2)}`, { exact: true })).toBeVisible()
+  await expect(chart).toHaveAttribute('aria-valuetext', new RegExp(escapeRegex(`probability ${probabilityText(point.p_3)}`)))
+  await expect(page.getByRole('complementary', { name: 'Selected raion' }).getByText(`P1 ${probabilityText(point.p_1)} / P3 ${probabilityText(point.p_3)} / P12 ${probabilityText(point.p_12)}`, { exact: true })).toBeVisible()
   await ready(page, forecast.at)
 })
 
@@ -310,7 +396,7 @@ test('list contains every raion sorted by the chosen horizon and opens its panel
     const sorted = [...forecast.rows].sort((a, b) => b[probabilityKeys[horizon]] - a[probabilityKeys[horizon]])
     expect(displayed).toEqual(sorted.map(row => ({
       name: featureFor(row.raion_id).properties.name,
-      cells: [row.p_1.toFixed(2), row.p_3.toFixed(2), row.p_12.toFixed(2), row.active ? 'Active' : 'Quiet'],
+      cells: [probabilityText(row.p_1), probabilityText(row.p_3), probabilityText(row.p_12), row.active ? 'Active' : 'Quiet'],
     })))
   }
   const selected = [...forecast.rows].sort((a, b) => b.p_12 - a.p_12)[0]

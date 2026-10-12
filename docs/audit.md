@@ -332,3 +332,26 @@ Lead clarification requested for the scope of the blanket as-of claim: record-pr
 ## Dependencies added
 
 None.
+
+## Post-audit verification
+
+Rechecked on 2026-10-12 after A3's phase 3 display changes. The original findings above remain the audit record. This follow-up updates the status of AUD-04 and AUD-05 for the current UI.
+
+**AUD-04:** I checked `2026-08-29T03:00Z` in the T3 browser at 1440×900 and 390×844, selecting Kryvorizkyi and switching H=1/3/12. H=1 has no unscored notice, because its window ends before the outage. H=3 and H=12 each show "The [3 or 12] h forecast window reaches into the source outage. This forecast is not scored." The API-backed panel retains `1 h Yes`, `3 h Unknown`, and `12 h Unknown` at every horizon. Known active status and all 73 active dots remain visible. The warnings agree with an independent comparison against `/api/meta.data_gaps`. Neither viewport has horizontal overflow. AUD-04 is resolved for this case.
+
+**AUD-05:** At `2026-08-01T01:00Z`, H=3, I selected Boryspilskyi beside Cherkaskyi in the browser at 390 px. The adjacency file confirms they share a boundary. The API gives Boryspilskyi `actual_onset_3=false` and Cherkaskyi `actual_onset_3=true`. Boryspilskyi has a violet `#bda4ff` selection ring and black base stroke; Cherkaskyi has the white `#f0efec` onset stroke. Selecting Cherkaskyi keeps its white onset stroke and adds the separate violet ring. The two legend keys are distinct, and the page stays within 390 px. The automated outline workflow also passes at both suite viewports. AUD-05 is resolved for this case.
+
+`web/tests/dashboard.spec.ts` now owns its probability display oracle, with no import from `format.ts`: values below 0.01 use `<0.01`, values above 0.99 use `>0.99`, and the closed interval between those thresholds uses two decimals. Map ARIA, panel, tooltip, list, history table/readout, and history ARIA expectations follow that rule. Score expectations retain their original formatting.
+
+The added API-driven extreme workflow selected real Dnistrovskyi `p_1=0` and Iziumskyi `p_12=1` at `2026-08-01T02:00Z`. Both wordings passed in map ARIA, tooltip, panel, history ARIA/readout/table, and list at both viewports. Mock data has no extremes at that hour, so each missing bound produces an explicit coverage annotation and console log. Those subchecks are disclosed rather than counted through a vacuous expectation.
+
+Real Playwright summaries, with 14 workflows at 1440×900 and 390×844, zero retries, zero failed executions, and zero whole-test skips:
+
+| Mode | Command from `web/` | Actual summary | Exit |
+|---|---|---|---:|
+| Mock | `bunx playwright test` | `28 passed (18.7s)` | 0 |
+| Live | `$env:E2E_TARGET='live'; bunx playwright test` | `28 passed (21.9s)` | 0 |
+
+Reports and traces are retained under `web/test-results/report/{mock,live}/` and `web/test-results/artifacts/{mock,live}/`. Independently inspected screenshots are [the H=12 pre-outage notice]([private home path removed] and [mobile selection beside actual onset]([private home path removed]
+
+Strict TypeScript checking of the test files and Playwright configuration passed, exit 0. I stopped the FastAPI server started with `uv run airalert serve --port 8000` and the manual Vite server on 5188; FastAPI reported "Application shutdown complete". Both Playwright Vite processes on 5187 were also removed by their test runners. The final listener check found none on 8000, 5187, or 5188. The pre-existing 5173 listener, [process identifier removed], remains untouched. No product files, fixtures, models, scores, contracts, or dependency manifests were changed. No commits or branch changes were made.
