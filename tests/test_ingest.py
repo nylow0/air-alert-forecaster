@@ -1,10 +1,13 @@
 """Guard source decoding, both live colors, preservation on failure and day commits."""
 
 import json
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
+import httpx
 import pandas as pd
 import pytest
 
@@ -13,7 +16,7 @@ from airalert.config import CROSSWALK_PATH, REPO_ROOT
 from airalert.data import load_raions
 from airalert.sources import aiu_api, aiu_web, mapping, siren, ubilling
 from airalert.sources.locations import DISTRICT_IDS, OBLAST_IDS, Locations
-from airalert.sources.storage import atomic_json
+from airalert.sources.storage import atomic_json, cache_response
 
 
 def _sample(name: str) -> dict[str, object]:
@@ -145,20 +148,28 @@ def test_supported_api_proxy_preserves_scalar_threat_conflict(locations: Locatio
     assert records.iloc[0].severity == "red"
 
 
+@pytest.mark.parametrize("failed_source", ["ubilling", "aiu_api", "siren"])
 def test_failed_poll_keeps_layers_and_successful_clock(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, locations: Locations,
+    failed_source: str,
 ) -> None:
     now = datetime(2026, 10, 12, 15, tzinfo=UTC)
     monkeypatch.setattr(ingest, "_locations", lambda root: locations)
     monkeypatch.setattr(ingest, "PROCESSED_DIR", tmp_path / "processed")
-    monkeypatch.setattr(aiu_api, "token_from_env", lambda dotenv: None)
+    monkeypatch.setattr(aiu_api, "token_from_env", lambda dotenv: "test-token")
+    api = _sample("r3_ubilling_aiu_raw.json")
+    monkeypatch.setattr(aiu_api, "fetch_alerts", lambda token: (api, json.dumps(api).encode()))
     sample = _sample("r3_siren_active.json")["sample_rows"]
     monkeypatch.setattr(siren, "fetch_alerts", lambda: (sample, json.dumps(sample).encode()))
     secondary = _sample("r3_ubilling_default.json")
     monkeypatch.setattr(ubilling, "fetch_alerts",
                         lambda: (secondary, json.dumps(secondary).encode()))
     before = ingest.live_state(now, root=tmp_path)
+    assert len(list((tmp_path / "observations").glob("*.parquet"))) == 1
     assert before["stale"] is False
+    api_unit = next(p for p in before["polygons"]
+                    if p["raion_id"] == "dnipropetrovska/nikopolskyi")
+    assert api_unit["red"]["active"] and api_unit["yellow"]["active"]
     sevastopol = next(p for p in before["polygons"] if p["oblast_id"] == "sevastopol-city")
     assert sevastopol["coverage"] == "inherited"
     assert sevastopol["red"] == {"active": True, "since": "2022-12-10T22:22:00Z"}
@@ -167,13 +178,22 @@ def test_failed_poll_keeps_layers_and_successful_clock(
     def fail() -> tuple[object, bytes]:
         raise TimeoutError("source unavailable")
 
-    monkeypatch.setattr(ubilling, "fetch_alerts", fail)
+    if failed_source == "aiu_api":
+        monkeypatch.setattr(aiu_api, "fetch_alerts", lambda token: fail())
+    else:
+        monkeypatch.setattr(ubilling if failed_source == "ubilling" else siren,
+                            "fetch_alerts", fail)
     secondary_failed = ingest.live_state(now + timedelta(seconds=30), root=tmp_path)
     sevastopol = next(
         p for p in secondary_failed["polygons"] if p["oblast_id"] == "sevastopol-city"
     )
-    assert sevastopol["coverage"] == "unknown" and sevastopol["red"] is None
-    assert not secondary_failed["stale"] and secondary_failed["sources"]["ubilling"] == "failed"
+    assert sevastopol["coverage"] == "inherited"
+    assert sevastopol["red"] == {"active": True, "since": "2022-12-10T22:22:00Z"}
+    assert secondary_failed["stale"] and secondary_failed["sources"][failed_source] == "failed"
+    assert secondary_failed["fetched_at"] == before["fetched_at"]
+    assert len(list((tmp_path / "observations").glob("*.parquet"))) == 1
+    for old, new in zip(before["polygons"], secondary_failed["polygons"], strict=True):
+        assert new["red"] == old["red"] and new["yellow"] == old["yellow"]
     before = secondary_failed
     monkeypatch.setattr(siren, "fetch_alerts", fail)
     after = ingest.live_state(now + timedelta(minutes=1), root=tmp_path)
@@ -183,7 +203,7 @@ def test_failed_poll_keeps_layers_and_successful_clock(
         assert new["red"] == old["red"] and new["yellow"] == old["yellow"]
         assert new["fetched_at"] == old["fetched_at"]
     transitions = pd.read_parquet(tmp_path / "processed/severity_transitions.parquet")
-    assert transitions.alert_start.isna().all()
+    assert transitions.loc[transitions.source.eq("siren"), "alert_start"].isna().all()
     assert {"red", "yellow"}.issubset(set(transitions.severity))
 
 
@@ -217,17 +237,170 @@ def reconciliation(
         "cutover": "2026-10-24T21:00:00Z", "watermark": "2026-10-24", "days": [], "gaps": [],
     })
 
-    def fetch(day: date, root: Path) -> object:
+    def fetch(day: date, root: Path, **kwargs: object) -> object:
         start = datetime(2026, 10, 24, 21, 30, tzinfo=UTC)
         finish = datetime(2026, 10, 26, 1, tzinfo=UTC)
         row = {"i": 1, "luid": 31, "t": "o", "s": int(start.timestamp()),
                "u": int(start.timestamp()), "al": 1}
         if day >= date(2026, 10, 26):
             row.update({"f": int(finish.timestamp()), "u": int(finish.timestamp())})
-        return {"meta": {"type": "compact"}, "alerts": [row]}
+        return {"meta": {"type": "compact"}, "alerts": [{**row, "i": i} for i in range(100)]}
 
     monkeypatch.setattr(aiu_web, "fetch_day", fetch)
     return tmp_path
+
+
+@pytest.mark.parametrize("failure", [
+    "empty", "truncated", "missing_live_alert", "missing_live_interval",
+])
+def test_archive_completeness_blocks_bad_days_and_retries(
+    reconciliation: Path, monkeypatch: pytest.MonkeyPatch, locations: Locations, failure: str,
+) -> None:
+    """The EMPTY_ARCHIVE probe must stop at the first day, then recover without intervention."""
+    day = date(2026, 10, 25)
+    now = datetime(2026, 10, 27, tzinfo=UTC)
+    original_fetch = aiu_web.fetch_day
+    healthy = original_fetch(day, reconciliation)
+    ledger_path = reconciliation / "ledger.json"
+    ledger = json.loads(ledger_path.read_text())
+    if failure == "truncated":
+        # A 100-row response clears the absolute floor but not 20% of this robust baseline.
+        days = [(day - timedelta(days=i)).isoformat() for i in range(14, 0, -1)]
+        ledger.update({"days": days, "cutover": ingest._iso(aiu_web.day_bounds(
+            date.fromisoformat(days[0]))[0])})
+        frame = ingest.event_records(aiu_web.decode(healthy, []), locations)
+        directory = reconciliation / "normalized"
+        directory.mkdir()
+        for index, prior in enumerate(days):
+            count = 10_000 if index == 0 else 1_000
+            pd.concat([frame] * (count // len(frame)), ignore_index=True).assign(
+                origin_event_id=[str(i) for i in range(count)]
+            ).to_parquet(directory / f"{prior}.parquet", index=False)
+        atomic_json(ledger_path, ledger)
+    elif failure in {"missing_live_alert", "missing_live_interval"}:
+        event = next(e for e in siren.decode(_sample("r3_siren_active.json")["sample_rows"])
+                     if e.origin_uid == "56")
+        event = replace(event, started_at=datetime(2026, 10, 25, 1, tzinfo=UTC))
+        observed = ingest.event_records([event], locations)
+        observed["observed_at"] = pd.Timestamp("2026-10-25T01:30:00Z")
+        directory = reconciliation / "observations"
+        directory.mkdir()
+        observed.to_parquet(directory / "20261025T013000Z.parquet", index=False)
+    before_snapshot = ingest.SNAPSHOT_PATH.read_bytes()
+    requested: list[date] = []
+    refreshed: list[bool] = []
+    repaired = False
+
+    def fetch(candidate: date, root: Path, **kwargs: object) -> object:
+        requested.append(candidate)
+        refreshed.append(bool(kwargs.get("refresh")))
+        if repaired:
+            rows = [{**healthy["alerts"][0], "i": i} for i in range(400)]
+            rows.append({"i": 99999, "luid": 56, "t": "r", "s": 1792890000,
+                         "u": 1792890000})  # 2026-10-25 01:00Z, before the live receipt.
+            return {"meta": {"type": "compact"}, "alerts": rows}
+        rows = [] if failure == "empty" else list(healthy["alerts"])
+        if failure == "missing_live_interval":
+            rows.append({"i": 99999, "luid": 56, "t": "r", "s": 1792886400,
+                         "f": 1792889940, "u": 1792889940})  # Ends 31m before the receipt.
+        return {"meta": {"type": "compact"}, "alerts": rows}
+
+    monkeypatch.setattr(aiu_web, "fetch_day", fetch)
+    with pytest.raises(ValueError, match="Archive completeness"):
+        ingest.catch_up(now, root=reconciliation)
+    failed = json.loads(ledger_path.read_text())
+    assert failed["watermark"] == "2026-10-24" and failed["days"] == ledger["days"]
+    assert requested == [day]
+    assert failed["gaps"][0]["day"] == day.isoformat()
+    assert failed["gaps"][0]["start"] == "2026-10-24T21:00:00Z"
+    assert not (reconciliation / "normalized/2026-10-25.parquet").exists()
+    assert ingest.SNAPSHOT_PATH.read_bytes() == before_snapshot
+    repaired = True
+    recovered = ingest.reconcile_days([day], root=reconciliation, now=now)
+    assert refreshed[-1] and recovered["watermark"] == day.isoformat()
+    assert recovered["gaps"] == []
+
+
+@pytest.mark.parametrize("shared_file", ["hazards.parquet", "severity_transitions.parquet"])
+def test_poll_rows_survive_interleaved_nightly_publication(
+    reconciliation: Path, monkeypatch: pytest.MonkeyPatch, locations: Locations, shared_file: str,
+) -> None:
+    """Pause nightly after its shared-file read, as in the audit's LOST_UPDATE probe."""
+    ingest.reconcile_days([date(2026, 10, 25)], root=reconciliation,
+                          now=datetime(2026, 10, 27, tzinfo=UTC))
+    ledger = json.loads((reconciliation / "ledger.json").read_text())
+    events = siren.decode(_sample("r3_siren_active.json")["sample_rows"])
+    air = next(e for e in events if e.origin_uid == "56")
+    hazard = replace(air, event_id="probe-hazard", hazard="artillery_shelling")
+    observed = ingest.event_records([hazard], locations)
+    read = pd.read_parquet
+    nightly_read, resume, poll_started, poll_finished = (threading.Event() for _ in range(4))
+    nightly_ident: list[int] = []
+
+    def paused_read(path: Path, *args: object, **kwargs: object) -> pd.DataFrame:
+        frame = read(path, *args, **kwargs)
+        if Path(path).name == shared_file and threading.get_ident() in nightly_ident:
+            nightly_read.set()
+            assert resume.wait(5), "nightly probe was not released"
+        return frame
+
+    def nightly() -> None:
+        nightly_ident.append(threading.get_ident())
+        ingest._publish(ledger, reconciliation)
+
+    def poll() -> None:
+        poll_started.set()
+        ingest._save_hazards(observed)
+        ingest._save_level_observations([air], locations, datetime(2026, 10, 25, tzinfo=UTC))
+        poll_finished.set()
+
+    monkeypatch.setattr(pd, "read_parquet", paused_read)
+    with ThreadPoolExecutor(max_workers=2) as workers:
+        publishing = workers.submit(nightly)
+        try:
+            assert nightly_read.wait(5)
+            polling = workers.submit(poll)
+            assert poll_started.wait(5)
+            # Old code lets the poll finish here, then erases it. A shared lock defers it.
+            poll_finished.wait(0.5)
+        finally:
+            resume.set()
+        publishing.result(timeout=5)
+        polling.result(timeout=5)
+    expected = 1 if shared_file == "hazards.parquet" else len(air.levels)
+    assert len(read(ingest.PROCESSED_DIR / shared_file)) == expected
+    assert len(read(ingest.PROCESSED_DIR / "hazards.parquet")) == 1
+    assert len(read(ingest.PROCESSED_DIR / "severity_transitions.parquet")) == len(air.levels)
+
+
+@pytest.mark.parametrize("legacy_bad_cache", [False, True])
+def test_schema_invalid_archive_is_retried_after_upstream_recovers(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, legacy_bad_cache: bool,
+) -> None:
+    """A schema-invalid HTTP 200 must not poison normal cache-based catch-up forever."""
+    day = date(2026, 10, 25)
+    path = tmp_path / f"{day.isoformat()}.json.gz"
+    invalid = {"meta": {"type": "compact"}, "alerts": [{"i": 1, "luid": 31}]}
+    valid = {"meta": {"type": "compact"}, "alerts": [
+        {"i": 1, "luid": 31, "s": 1792890000, "u": 1792890000}
+    ]}
+    responses = iter([invalid, valid])
+    requests: list[str] = []
+
+    def get(url: str, **kwargs: object) -> httpx.Response:
+        requests.append(url)
+        return httpx.Response(200, json=next(responses), request=httpx.Request("GET", url))
+
+    monkeypatch.setattr(aiu_web.httpx, "get", get)
+    monkeypatch.setattr(aiu_web.time, "sleep", lambda seconds: None)
+    monkeypatch.setattr(aiu_web, "fetch_dictionary", lambda root: [])
+    if legacy_bad_cache:
+        cache_response(path, json.dumps(invalid).encode())
+    with pytest.raises(ValueError, match="valid start/update"):
+        aiu_web.decode(aiu_web.fetch_day(day, tmp_path), [])
+    assert path.exists() == legacy_bad_cache
+    events = aiu_web.decode(aiu_web.fetch_day(day, tmp_path), [])
+    assert len(events) == 1 and len(requests) == 2 and path.exists()
 
 
 def test_catch_up_commits_every_complete_day_across_kyiv_dst(reconciliation: Path) -> None:

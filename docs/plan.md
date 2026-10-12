@@ -26,7 +26,7 @@ Owner: project owner (decisions), lead agent (integration)
 
 Hard ruleA forecast made at time t may only use data from strictly before t
 
-Workspace. (currently empty)
+Workspace: repository root (originally empty)
 
 01 Decisions
 02 Verified facts

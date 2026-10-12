@@ -17,7 +17,8 @@ import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
 
-from airalert import config
+from airalert import config, metrics
+from airalert.backtest import write_v2_json
 from airalert.config import (
     ARTIFACTS_DIR,
     DATA_GAPS,
@@ -713,23 +714,29 @@ def _v2_score(
     return score, detail
 
 
-def evaluate_v2(*, final: bool = False, reuse_models: bool = False) -> Report:
+def evaluate_v2(
+    *, final: bool = False, reuse_models: bool = False, out: Path | None = None,
+) -> Report:
     """Fit/evaluate v2 validation, or score available test2 exactly once with --final.
 
     Test2 keeps the pre-validation boosters and recalibrates only on validation.
     Prediction files live in a subdirectory so v1 backtest never rescans them.
     """
+    paths = metrics.v2_evaluation_paths(out)
+    metrics.assert_v2_writable(paths.reports)
+    evaluation_artifacts = ARTIFACTS_DIR if out is None else paths.artifacts
+    prediction_dir = V2_PREDICTIONS_DIR if out is None else paths.predictions / "duration"
+    report_path = paths.reports / "duration_scores.json"
     val_start, test_start = _v2_boundaries()
     cal_start = val_start - pd.Timedelta(days=CALIBRATION_DAYS)
     snapshot = load_snapshot()
-    directory = ARTIFACTS_DIR / "D2"
-    marker = directory / "test2_scored.json"
-    if marker.exists():
-        raise ValueError("Test2 was already scored; preserve the frozen evaluation")
+    directory = evaluation_artifacts / "D2"
     if final and snapshot.snapshot <= test_start:
         raise ValueError("Test2 remains unavailable at the saved snapshot")
     if final and not (directory / "evaluation_val.json").exists():
         raise ValueError("Freeze validation models before scoring test2")
+    claim = (metrics.claim_v2_evaluation(paths.reports, "duration",
+                                        snapshot=snapshot.snapshot.isoformat()) if final else None)
     episodes, records, raions = load_episodes(), load_records(), load_raions()
     fit_mask = _eligible_window(
         episodes, snapshot.regime_switch, cal_start, observed_through=cal_start
@@ -758,8 +765,10 @@ def evaluate_v2(*, final: bool = False, reuse_models: bool = False) -> Report:
     start_rows = episodes.loc[selected].reset_index(drop=True)
     onset_features = build_start_features(records, start_rows, raions, snapshot.regime_switch)
     if final or reuse_models:
-        onset_models, _, onset_metadata = _load_bundle(ARTIFACTS_DIR / "D1c")
-        landmark_models, _, _ = _load_bundle(directory)
+        model_artifacts = (ARTIFACTS_DIR if reuse_models and not directory.exists()
+                           else evaluation_artifacts)
+        onset_models, _, onset_metadata = _load_bundle(model_artifacts / "D1c")
+        landmark_models, _, _ = _load_bundle(model_artifacts / "D2")
         if pd.Timestamp(onset_metadata["fit_end"]) != cal_start:
             raise ValueError("Saved duration model does not match the v2 split contract")
         empirical_features = onset_features.loc[start_rows.start.lt(cal_start)]
@@ -802,8 +811,8 @@ def evaluate_v2(*, final: bool = False, reuse_models: bool = False) -> Report:
         details.append(detail)
         output = eval_episodes[["raion_id", "start"]].assign(split=split)
         output[list(PREDICTION_COLUMNS)] = predictions
-        V2_PREDICTIONS_DIR.mkdir(parents=True, exist_ok=True)
-        output.to_parquet(V2_PREDICTIONS_DIR / f"duration_{model_id}_{split}.parquet", index=False)
+        prediction_dir.mkdir(parents=True, exist_ok=True)
+        output.to_parquet(prediction_dir / f"duration_{model_id}_{split}.parquet", index=False)
     landmarks = landmark_rows(start_rows, records)
     features = build_landmark_features(records, landmarks, raions, snapshot.regime_switch)
     if not final and not reuse_models:
@@ -849,7 +858,7 @@ def evaluate_v2(*, final: bool = False, reuse_models: bool = False) -> Report:
         output = rows.loc[mask, ["raion_id", "start", "checkpoint"]].assign(split=split)
         output[list(PREDICTION_COLUMNS)] = calibrated[mask]
         output.to_parquet(
-            V2_PREDICTIONS_DIR / f"duration_D2@{elapsed}_{split}.parquet", index=False
+            prediction_dir / f"duration_D2@{elapsed}_{split}.parquet", index=False
         )
     metadata = {
         "model": "D2", "snapshot": snapshot.snapshot.isoformat(),
@@ -862,9 +871,8 @@ def evaluate_v2(*, final: bool = False, reuse_models: bool = False) -> Report:
         "data_gaps": [[start.isoformat(), end.isoformat()] for start, end in _v2_data_gaps()],
     }
     if not final:
-        _save_bundle(ARTIFACTS_DIR / "D1c", onset_models, {"0": onset_calibration}, metadata)
+        _save_bundle(evaluation_artifacts / "D1c", onset_models, {"0": onset_calibration}, metadata)
         _save_bundle(directory, landmark_models, calibrations, metadata)
-    report_path = config.REPORTS_DIR / "v2" / "duration_scores.json"
     notes = [
         "v2 validation starts 2026-08-01; test denotes untouched test2 from 2026-09-08.",
         "D1 is the v1 architecture refitted before chronological calibration; v1 is frozen.",
@@ -879,8 +887,7 @@ def evaluate_v2(*, final: bool = False, reuse_models: bool = False) -> Report:
         scores = prior.duration + scores
         notes = [note for note in prior.notes if "has not been scored" not in note] + notes
     report = Report(generated_at=datetime.now(UTC), duration=scores, notes=notes)
-    report_path.parent.mkdir(parents=True, exist_ok=True)
-    report_path.write_text(report.model_dump_json(indent=2) + "\n", encoding="utf-8")
+    write_v2_json(report_path, report.model_dump(mode="json"), claim=claim)
     evaluation = {
         **metadata, "split": split, "details": details,
         "onset_calibration": vars(onset_calibration),
@@ -889,9 +896,8 @@ def evaluate_v2(*, final: bool = False, reuse_models: bool = False) -> Report:
     (directory / f"evaluation_{split}.json").write_text(
         json.dumps(evaluation, indent=2) + "\n", encoding="utf-8"
     )
-    if final:
-        marker.write_text(json.dumps({"snapshot": snapshot.snapshot.isoformat()}) + "\n",
-                          encoding="utf-8")
+    if claim is not None:
+        claim.finish()
     print(f"Duration v2 {split}: {len(details)} scores; "
           f"onset coverage {details[1]['coverage_80']:.4%} -> {details[2]['coverage_80']:.4%}",
           flush=True)
@@ -1037,17 +1043,20 @@ def predict_remaining(
     return result
 
 
-def wait_for_backfill() -> None:
+def wait_for_backfill(*, out: Path | None = None) -> None:
     """Poll the saved snapshot every five minutes for two hours, then stop.
 
     Test2 is scored only after accepted data reaches its start. Persist the
     bounded polling evidence without changing canonical ingestion artifacts.
     """
+    paths = metrics.v2_evaluation_paths(out)
+    metrics.assert_v2_writable(paths.reports)
     began = monotonic()
     deadline = began + 2 * 60 * 60
     _, test_start = _v2_boundaries()
     polls: list[dict[str, object]] = []
-    path = ARTIFACTS_DIR / "D2" / "backfill_wait.json"
+    directory = ARTIFACTS_DIR / "D2" if out is None else paths.artifacts / "D2"
+    path = directory / "backfill_wait.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     while True:
         snapshot = load_snapshot()
@@ -1062,8 +1071,8 @@ def wait_for_backfill() -> None:
         print(f"Backfill poll {len(polls)}: {snapshot.snapshot.isoformat()}; "
               f"{status}, {elapsed / 60:.1f} minutes", flush=True)
         if available:
-            if (ARTIFACTS_DIR / "D2" / "evaluation_val.json").exists():
-                evaluate_v2(final=True)
+            if (directory / "evaluation_val.json").exists():
+                evaluate_v2(final=True, out=out)
             else:
                 print("Backfill available; finish validation before --final", flush=True)
             return
@@ -1074,7 +1083,8 @@ def wait_for_backfill() -> None:
             sleep(min(60, next_poll - monotonic()))
 
 
-if __name__ == "__main__":
+def main(argv: list[str] | None = None) -> None:
+    """Run evaluation separately from the unchanged production refit entry point."""
     import argparse
 
     parser = argparse.ArgumentParser(description="Duration v2 evaluation and production refit")
@@ -1082,10 +1092,17 @@ if __name__ == "__main__":
     parser.add_argument("--production", action="store_true", help="Refit the production hook")
     parser.add_argument("--wait-backfill", action="store_true",
                         help="Wait up to 2h, then score test2")
-    arguments = parser.parse_args()
+    parser.add_argument("--out", nargs="?", type=Path,
+                        const=config.V2_ARTIFACTS_DIR / "experiments",
+                        help="Experiment directory; --out alone uses artifacts/v2/experiments")
+    arguments = parser.parse_args(argv)
     if arguments.wait_backfill:
-        wait_for_backfill()
+        wait_for_backfill(out=arguments.out)
     elif arguments.production:
         refit_production(datetime.now(UTC))
     else:
-        evaluate_v2(final=arguments.final)
+        evaluate_v2(final=arguments.final, out=arguments.out)
+
+
+if __name__ == "__main__":
+    main()

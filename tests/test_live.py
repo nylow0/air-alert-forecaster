@@ -93,6 +93,42 @@ def test_failed_poll_retains_state_and_recovers(scheduler: Scheduler, failure: s
     asyncio.run(scenario())
 
 
+def test_secondary_failure_retains_alert_in_api_state_and_recovers(scheduler: Scheduler) -> None:
+    """One API stale flag means incomplete secondary polls keep the whole snapshot."""
+    async def scenario() -> None:
+        await scheduler.poll_once()
+        before = scheduler.live.get(scheduler.clock())
+
+        def secondary_failed(now: datetime) -> dict[str, object]:
+            value = raw_state(before.fetched_at)
+            value.update({"stale": True, "sources": {"siren": "observed", "ubilling": "failed"}})
+            return value
+
+        scheduler.poll = secondary_failed
+        scheduler.clock.now += timedelta(minutes=1)
+        await scheduler.poll_once()
+        failed = scheduler.live.get(scheduler.clock())
+        assert failed.stale and failed.units == before.units
+        assert failed.fetched_at == before.fetched_at and scheduler.status().live_stale
+        assert failed.model_dump(mode="json")["units"][0]["red_since"]
+        scheduler.poll = raw_state
+        await scheduler.poll_once()
+        assert not scheduler.live.get(scheduler.clock()).stale
+
+    asyncio.run(scenario())
+
+
+def test_failed_archive_day_is_visible_in_system_coverage(scheduler: Scheduler) -> None:
+    scheduler.ledger = {"watermark": "2026-10-24", "gaps": [{
+        "day": "2026-10-25", "start": "2026-10-24T21:00:00Z", "end": "2026-10-25T22:00:00Z",
+        "error_type": "IncompleteArchiveError", "reason": "Archive completeness: 0 records",
+    }]}
+    status = scheduler.status()
+    assert status.model_dump(mode="json")["ledger_watermark"] == "2026-10-24"
+    assert status.coverage_gaps[0].start == datetime(2026, 10, 24, 21, tzinfo=UTC)
+    assert status.coverage_gaps[0].end == datetime(2026, 10, 25, 22, tzinfo=UTC)
+
+
 @pytest.mark.parametrize("fail_first", [False, True])
 def test_kyiv_midnight_once_across_dst_and_failure(scheduler: Scheduler, fail_first: bool) -> None:
     async def scenario() -> None:

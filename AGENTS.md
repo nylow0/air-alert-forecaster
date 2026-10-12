@@ -124,7 +124,7 @@ Each subcommand imports its target lazily, so a module that isn't built yet does
 
 ## Frontend notes
 
-Full `#000` background and a dark UI only. Onest variable font (`@fontsource-variable/onest`, which covers Cyrillic). Draw the map as SVG with `d3-geo`, using a projection fitted to Ukraine, with no tiles. Use a single-hue sequential scale for probability and a white outline for raions where an alert really started. The layout must work from 1440 px down to 390 px. Every number on the report page comes from `/api/report`. Read `[private home path removed]` and `docs/design-notes.md` (if it exists) before building UI.
+Full `#000` background and a dark UI only. Onest variable font (`@fontsource-variable/onest`, which covers Cyrillic). Draw the map as SVG with `d3-geo`, using a projection fitted to Ukraine, with no tiles. Use a single-hue sequential scale for probability and a white outline for raions where an alert really started. The layout must work from 1440 px down to 390 px. Every number on the report page comes from `/api/report`. Read the frontend-design skill from the configured agent skill catalog and `docs/design-notes.md` (if it exists) before building UI.
 
 # v2: live data, news agent (architect decisions, 2026-10-12)
 
@@ -160,4 +160,4 @@ The v1 results (`reports/`, `docs/report.md`) are **frozen history**. v2 extends
 Each backend feature exposes a FastAPI `APIRouter` from its own module; `api.py` (S1) includes them.
 
 ## Secrets and privacy (hard rule)
-Never write tokens, the ChatGPT/Codex auth, the owner's email, `~` paths, or local PIDs into a tracked file. LLM calls go through the local Codex CLI (`codex exec`), whose credentials live in `[private home path removed]` and are never read, copied or logged by this app. Local settings: `data/settings.local.json` (git-ignored).
+Never write tokens, the ChatGPT/Codex auth, the owner's email, `~` paths, or local PIDs into a tracked file. LLM calls go through the local Codex CLI (`codex exec`), whose credentials live in the Codex-managed credential store and are never read, copied or logged by this app. Local settings: `data/settings.local.json` (git-ignored).

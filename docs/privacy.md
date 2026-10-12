@@ -37,7 +37,16 @@ Telegram's [content-licensing terms](https://telegram.org/tos/content-licensing)
 
 ## Install the pre-commit guard
 
-The [guard](../scripts/pre_commit_secret_guard.py) scans staged added, copied, modified and renamed file blobs. It blocks Gmail addresses, Windows and Git Bash user-directory paths, recognized GitHub/Telegram/OpenAI-style tokens, JWTs and private-key markers. It excludes its own pattern-definition file. A passing check is limited to these patterns and the current index; it is not a scan of every secret type or git history.
+The [guard](../scripts/pre_commit_secret_guard.py) scans staged added, copied, modified and renamed file blobs and their names. It blocks personal-provider email addresses, literal home/workspace paths, process identifiers, recognized GitHub/Telegram/OpenAI-style tokens, JWTs and private-key markers. PNG checks inspect text metadata rather than compressed image pixels. The script also checks the next author and committer email, including Git's environment and command overrides. It accepts the anonymous project email or a GitHub no-reply email. A passing check covers these patterns and the current index; it does not scan every secret type or git history.
+
+This repository uses a local anonymous identity. To apply the same identity in another clone:
+
+```sh
+git config --local user.name "Air Alert Contributors"
+git config --local user.email "airalert@example.invalid"
+```
+
+These settings affect only this clone. Git's global identity stays unchanged. A personal email supplied by an environment variable or command override still causes the hook to reject the commit.
 
 From the repository root in PowerShell, install the supplied hook for a clone without an existing pre-commit hook:
 
@@ -60,7 +69,15 @@ Run the same staged-content check manually:
 uv run --no-project python scripts/pre_commit_secret_guard.py
 ```
 
-A rejection exits nonzero and prints the affected path and pattern category. Review the staged content, remove private material and run the guard again. Do not bypass it to publish a credential or private machine detail.
+A rejection exits nonzero and prints pattern categories or the rejected identity role. It does not print matched values or filenames, which can themselves contain private data. Review the staged content, remove private material and run the guard again. Do not bypass it to publish a credential or private machine detail.
+
+## History remediation status
+
+The owner authorized removing private information from local Git history before publication. Current documentation now uses portable paths or redacted tool-safety examples. The staged guard also blocks future private commit emails. Its installed local hook matches the supplied hook.
+
+The prepared rewrite scans all local refs, every reachable blob, commit/tag messages, tree/ref names and author/committer/tagger metadata. It anonymizes contributor identities, preserves commit dates and parent links, retains every ref, and verifies the final tree against the intended sanitization. Genuine private matches in binary metadata stop the rewrite for review. The current dry-run covers 170 commits and 133 refs; the transformed content and metadata have zero remaining matches.
+
+History execution and the final object audit are pending. The lead will verify the rewrite before expiring reflogs and pruning unreachable private objects. No remote operation is part of this remediation. Runtime data and Codex credentials remain outside this process.
 
 ## Pre-publish checklist
 

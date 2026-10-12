@@ -1,7 +1,7 @@
 # Design notes for the dashboard (lead-owned)
 
 These are distilled from the `dataviz` and `frontend-design` skills for this one app. Full references:
-- `[private home path removed]`
+- frontend-design skill in the configured agent skill catalog
 - dataviz skill (read-only copy, may be absent later): `<dataviz skill, bundled with Claude Code>` (`anti-patterns.md`, `marks-and-anatomy.md`, `interaction.md`)
 
 ## Direction

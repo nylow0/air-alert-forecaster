@@ -5,8 +5,8 @@
 A live community/hromada origin active for more than 72 hours is excluded
 from forecast records, every record-derived feature, active/active-since and
 remaining-duration inputs. Exactly 72 hours still counts. District and oblast
-origins have no age exclusion. `PERSISTENT_LOCAL_ALERT_H` in `ingest.py` is the
-single threshold pending the lead's move to config. Canonical CSV/archive
+origins have no age exclusion. `PERSISTENT_LOCAL_ALERT_H` in `config.py` is the
+single threshold. Canonical CSV/archive
 history and labels are unchanged. The online view also excludes unresolved
 persistent hromada continuations already present in canonical archive data.
 This avoids treating a permanently alerted
@@ -28,6 +28,74 @@ receipt sidecars, including empty polls; legacy empty files use write time.
 Archive-censored coverage closes when a successful poll has no eligible origin
 at its raion and source level. A community alert cannot keep an absent district
 or oblast origin open.
+
+### Archive completeness and publication, Y1
+
+V2-03 adds a check before writing a day's normalized partition. Count unique
+national air-raid origin event IDs whose intervals overlap that Kyiv day,
+including alerts continuing from earlier days and excluded permanent origins.
+Mirrored copies and repeated event IDs do not increase this count. Require at
+least **100 records** and **20% of the median of the preceding 14 reconciled
+days**. Use all available preceding days during bootstrap; the absolute floor
+still applies when there is no baseline. Accepted counts and check inputs are
+saved in `ledger.day_checks`. Legacy ledgers derive the baseline from their
+decoded raw responses, or durable partitions when the raw cache is absent.
+Those partitions omit the excluded permanent origins, so that fallback is
+slightly more permissive.
+
+These are conservative outage thresholds. The 54 cached sample days inspected
+for Y1 have a minimum of 374 unique national air-raid records; the latest
+14-day median is 567. Across the latest 60 complete days, the minimum is 219
+raion episode starts on August 15. A genuinely quiet national day is
+essentially impossible in these data. The check catches empty and severely
+truncated responses while allowing a large real decrease in daily activity.
+It is not a claim to detect every missing alert.
+
+Where successful minute observations exist for the day, every observed raion
+and receipt time must also have archive air-raid coverage. Use `observed_at`,
+not the inexact live onset proxy, and allow 120 seconds around archive starts
+and finishes to match the reviewed source timing tolerance. Broad archive
+coverage can satisfy a local observation; colors are not completeness labels.
+Receipt coverage uses sorted interval searches rather than a row-by-row scan.
+A contradiction fails the day even when its national count clears both floors.
+
+An `IncompleteArchiveError` records the whole Kyiv day in `ledger.gaps`, with
+UTC bounds and an explicit reason. `/api/system.coverage_gaps` exposes those
+bounds. No candidate partition or canonical records are published, the
+watermark stays at the last accepted day, and catch-up stops before later
+days. The next catch-up retries the failed day with a fresh upstream response,
+so a suspicious but syntactically valid cached response cannot prevent repair.
+
+V2-04 uses one `canonical_publication` lock for minute and nightly writers.
+It covers each shared file's read, merge, staging, replacement and rollback,
+including hazards and severity transitions. It combines a process-local lock
+with an OS file lock at `data/processed/.canonical.lock`, so a separate CLI
+also participates. Large records/episodes staging and model fits happen
+outside this lock. Atomic file replacement still protects readers; the lock
+also prevents one writer from erasing another writer's newer row.
+
+V2-06 decodes and validates compact archive events before caching a response.
+Cache hits are validated too; an invalid legacy cache is bypassed and fetched
+again. HTTP/JSON/schema-invalid responses do not replace a valid raw cache.
+The normal two-second request spacing and descriptive User-Agent still apply.
+
+### Failed secondary polls, Y1
+
+V2-05 supersedes the earlier secondary-failure policy below. A failure in
+siren, enabled `aiu_api`, or ubilling retains the **entire last complete live
+snapshot**, including Sevastopol's inherited red layer, both colors, source
+contributions and the last successful `fetched_at`. It marks the snapshot and
+polygons stale, and records the failed source in local `state.sources`.
+The existing API exposes the top-level stale flag; no per-unit API field or
+schema change is needed. If no complete snapshot exists, coverage is unknown
+and stale until all enabled sources succeed.
+
+This intentionally treats the display as one complete receipt. A fresh
+primary response cannot certify the absent secondary source's units as fresh.
+Failed attempts produce no successful observation receipt and cannot close
+live origins in forecast inputs. Raw responses already received may remain
+archived. The next complete poll clears stale and can apply a source-confirmed
+all-clear. A disabled optional API is not a failure.
 
 **DATA_GAPS recommendation:** empty `config.DATA_GAPS`. The accepted archive
 fills the August 29 to September 2 outage with plausible daily activity, all
@@ -323,9 +391,9 @@ or the live feature observation store.
    Daily scalar colours are not historical transition times or proof of
    as-of availability. Live inputs retain their `observed_at` clock.
 6. Sevastopol may show the secondary source's reported permanent alert as
-   inherited red. If that secondary source fails during a successful
-   primary poll, Sevastopol is unknown. A primary failure preserves the last
-   complete state as stale. Chornobyl inherits only Kyivska oblast-wide
+   inherited red. Y1's V2-05 repair supersedes the former unknown-on-secondary-
+   failure behavior: any enabled source failure now preserves the complete
+   prior snapshot as stale. Chornobyl inherits only Kyivska oblast-wide
    air-raid alerts.
 
 The normalization window and thresholds remain local to I1's code as the
@@ -398,9 +466,9 @@ remain in `data/live/validation.json`; it retains the round-1 raw totals too.
 `catch_up(now)` requires an aware datetime and resumes from the ledger
 watermark plus one day through yesterday in Europe/Kyiv. The same function
 is ready for startup and midnight scheduling. It processes missing complete
-days in order and refuses skipped or incomplete days. It uses cached raw
-responses when available, and later daily partitions can update an earlier
-origin event's end.
+days in order and refuses skipped or incomplete days. It uses semantically
+validated raw caches when available, checks per-day completeness before
+publication, and later daily partitions can update an earlier origin event's end.
 
 Before reconciliation, the accepted episode gate and current CSV hash must
 still agree. With a ledger already present, its chosen cutover remains in
@@ -418,13 +486,13 @@ On fetch, decode, geography or publication failure, the day is recorded in
 `ledger.gaps` with its Kyiv-day UTC bounds and error type. Catch-up stops,
 leaves the watermark at the last successful day and resumes that failed day
 on the next call. There is no successful-looking jump over a failed day.
-The raw cache is reused unless explicitly refreshed, so an invalid cached
-upstream response may need refresh after its cause is reviewed.
+Schema-invalid caches are bypassed automatically. A failed completeness check
+forces a fresh fetch on the next catch-up; manual cache deletion is unnecessary.
 
 I1 owns this ingestion step. S1's scheduler must invoke the downstream
 feature rebuild, production refit, forecasts and rolling scoring after
 catch-up; these operations are not performed inside `catch_up`.
-`live_state(now)` is independent. A primary poll failure keeps the previous
+`live_state(now)` is independent. Any enabled source failure keeps the previous
 polygons and successful fetched time, marks them stale and never clears alerts.
 
 ## Open issues
@@ -467,3 +535,120 @@ polygons and successful fetched time, marks them stale and never clears alerts.
 ## Dependencies added
 
 None.
+
+## Y1 ingest robustness report
+
+### Delivered
+
+#### V2-03, archive completeness
+
+`src/airalert/ingest.py` rejects empty, severely truncated and live-contradictory
+archive days before partition publication. Rejections preserve the watermark,
+write an explicit day gap, stop later requests and force a fresh retry next time.
+`ledger.day_checks` stores accepted volume and live-coverage evidence.
+The guarding test is
+`tests/test_ingest.py::test_archive_completeness_blocks_bad_days_and_retries`,
+with empty, low-relative-volume, missing-live-raion and missing-live-interval
+cases. `tests/test_live.py::test_failed_archive_day_is_visible_in_system_coverage`
+checks the existing API status representation of the gap.
+
+#### V2-04, shared canonical publication
+
+`src/airalert/sources/storage.py` supplies one thread/OS publication lock.
+`src/airalert/ingest.py` holds it across shared reads, merges, replacements and
+nightly rollback. `src/airalert/scheduler.py` documents this boundary while
+retaining independent poll and fit scheduling. The guarding test is
+`tests/test_ingest.py::test_poll_rows_survive_interleaved_nightly_publication`,
+run for both hazards and severity transitions. It pauses the real nightly
+shared-file read, invokes the actual poll writers, resumes publication and
+checks that both live rows survive.
+
+#### V2-05, failed secondary polls
+
+`src/airalert/ingest.py` retains the last complete snapshot on failure in
+ubilling, enabled `aiu_api` or siren. Sevastopol's inherited red layer and
+distinct authenticated-source contributions stay present, with top-level
+stale and the old successful clock. No failed attempt becomes an absence
+receipt. The rewritten guarding test is
+`tests/test_ingest.py::test_failed_poll_keeps_layers_and_successful_clock`,
+parameterized over all three sources.
+`tests/test_live.py::test_secondary_failure_retains_alert_in_api_state_and_recovers`
+checks API serialization, system staleness and recovery. No schema change or
+`live.py` change was necessary.
+
+#### V2-06, invalid archive cache recovery
+
+`src/airalert/sources/aiu_web.py` validates compact events before caching and
+validates existing cache hits. Legacy invalid hits trigger an upstream retry;
+new invalid responses are not cached. The guarding test is
+`tests/test_ingest.py::test_schema_invalid_archive_is_retried_after_upstream_recovers`,
+with both a fresh invalid HTTP 200 and a preexisting bad cache. A corrected
+second response is requested and accepted normally in both cases.
+
+Matching operating guidance is updated in `docs/ingest.md` and
+`docs/operations.md`. Y1 did not edit Y2's backtest, metrics or model files,
+schemas, dependencies, frozen reports or git state.
+
+### Verified
+
+Before the repairs, `uv run --no-sync pytest tests/test_ingest.py -q --tb=line`
+reproduced all four audit symptoms: empty/truncated/live-contradictory days
+advanced through October 26, interleaved nightly publication erased a live
+hazard, ubilling removed Sevastopol's red layer, and schema-invalid raw caches
+blocked normal upstream retry. The original run had 10 failures and 10 passes,
+including the new source-status assertion for primary failure.
+
+The first full run of `uv run --no-sync pytest -q --tb=short` passed 160 tests
+in 90.75 seconds. The final shared-tree run, including subsequent concurrent
+Y2 tests and the additional receipt-interval case, returned **162 passed,
+1 warning in 84.16s**. The warning is the existing FastAPI/Starlette test-client
+deprecation. `uv run --no-sync ruff check .` returned **All checks passed!**
+after Y2 resolved its transient line-length error. `git diff --check` also
+passed. Y1 made no changes to Y2's files to obtain those results.
+
+`uv run --no-sync airalert live-once` exited 0 and persisted a real successful
+poll at `2026-10-12T19:30:55.749483Z`. Its state has 139 polygons, 52 red and
+28 yellow, `stale=false`, `siren=observed`, `aiu_api=disabled` and
+`ubilling=reported_permanent_alert`. It produced a receipt-tagged observation
+file. The CLI itself emits no stdout on success; these counts were read back
+from its actual `data/live/state.json`.
+
+`uv run --no-sync airalert backfill` exited 0 as a no-op catch-up. The ledger
+still has cutover `2026-08-29T06:00:00Z`, watermark `2026-10-11`, 44 accepted
+days and `gaps=[]`. The historical snapshot remains
+`2026-10-11T21:00:00Z`. `GET /api/system` on the existing server returned
+HTTP 200 with the same watermark, empty coverage gaps and `live_stale=false`.
+The server was left running and was not restarted.
+
+### Decisions/assumptions
+
+The national floor is 100 unique air-raid events overlapping the day; the
+relative floor is 20% of the median of up to 14 previous accepted days.
+Bootstrap always enforces the absolute floor. Live comparisons use expanded
+raion interval coverage at receipt time with 120-second tolerance. These
+checks detect implausible completeness and concrete live contradictions,
+not every small omission. They do not turn live proxies into historical labels.
+
+The existing API has only one stale flag, so any enabled secondary-source
+failure preserves the complete display rather than advertising a partially
+fresh snapshot. New successful observation receipts wait until all enabled
+sources succeed. Disabled optional credentials do not block primary polling.
+
+### Open issues
+
+The real authenticated adapter remains unexercised because it is disabled in
+this environment; its failure/retention path is covered with real-source-shaped
+fixtures. The existing long-lived server still needs the lead's normal restart
+to load this patch during integration. Multi-file publication remains atomic
+per file, so forced process termination can still require startup recovery.
+
+### Contract change requests
+
+Resolved during final integration. `ARCHIVE_MIN_NATIONAL_RECORDS`,
+`ARCHIVE_BASELINE_DAYS`, `ARCHIVE_MIN_BASELINE_FRACTION` and
+`ARCHIVE_LIVE_TOLERANCE_SECONDS` now live in `config.py`. Ingest imports them;
+their values and behavior are unchanged. No API schema change is requested.
+
+### Dependencies added
+
+None. The cross-process publication lock uses the standard library.

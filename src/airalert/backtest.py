@@ -466,27 +466,34 @@ def run(final: bool = False) -> None:
           f"{len(merged.duration)} duration scores")
 
 
-def write_v2_json(path: Path, value: object) -> None:
-    """Replace complete v2 metadata without exposing a partially written JSON file."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    staging = path.with_suffix(".json.tmp")
-    staging.write_text(json.dumps(value, indent=2, allow_nan=False) + "\n", encoding="utf-8")
-    staging.replace(path)
+def write_v2_json(
+    path: Path, value: object, *, claim: metrics.V2EvaluationClaim | None = None,
+) -> None:
+    """Replace complete metadata only while its evaluation destination is writable."""
+    with metrics.v2_report_write(path, claim=claim):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        staging = path.with_suffix(".json.tmp")
+        staging.write_text(json.dumps(value, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+        staging.replace(path)
 
 
-def v2_prediction_hashes() -> dict[str, str]:
+def v2_prediction_hashes(directory: Path | None = None) -> dict[str, str]:
     """Hash complete prediction files without opening any test2 target column."""
     hashes: dict[str, str] = {}
-    for path in sorted(config.V2_PREDS_DIR.glob("onset_*.parquet")):
+    directory = config.V2_PREDS_DIR if directory is None else directory
+    for path in sorted(directory.glob("onset_*.parquet")):
         with path.open("rb") as handle:
             hashes[path.name] = hashlib.file_digest(handle, "sha256").hexdigest()
     return hashes
 
 
-def v2_score_predictions(split: str, *, final: bool = False) -> tuple[Report, pd.DataFrame]:
+def v2_score_predictions(
+    split: str, *, final: bool = False, prediction_dir: Path | None = None,
+) -> tuple[Report, pd.DataFrame]:
     """Score both unprojected and served probabilities on identical eligible rows."""
     if split == "test2" and not final:
         raise ValueError("test2 scoring requires final=True")
+    prediction_dir = config.V2_PREDS_DIR if prediction_dir is None else prediction_dir
     columns = ["t", "raion_id", "oblast_id", "f_active", "f_source_archive",
                *(f"y_{h}" for h in config.HORIZONS)]
     truth = pd.read_parquet(config.V2_FEATURES_DIR / f"{split}.parquet", columns=columns)
@@ -495,7 +502,7 @@ def v2_score_predictions(split: str, *, final: bool = False) -> tuple[Report, pd
     if truth.empty:
         report.notes.append("test2 has no observed eligible period; no test outcomes were scored.")
         return report, truth
-    baseline = pd.read_parquet(config.V2_PREDS_DIR / "onset_B0-raw.parquet",
+    baseline = pd.read_parquet(prediction_dir / "onset_B0-raw.parquet",
                                filters=[("split", "==", split)])
     reference = metrics.monotone_projection(baseline[[f"p_{h}" for h in config.HORIZONS]])
     baseline = baseline[["t", "raion_id"]].copy()
@@ -504,7 +511,7 @@ def v2_score_predictions(split: str, *, final: bool = False) -> tuple[Report, pd
     if truth.filter(like="b0_").isna().any().any():
         raise ValueError("B0 does not cover every forecast key")
     selected_rows = pd.DataFrame()
-    for path in sorted(config.V2_PREDS_DIR.glob("onset_*.parquet")):
+    for path in sorted(prediction_dir.glob("onset_*.parquet")):
         predictions = pd.read_parquet(path, filters=[("split", "==", split)])
         _validate_keys(predictions, ["t", "raion_id"], path.name)
         joined = truth.merge(predictions.drop(columns="split"), on=["t", "raion_id"],
@@ -536,48 +543,55 @@ def v2_score_predictions(split: str, *, final: bool = False) -> tuple[Report, pd
     return report, selected_rows
 
 
-def run_v2(*, final: bool = False) -> Report:
-    """Validation is repeatable. A durable claim permits test2 scoring only once."""
-    claim = config.V2_REPORTS_DIR / "test2_claim.json"
-    if final and claim.exists():
-        raise RuntimeError("test2 was already claimed; inspect its saved result")
+def run_v2(*, final: bool = False, out: Path | None = None) -> Report:
+    """Refuse frozen destinations; explicit experiments may reuse saved predictions."""
+    paths = metrics.v2_evaluation_paths(out)
+    metrics.assert_v2_writable(paths.reports)
+    prediction_dir = (paths.predictions if out is None or paths.predictions.exists()
+                      else config.V2_PREDS_DIR)
+    selection_path = (paths.selection if out is None or paths.selection.exists()
+                      else config.V2_SELECTION_PATH)
+    claim = None
     if not final:
-        report, _ = v2_score_predictions("val")
-        write_v2_json(config.V2_METRICS_DIR / "scores_val.json", report.model_dump(mode="json"))
+        report, _ = v2_score_predictions("val", prediction_dir=prediction_dir)
+        write_v2_json(paths.fragments / "scores_val.json", report.model_dump(mode="json"))
     else:
-        selection_bytes = config.V2_SELECTION_PATH.read_bytes()
+        selection_bytes = selection_path.read_bytes()
         selection = json.loads(selection_bytes)
         snapshot = load_snapshot().snapshot
         if selection["snapshot"] != snapshot.isoformat():
             raise ValueError("Selection snapshot differs from the data being scored")
         if selection["data_gaps"] != [[a.isoformat(), b.isoformat()] for a, b in v2_data_gaps()]:
             raise ValueError("Gap policy changed after selection; refresh validation before final")
-        if selection["prediction_sha256"] != v2_prediction_hashes():
+        if selection["prediction_sha256"] != v2_prediction_hashes(prediction_dir):
             raise ValueError("Predictions changed after selection; lock validation before final")
         if v2_test_end(snapshot) < pd.Timestamp(config.V2_TEST_START):
             print("No test2 coverage. Final scoring was not claimed.", flush=True)
-            return metrics.merge_reports(directory=config.V2_METRICS_DIR,
-                                         destination=config.V2_METRICS_PATH, include_test=False)
-        config.V2_REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-        with claim.open("x", encoding="utf-8") as handle:
-            json.dump({"started_at": datetime.now(UTC).isoformat(),
-                       "selection_sha256": hashlib.sha256(selection_bytes).hexdigest(),
-                       "snapshot": snapshot.isoformat()}, handle, indent=2)
-        report, served = v2_score_predictions("test2", final=True)
+            return metrics.merge_reports(directory=paths.fragments,
+                                         destination=paths.reports / "metrics.json",
+                                         include_test=False)
+        claim = metrics.claim_v2_evaluation(
+            paths.reports, "onset", snapshot=snapshot.isoformat(),
+            details={"selection_sha256": hashlib.sha256(selection_bytes).hexdigest()},
+        )
+        report, served = v2_score_predictions("test2", final=True, prediction_dir=prediction_dir)
         intervals = [metrics.day_block_bss(
             served.loc[v2_eligible_mask(served, horizon, "test2", final=True)], horizon
         ) for horizon in config.HORIZONS]
-        if config.V2_SELECTION_PATH.read_bytes() != selection_bytes:
+        if selection_path.read_bytes() != selection_bytes:
             raise RuntimeError("Selection changed during final scoring")
-        if selection["prediction_sha256"] != v2_prediction_hashes():
+        if selection["prediction_sha256"] != v2_prediction_hashes(prediction_dir):
             raise RuntimeError("Predictions changed during final scoring")
-        write_v2_json(config.V2_REPORTS_DIR / "bootstrap.json", intervals)
-        write_v2_json(config.V2_METRICS_DIR / "scores_test2.json", report.model_dump(mode="json"))
+        write_v2_json(paths.reports / "bootstrap.json", intervals, claim=claim)
+        write_v2_json(paths.fragments / "scores_test2.json",
+                      report.model_dump(mode="json"), claim=claim)
+    duration_path = paths.reports / "duration_scores.json"
+    merged = metrics.merge_reports(
+        directory=paths.fragments, destination=paths.reports / "metrics.json", include_test=final,
+        extra_fragments=([duration_path] if duration_path.exists() else []), claim=claim,
+    )
+    if claim is not None:
+        claim.finish()
         print("TEST2 SCORED ONCE; locked selection unchanged", flush=True)
-    merged = metrics.merge_reports(directory=config.V2_METRICS_DIR,
-                                   destination=config.V2_METRICS_PATH, include_test=final,
-                                   extra_fragments=([config.V2_REPORTS_DIR / "duration_scores.json"]
-                                       if (config.V2_REPORTS_DIR / "duration_scores.json").exists()
-                                       else []))
     print(f"v2 report: {len(merged.onset)} onset scores", flush=True)
     return merged

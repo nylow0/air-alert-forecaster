@@ -123,8 +123,8 @@ class Scheduler:
         return self.latest if self.latest is not None and self.latest.at == hour else None
 
     async def poll_once(self) -> None:
-        # Polls publish independent state/observation files. A long model fit must
-        # not prevent the next receipt or turn healthy live data stale.
+        # Fits do not hold the poll lock. Ingest uses canonical_publication for
+        # shared hazards/transitions, including nightly read/replace and rollback.
         async with self.poll_lock:
             try:
                 raw = await worker_call(self.poll, self.clock())

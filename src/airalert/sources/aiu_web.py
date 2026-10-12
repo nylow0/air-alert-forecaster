@@ -7,6 +7,7 @@ War-day 1 is 2022-02-24; its calendar label is Kyiv-local, including DST days.
 import gzip
 import json
 import time
+from collections.abc import Callable
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from threading import Lock
@@ -41,30 +42,47 @@ def day_bounds(day: date) -> tuple[datetime, datetime]:
     )
 
 
-def fetch_json(url: str, path: Path, *, refresh: bool = False) -> object:
+def fetch_json(
+    url: str, path: Path, *, validate: Callable[[object], object], refresh: bool = False,
+) -> object:
+    """Only validated responses are cache hits, including caches written by older versions."""
     global _LAST_REQUEST
     if path.exists() and not refresh:
-        return json.loads(gzip.decompress(path.read_bytes()))
+        try:
+            payload = json.loads(gzip.decompress(path.read_bytes()))
+            validate(payload)
+            return payload
+        except (ValueError, KeyError, TypeError, OSError, EOFError, OverflowError):
+            # Retry upstream now. A schema-invalid 200 must not poison later catch-up.
+            pass
     with _REQUEST_LOCK:
         time.sleep(max(0.0, 2.0 - (time.monotonic() - _LAST_REQUEST)))
         _LAST_REQUEST = time.monotonic()
         response = httpx.get(url, timeout=40, headers={"User-Agent": USER_AGENT})
         response.raise_for_status()
         payload = response.json()
+        validate(payload)
         cache_response(path, response.content)
         return payload
 
 
-def fetch_day(day: date, raw_dir: Path, *, refresh: bool = False) -> object:
+def fetch_day(
+    day: date, raw_dir: Path, *, dictionary: list[object] | None = None, refresh: bool = False,
+) -> object:
+    if dictionary is None:
+        dictionary = fetch_dictionary(raw_dir)
     return fetch_json(
         f"https://api.alerts.in.ua/v3/alerts/day/{war_day(day)}.json",
-        raw_dir / f"{day.isoformat()}.json.gz", refresh=refresh,
+        raw_dir / f"{day.isoformat()}.json.gz",
+        validate=lambda payload: decode(payload, dictionary),
+        refresh=refresh,
     )
 
 
 def fetch_dictionary(raw_dir: Path) -> list[object]:
     return array(fetch_json(
-        "https://cdn.alerts.in.ua/assets/locations.json?v=5", raw_dir / "locations-v5.json.gz"
+        "https://cdn.alerts.in.ua/assets/locations.json?v=5", raw_dir / "locations-v5.json.gz",
+        validate=array,
     ))
 
 

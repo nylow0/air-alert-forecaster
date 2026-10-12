@@ -1,8 +1,13 @@
 """Array metrics and validated, atomic merging of independently owned reports."""
 
 import json
+import os
+from collections.abc import Iterator
+from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -11,6 +16,152 @@ from sklearn.metrics import average_precision_score
 
 from airalert import config
 from airalert.schemas import ReliabilityBin, Report
+
+
+def v2_freeze_marker(directory: Path | None = None) -> Path | None:
+    """Committed claims freeze both evaluations, including interrupted claims."""
+    root = config.V2_REPORTS_DIR if directory is None else directory
+    return next((root / name for name in ("test2_claim.json", "duration_test2_claim.json")
+                 if (root / name).exists()), None)
+
+
+@dataclass
+class V2EvaluationClaim:
+    """Only the process that claimed test2 may publish its bounded final outputs."""
+
+    path: Path
+    contents: bytes
+    outputs: tuple[Path, ...]
+
+    def finish(self) -> None:
+        with v2_report_write(self.path, claim=self):
+            value = json.loads(self.contents)
+            value.update(status="finished", finished_at=datetime.now(UTC).isoformat())
+            staging = self.path.with_suffix(".json.tmp")
+            staging.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
+            staging.replace(self.path)
+
+
+def assert_v2_writable(path: Path, *, claim: V2EvaluationClaim | None = None) -> None:
+    """Check at every writer, resolving aliases and rejecting even partial claims.
+
+    The rolling track record is runtime state. All other files below a claimed
+    evaluation directory are immutable. A claim authorizes only its final outputs
+    while its exact original started-state bytes remain on disk.
+    """
+    target = path.resolve()
+    canonical = config.V2_REPORTS_DIR.resolve()
+    if target in (canonical / "track_record.json", canonical / "track_record.json.tmp"):
+        return
+    for root in (target, *target.parents):
+        marker = v2_freeze_marker(root)
+        if marker is None:
+            continue
+        markers = [root / name for name in ("test2_claim.json", "duration_test2_claim.json")
+                   if (root / name).exists()]
+        if (claim is not None and markers == [claim.path.resolve()]
+                and target in (*claim.outputs, claim.path.resolve())
+                and marker.read_bytes() == claim.contents
+                and json.loads(claim.contents).get("status") == "started"):
+            continue
+        raise RuntimeError(
+            f"v2 evaluation is frozen, already claimed by {marker.name}; cannot change {path}. "
+            "A started claim may be unfinished: inspect its saved outputs with the lead. "
+            "Keep the claim in place; use --out for a separate experiment directory."
+        )
+
+
+@contextmanager
+def v2_report_write(path: Path, *, claim: V2EvaluationClaim | None = None) -> Iterator[None]:
+    """Serialize committed publication with claims; OS locks are released on crashes.
+
+    The lock lives in ignored evaluation artifacts. Production artifact writes
+    and the rolling track record do not acquire or create this evaluation lock.
+    """
+    assert_v2_writable(path, claim=claim)
+    target, root = path.resolve(), config.V2_REPORTS_DIR.resolve()
+    if (not target.is_relative_to(root)
+            or target in (root / "track_record.json", root / "track_record.json.tmp")):
+        yield
+        return
+    lock = config.V2_ARTIFACTS_DIR / "evaluation.lock"
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    with lock.open("a+b") as handle:
+        if os.name == "nt":
+            import msvcrt
+
+            if handle.seek(0, os.SEEK_END) == 0:
+                handle.write(b"\0")
+                handle.flush()
+            handle.seek(0)
+            msvcrt.locking(handle.fileno(), msvcrt.LK_LOCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        try:
+            assert_v2_writable(path, claim=claim)
+            yield
+        finally:
+            if os.name == "nt":
+                handle.seek(0)
+                msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+
+def claim_v2_evaluation(
+    directory: Path, kind: Literal["onset", "duration"], *, snapshot: str,
+    details: dict[str, object] | None = None,
+) -> V2EvaluationClaim:
+    """Create before scoring with O_EXCL; crashes leave a durable started claim."""
+    directory = directory.resolve()
+    assert_v2_writable(directory)
+    path = directory / ("test2_claim.json" if kind == "onset" else "duration_test2_claim.json")
+    outputs = ((directory / "metrics.json", directory / "bootstrap.json",
+                directory / "metrics" / "scores_test2.json") if kind == "onset"
+               else (directory / "duration_scores.json",))
+    value = {**(details or {}), "status": "started", "started_at": datetime.now(UTC).isoformat(),
+             "snapshot": snapshot}
+    contents = (json.dumps(value, indent=2, allow_nan=False) + "\n").encode("utf-8")
+    with v2_report_write(directory):
+        directory.mkdir(parents=True, exist_ok=True)
+        try:
+            with path.open("xb") as handle:
+                handle.write(contents)
+                handle.flush()
+                os.fsync(handle.fileno())
+        except FileExistsError as error:
+            message = f"v2 evaluation already claimed by {path.name}; use --out"
+            raise RuntimeError(message) from error
+    return V2EvaluationClaim(path, contents, outputs)
+
+
+@dataclass(frozen=True)
+class V2EvaluationPaths:
+    """Explicit experiments keep reports, fitted artifacts and predictions separate."""
+
+    reports: Path
+    predictions: Path
+    artifacts: Path
+
+    @property
+    def fragments(self) -> Path:
+        return self.reports / "metrics"
+
+    @property
+    def selection(self) -> Path:
+        return self.reports / "selection.json"
+
+
+def v2_evaluation_paths(out: Path | None = None) -> V2EvaluationPaths:
+    if out is None:
+        return V2EvaluationPaths(config.V2_REPORTS_DIR, config.V2_PREDS_DIR,
+                                 config.V2_ARTIFACTS_DIR)
+    root = out.resolve()
+    if root.is_relative_to(config.V2_REPORTS_DIR.resolve()):
+        raise ValueError("--out must be outside the committed reports/v2 evaluation directory")
+    return V2EvaluationPaths(root, root / "preds", root / "artifacts")
 
 
 def _paired(
@@ -106,6 +257,7 @@ def interval_coverage(y: ArrayLike, q10: ArrayLike, q90: ArrayLike) -> float:
 def merge_reports(
     *, include_test: bool = True, directory: Path | None = None,
     destination: Path | None = None, extra_fragments: list[Path] | None = None,
+    claim: V2EvaluationClaim | None = None,
 ) -> Report:
     """Concatenate Report fragments; only selection.json supplies model selection.
 
@@ -116,6 +268,7 @@ def merge_reports(
     merged = Report(generated_at=datetime.now(UTC))
     directory = config.METRICS_DIR if directory is None else directory
     destination = config.METRICS_PATH if destination is None else destination
+    assert_v2_writable(destination, claim=claim)
     for path in sorted([*directory.glob("*.json"), *(extra_fragments or [])]):
         if not include_test and path.stem in ("scores_test", "scores_test2"):
             continue
@@ -134,13 +287,14 @@ def merge_reports(
     if len(set(onset_keys)) != len(onset_keys) or len(set(duration_keys)) != len(duration_keys):
         raise ValueError("Report fragments contain duplicate score identities")
     validated = Report.model_validate(merged.model_dump())
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    temporary = destination.with_suffix(".json.tmp")
-    temporary.write_text(
-        json.dumps(validated.model_dump(mode="json"), indent=2, allow_nan=False) + "\n",
-        encoding="utf-8",
-    )
-    temporary.replace(destination)
+    with v2_report_write(destination, claim=claim):
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        temporary = destination.with_suffix(".json.tmp")
+        temporary.write_text(
+            json.dumps(validated.model_dump(mode="json"), indent=2, allow_nan=False) + "\n",
+            encoding="utf-8",
+        )
+        temporary.replace(destination)
     return validated
 
 

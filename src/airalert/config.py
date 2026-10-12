@@ -10,6 +10,15 @@ VAL_START = datetime(2026, 6, 1, tzinfo=UTC)
 TEST_START = datetime(2026, 8, 1, tzinfo=UTC)
 TEST_END_OFFSET_H = 12
 KYIV_TZ = "Europe/Kyiv"
+# Online community spells older than this are excluded from forecast inputs,
+# while canonical history and the live display retain them. Exactly 72 h counts.
+PERSISTENT_LOCAL_ALERT_H = 72
+# Archive days must clear both national volume floors and match successful live
+# receipts within the reviewed source timing tolerance. See docs/ingest.md.
+ARCHIVE_MIN_NATIONAL_RECORDS = 100
+ARCHIVE_BASELINE_DAYS = 14
+ARCHIVE_MIN_BASELINE_FRACTION = 0.20
+ARCHIVE_LIVE_TOLERANCE_SECONDS = 120
 # Source outages: [start, end) with no alert events nationwide. v1 had one (2026-08-29T06:00Z to
 # 2026-09-02T14:00Z in the CSV); v2 filled it from the validated alerts.in.ua day archive
 # (docs/ingest.md), so the list is empty. The mask code stays: a future outage is added here.

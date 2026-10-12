@@ -571,12 +571,12 @@ def fit_chronological(
     return final_model, calibration, details
 
 
-def train_v2() -> dict[str, object]:
+def train_v2(*, out: Path | None = None) -> dict[str, object]:
     """Compare candidates on chronological validation; lock selection before test2 reads."""
     from airalert.models import baseline
 
-    if (config.V2_REPORTS_DIR / "test2_claim.json").exists():
-        raise RuntimeError("Final test2 was claimed; v2 selection and evaluation models are frozen")
+    paths = metrics.v2_evaluation_paths(out)
+    metrics.assert_v2_writable(paths.reports)
     began = perf_counter()
     saved = load_snapshot()
     training = pd.read_parquet(config.V2_FEATURES_DIR / "train.parquet")
@@ -598,9 +598,9 @@ def train_v2() -> dict[str, object]:
         candidates += [("M1+geo", "M1", "raionregime", features),
                        ("M1-full+geo", "M1", "full", features)]
     details: dict[str, dict[str, object]] = {}
-    config.V2_PREDS_DIR.mkdir(parents=True, exist_ok=True)
+    paths.predictions.mkdir(parents=True, exist_ok=True)
     for identity, kind, window, names in candidates:
-        artifact = config.V2_ARTIFACTS_DIR / identity
+        artifact = paths.artifacts / identity
         artifact.mkdir(parents=True, exist_ok=True)
         raw_frames = _prediction_frames(outputs)
         calibrated_frames = _prediction_frames(outputs)
@@ -639,25 +639,25 @@ def train_v2() -> dict[str, object]:
             print(f"v2 {identity} H={horizon}: {perf_counter() - began:.1f}s elapsed", flush=True)
         for suffix, frames in (("raw", raw_frames), ("cal", calibrated_frames)):
             pd.concat(frames.values(), ignore_index=True).to_parquet(
-                config.V2_PREDS_DIR / f"onset_{identity}-{suffix}.parquet", index=False)
+                paths.predictions / f"onset_{identity}-{suffix}.parquet", index=False)
         write_v2_json(artifact / "metadata.json", details[identity])
-    return select_v2(details, outputs, elapsed_seconds=perf_counter() - began)
+    return select_v2(details, outputs, elapsed_seconds=perf_counter() - began, out=out)
 
 
 def select_v2(
     details: dict[str, dict[str, object]], outputs: dict[str, pd.DataFrame],
-    *, elapsed_seconds: float,
+    *, elapsed_seconds: float, out: Path | None = None,
 ) -> dict[str, object]:
     """Lock independent served-Brier horizon choices without reading any test2 targets."""
     from airalert.backtest import v2_score_predictions
     from airalert.schemas import Report, Selection
 
-    if (config.V2_REPORTS_DIR / "test2_claim.json").exists():
-        raise RuntimeError("Test2 is frozen; selection cannot change")
+    paths = metrics.v2_evaluation_paths(out)
+    metrics.assert_v2_writable(paths.reports)
     validation = outputs["val"]
     saved = load_snapshot()
     geography_available = any(n.startswith("f_geo_") for n in validation)
-    report, _ = v2_score_predictions("val")
+    report, _ = v2_score_predictions("val", prediction_dir=paths.predictions)
     choices: dict[str, dict[str, object]] = {}
     for horizon in config.HORIZONS:
         scores = [s for s in report.onset if s.horizon == horizon and s.row_set == "served"
@@ -671,31 +671,31 @@ def select_v2(
         selected = rows[["t", "raion_id"]].assign(split=split).copy()
         for horizon in config.HORIZONS:
             candidate = choices[str(horizon)]["candidate"]
-            predicted = pd.read_parquet(config.V2_PREDS_DIR / f"onset_{candidate}.parquet",
+            predicted = pd.read_parquet(paths.predictions / f"onset_{candidate}.parquet",
                                          filters=[("split", "==", split)])
             selected[f"p_{horizon}"] = predicted[f"p_{horizon}"].to_numpy()
-        selected.to_parquet(config.V2_PREDS_DIR / f"selected_{split}.parquet", index=False)
-    pd.concat([pd.read_parquet(config.V2_PREDS_DIR / f"selected_{s}.parquet")
+        selected.to_parquet(paths.predictions / f"selected_{split}.parquet", index=False)
+    pd.concat([pd.read_parquet(paths.predictions / f"selected_{s}.parquet")
                for s in outputs], ignore_index=True).to_parquet(
-                   config.V2_PREDS_DIR / "onset_selected.parquet", index=False)
+                   paths.predictions / "onset_selected.parquet", index=False)
     selection: dict[str, object] = {"generated_at": pd.Timestamp.now(tz="UTC").isoformat(),
                                     "snapshot": saved.snapshot.isoformat(), "horizons": choices,
                                     "rule": "minimum served validation Brier per horizon",
                                     "elapsed_seconds": elapsed_seconds,
                                     "data_gaps": [[a.isoformat(), b.isoformat()]
                                                   for a, b in v2_data_gaps()],
-                                    "prediction_sha256": v2_prediction_hashes(),
+                                    "prediction_sha256": v2_prediction_hashes(paths.predictions),
                                     "geography_available": geography_available}
-    write_v2_json(config.V2_SELECTION_PATH, selection)
+    write_v2_json(paths.selection, selection)
     fragment = Report(generated_at=pd.Timestamp.now(tz="UTC"), selection=Selection(
         onset="selected", duration=("D2" if (config.V2_PRODUCTION_DIR / "duration"
                                               / "current.json").exists() else None),
-        note="Per-horizon choices locked in reports/v2/selection.json before test2 scoring."))
-    write_v2_json(config.V2_METRICS_DIR / "selection.json", fragment.model_dump(mode="json"))
+        note="Per-horizon choices locked in selection.json before test2 scoring."))
+    write_v2_json(paths.fragments / "selection.json", fragment.model_dump(mode="json"))
     source = validation.groupby("f_source_archive", observed=True).agg(
         rows=("t", "size"), starts_24h=("f_starts_24h", "mean"),
         starts_168h=("f_starts_168h", "mean"), active_share=("f_active", "mean"))
-    _, selected_rows = v2_score_predictions("val")
+    _, selected_rows = v2_score_predictions("val", prediction_dir=paths.predictions)
     source_scores: list[dict[str, object]] = []
     for horizon in config.HORIZONS:
         eligible = selected_rows.loc[v2_eligible_mask(selected_rows, horizon, "val")]
@@ -706,7 +706,7 @@ def select_v2(
                                    "bss": metrics.brier_skill_score(group[f"y_{horizon}"],
                                                                      group[f"p_{horizon}"],
                                                                      group[f"b0_{horizon}"])})
-    write_v2_json(config.V2_REPORTS_DIR / "source_shift.json", {
+    write_v2_json(paths.reports / "source_shift.json", {
         "flag": "first archive start for this raion is strictly before t",
         "validation_groups": source.reset_index().to_dict(orient="records"),
         "served_validation_scores": source_scores,
@@ -718,17 +718,17 @@ def select_v2(
     return selection
 
 
-def refresh_v2_validation() -> dict[str, object]:
+def refresh_v2_validation(*, out: Path | None = None) -> dict[str, object]:
     """Refresh calibration/selection after the lead changes the gap policy, before final."""
-    if (config.V2_REPORTS_DIR / "test2_claim.json").exists():
-        raise RuntimeError("Cannot refresh after test2 scoring")
+    paths = metrics.v2_evaluation_paths(out)
+    metrics.assert_v2_writable(paths.reports)
     began = perf_counter()
     validation = pd.read_parquet(config.V2_FEATURES_DIR / "val.parquet")
     outputs: dict[str, pd.DataFrame] = {"val": validation}
     details: dict[str, dict[str, object]] = {}
-    for path in sorted(config.V2_PREDS_DIR.glob("onset_*-raw.parquet")):
+    for path in sorted(paths.predictions.glob("onset_*-raw.parquet")):
         identity = path.stem.removeprefix("onset_").removesuffix("-raw")
-        artifact = config.V2_ARTIFACTS_DIR / identity
+        artifact = paths.artifacts / identity
         # Older CLI bundles named __main__.HorizonModel. In this CLI context the
         # class is available; re-saving invokes its stable importable reducer.
         for bundle in [*artifact.glob("model_*.joblib"),
@@ -755,14 +755,16 @@ def refresh_v2_validation() -> dict[str, object]:
                 if selected.any():
                     calibrated.loc[selected, f"p_{horizon}"] = fitted.predict(
                         raw.loc[selected, f"p_{horizon}"])
-        calibrated.to_parquet(config.V2_PREDS_DIR / f"onset_{identity}-cal.parquet", index=False)
+        calibrated.to_parquet(paths.predictions / f"onset_{identity}-cal.parquet", index=False)
         write_v2_json(artifact / "metadata.json", metadata)
         details[identity] = metadata
-    return select_v2(details, outputs, elapsed_seconds=perf_counter() - began)
+    return select_v2(details, outputs, elapsed_seconds=perf_counter() - began, out=out)
 
 
-def wait_for_backfill() -> None:
+def wait_for_backfill(*, out: Path | None = None) -> None:
     """Watch the saved coverage at five-minute intervals for at most two hours."""
+    paths = metrics.v2_evaluation_paths(out)
+    metrics.assert_v2_writable(paths.reports)
     began = perf_counter()
     target = pd.Timestamp.now(tz=config.KYIV_TZ).normalize().tz_convert("UTC")
     polls: list[dict[str, object]] = []
@@ -776,7 +778,7 @@ def wait_for_backfill() -> None:
             else "waiting"
         polls.append({"checked_at": pd.Timestamp.now(tz="UTC").isoformat(),
                       "snapshot": snapshot.isoformat()})
-        write_v2_json(config.V2_REPORTS_DIR / "backfill_watch.json", {
+        write_v2_json(paths.reports / "backfill_watch.json", {
             "state": state, "target": target.isoformat(), "polls": polls,
             "elapsed_seconds": elapsed, "poll_seconds": config.V2_BACKFILL_POLL_S,
             "maximum_seconds": config.V2_BACKFILL_WAIT_S})
@@ -786,7 +788,8 @@ def wait_for_backfill() -> None:
         sleep(min(config.V2_BACKFILL_POLL_S, config.V2_BACKFILL_WAIT_S - elapsed))
 
 
-if __name__ == "__main__":
+def main(argv: list[str] | None = None) -> None:
+    """Expose the real CLI to isolated tests without invoking main-checkout scoring."""
     import argparse
 
     parser = argparse.ArgumentParser(description="Isolated v2 onset evaluation")
@@ -794,16 +797,24 @@ if __name__ == "__main__":
     parser.add_argument("--score-only", action="store_true")
     parser.add_argument("--refresh-validation", action="store_true")
     parser.add_argument("--watch-backfill", action="store_true")
-    arguments = parser.parse_args()
+    parser.add_argument("--out", nargs="?", type=Path,
+                        const=config.V2_ARTIFACTS_DIR / "experiments",
+                        help="Experiment directory; --out alone uses artifacts/v2/experiments")
+    arguments = parser.parse_args(argv)
     from airalert.backtest import run_v2
     from airalert.features import build_v2
 
+    metrics.assert_v2_writable(metrics.v2_evaluation_paths(arguments.out).reports)
     if arguments.watch_backfill:
-        wait_for_backfill()
+        wait_for_backfill(out=arguments.out)
     elif arguments.refresh_validation:
-        refresh_v2_validation()
+        refresh_v2_validation(out=arguments.out)
     elif not arguments.score_only:
         build_v2()
-        train_v2()
+        train_v2(out=arguments.out)
     if not arguments.watch_backfill:
-        run_v2(final=arguments.final)
+        run_v2(final=arguments.final, out=arguments.out)
+
+
+if __name__ == "__main__":
+    main()

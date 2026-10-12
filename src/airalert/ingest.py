@@ -8,6 +8,7 @@ Live observations have their own clock and never advance historical coverage.
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
 import json
 import shutil
@@ -15,6 +16,7 @@ from collections import Counter
 from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
+from statistics import median
 from tempfile import TemporaryDirectory
 from typing import TypedDict
 from zoneinfo import ZoneInfo
@@ -23,11 +25,16 @@ import numpy as np
 import pandas as pd
 
 from airalert.config import (
+    ARCHIVE_BASELINE_DAYS,
+    ARCHIVE_LIVE_TOLERANCE_SECONDS,
+    ARCHIVE_MIN_BASELINE_FRACTION,
+    ARCHIVE_MIN_NATIONAL_RECORDS,
     CROSSWALK_PATH,
     DATA_DIR,
     DATA_GAPS,
     EPISODES_PATH,
     KYIV_TZ,
+    PERSISTENT_LOCAL_ALERT_H,
     PROCESSED_DIR,
     RAW_DIR,
     RECORDS_PATH,
@@ -37,13 +44,11 @@ from airalert.config import (
 from airalert.data import expand_records, load_raions, load_source, merge_episodes
 from airalert.sources import Event, Severity, aiu_api, aiu_web, mapping, siren, ubilling
 from airalert.sources.locations import Location, Locations
-from airalert.sources.storage import atomic_json, cache_response
+from airalert.sources.storage import atomic_json, cache_response, canonical_publication
 
 # Lead-reviewed round-3 overlap and outage repair, documented in docs/ingest.md.
 # Local bootstrap policy is committed; validation results and ledgers are not.
 REVIEWED_CUTOVER = datetime(2026, 8, 29, 6, tzinfo=UTC)
-# Lead-owned config will take this constant at integration.
-PERSISTENT_LOCAL_ALERT_H = 72
 REVIEWED_VALIDATION_DAYS = tuple(
     date.fromisoformat(value) for value in (
         "2026-08-20", "2026-08-21", "2026-08-22", "2026-08-23",
@@ -270,7 +275,7 @@ def validate_archive(days: list[date], *, root: Path | None = None) -> dict[str,
     first, last = min(days) - timedelta(days=1), max(days) + timedelta(days=1)
     context_days = [first + timedelta(days=i) for i in range((last - first).days + 1)]
     frames = [event_records(aiu_web.decode(
-        aiu_web.fetch_day(day, root / "raw/aiu_web"), dictionary
+        aiu_web.fetch_day(day, root / "raw/aiu_web", dictionary=dictionary), dictionary
     ), locations) for day in context_days]
     frame = pd.concat(frames, ignore_index=True).sort_values("source_updated_at").drop_duplicates(
         ["raion_id", "source", "origin_event_id"], keep="last"
@@ -487,11 +492,6 @@ def _publish(ledger: dict[str, object], root: Path) -> None:
     )
     hazards = incoming.loc[~incoming.hazard_type.eq("air_raid")].copy()
     hazard_path = PROCESSED_DIR / "hazards.parquet"
-    if hazard_path.exists():
-        live_hazards = pd.read_parquet(hazard_path)
-        hazards = pd.concat([
-            hazards, live_hazards.loc[live_hazards.source.isin(["siren", "aiu_api"])],
-        ], ignore_index=True)
     # Daily scalar archive levels are observations, not exact transition times. Live
     # threat createdAt timestamps are kept separately and never become extra starts.
     transitions = pd.DataFrame(columns=[
@@ -500,8 +500,6 @@ def _publish(ledger: dict[str, object], root: Path) -> None:
     for col in ("alert_start", "at", "observed_at"):
         transitions[col] = pd.to_datetime(transitions[col], utc=True).astype("datetime64[us, UTC]")
     transitions_path = PROCESSED_DIR / "severity_transitions.parquet"
-    if transitions_path.exists():
-        transitions = pd.read_parquet(transitions_path)
     metadata = _read_json(SNAPSHOT_PATH)
     end_day = date.fromisoformat(str(ledger["watermark"]))
     _, reconciled_end = aiu_web.day_bounds(end_day)
@@ -523,30 +521,42 @@ def _publish(ledger: dict[str, object], root: Path) -> None:
         stage = Path(directory)
         artifacts = {
             RECORDS_PATH: records, EPISODES_PATH: episodes,
-            PROCESSED_DIR / "hazards.parquet": hazards, transitions_path: transitions,
         }
         for path, frame in artifacts.items():
             frame.to_parquet(stage / path.name, index=False)
-        publications = list(artifacts) + [SNAPSHOT_PATH]
-        for path in publications:
-            if path.exists():
-                shutil.copyfile(path, stage / f"{path.name}.old")
-        replaced: list[Path] = []
-        try:
-            for path in artifacts:
-                (stage / path.name).replace(path)
-                replaced.append(path)
-            atomic_json(SNAPSHOT_PATH, metadata)
-            replaced.append(SNAPSHOT_PATH)
-            atomic_json(root / "ledger.json", ledger)
-        except BaseException:
-            for path in reversed(replaced):
-                backup = stage / f"{path.name}.old"
-                if backup.exists():
-                    backup.replace(path)
-                else:
-                    path.unlink(missing_ok=True)
-            raise
+        # Fits and large history staging stay independent of minute polls. Shared
+        # reads, replacements and rollback must all see one locked generation.
+        with canonical_publication(PROCESSED_DIR):
+            if hazard_path.exists():
+                live_hazards = pd.read_parquet(hazard_path)
+                hazards = pd.concat([
+                    hazards, live_hazards.loc[live_hazards.source.isin(["siren", "aiu_api"])],
+                ], ignore_index=True)
+            if transitions_path.exists():
+                transitions = pd.read_parquet(transitions_path)
+            for path, frame in {hazard_path: hazards, transitions_path: transitions}.items():
+                frame.to_parquet(stage / path.name, index=False)
+                artifacts[path] = frame
+            publications = list(artifacts) + [SNAPSHOT_PATH]
+            for path in publications:
+                if path.exists():
+                    shutil.copyfile(path, stage / f"{path.name}.old")
+            replaced: list[Path] = []
+            try:
+                for path in artifacts:
+                    (stage / path.name).replace(path)
+                    replaced.append(path)
+                atomic_json(SNAPSHOT_PATH, metadata)
+                replaced.append(SNAPSHOT_PATH)
+                atomic_json(root / "ledger.json", ledger)
+            except BaseException:
+                for path in reversed(replaced):
+                    backup = stage / f"{path.name}.old"
+                    if backup.exists():
+                        backup.replace(path)
+                    else:
+                        path.unlink(missing_ok=True)
+                raise
 
 
 def rebuild(*, root: Path | None = None) -> None:
@@ -557,6 +567,84 @@ def rebuild(*, root: Path | None = None) -> None:
     if not ledger.get("days"):
         raise RuntimeError("No reconciled archive partitions to rebuild")
     _publish(ledger, root)
+
+
+class IncompleteArchiveError(ValueError):
+    """A decodable day contradicted recent volume or our own observed alert coverage."""
+
+
+def _national_record_count(events: list[Event], day: date) -> int:
+    start, end = aiu_web.day_bounds(day)
+    return len({event.event_id for event in events if event.hazard == "air_raid"
+                and event.started_at < end
+                and (event.finished_at is None or event.finished_at >= start)})
+
+
+def _archive_completeness(
+    events: list[Event], frame: pd.DataFrame, day: date, ledger: dict[str, object],
+    root: Path, dictionary: list[object],
+) -> dict[str, object]:
+    """Fail before partition publication; count origins, then check receipt-time raion coverage."""
+    count = _national_record_count(events, day)
+    counts: list[int] = []
+    checks = mapping(ledger.get("day_checks", {}))
+    previous = sorted(prior for prior in ledger.get("days", []) if prior < day.isoformat())
+    for prior in previous[-ARCHIVE_BASELINE_DAYS:]:
+        if prior in checks:
+            counts.append(int(mapping(checks[prior])["national_records"]))
+        elif (raw := root / "raw/aiu_web" / f"{prior}.json.gz").exists():
+            payload = json.loads(gzip.decompress(raw.read_bytes()))
+            counts.append(_national_record_count(aiu_web.decode(payload, dictionary),
+                                                 date.fromisoformat(prior)))
+        else:
+            # Legacy ledgers predate counts. Their durable partitions omit the
+            # two excluded permanent origins, a negligible conservative difference.
+            prior_frame = pd.read_parquet(root / "normalized" / f"{prior}.parquet",
+                                          columns=["hazard_type", "origin_event_id"])
+            counts.append(prior_frame.loc[prior_frame.hazard_type.eq("air_raid"),
+                                          "origin_event_id"].nunique())
+    baseline = float(median(counts)) if counts else None
+    minimum = max(ARCHIVE_MIN_NATIONAL_RECORDS,
+                  (baseline or 0) * ARCHIVE_MIN_BASELINE_FRACTION)
+    if count < minimum:
+        raise IncompleteArchiveError(
+            f"Archive completeness: {day} has {count} national records; needs >= {minimum:g}"
+        )
+    start, end = aiu_web.day_bounds(day)
+    # Filename clocks are attempts, not receipts. Filter by observed_at, including
+    # adjacent UTC dates for Kyiv-day boundaries and network delays around midnight.
+    files = sorted(path for path in (root / "observations").glob("*.parquet")
+                   if start.date().strftime("%Y%m%d") <= path.name[:8]
+                   <= end.date().strftime("%Y%m%d"))
+    observations = [pd.read_parquet(path, filters=[
+        ("observed_at", ">=", start), ("observed_at", "<", end),
+        ("hazard_type", "==", "air_raid"),
+    ], columns=["raion_id", "observed_at"]) for path in files]
+    missing = 0
+    observed_count = 0
+    if observations:
+        observed = pd.concat(observations, ignore_index=True).dropna().drop_duplicates()
+        tolerance = ARCHIVE_LIVE_TOLERANCE_SECONDS * 1_000_000
+        air = frame.loc[frame.hazard_type.eq("air_raid")].sort_values("started_at")
+        for rid, receipts in observed.groupby("raion_id", sort=False):
+            intervals = air.loc[air.raion_id.eq(rid)]
+            times = pd.to_datetime(receipts.observed_at, utc=True).astype(
+                "datetime64[us, UTC]").array.asi8
+            observed_count += len(times)
+            if intervals.empty:
+                missing += len(times)
+                continue
+            starts = intervals.started_at.array.asi8
+            ends = np.maximum.accumulate(intervals.finished_at.fillna(pd.Timestamp(end)).array.asi8)
+            positions = np.searchsorted(starts, times + tolerance, side="right") - 1
+            covered = (positions >= 0) & (ends[np.maximum(positions, 0)] >= times - tolerance)
+            missing += int((~covered).sum())
+    if missing:
+        raise IncompleteArchiveError(
+            f"Archive completeness: {day} lacks {missing} of {observed_count} live raion receipts"
+        )
+    return {"national_records": count, "baseline_median": baseline, "baseline_days": len(counts),
+            "minimum_records": minimum, "live_receipts": observed_count}
 
 
 def reconcile_days(
@@ -577,8 +665,14 @@ def reconcile_days(
             raise ValueError("Reconcile missing days in order; do not skip coverage")
         previous = dict(ledger)
         try:
-            events = aiu_web.decode(aiu_web.fetch_day(day, root / "raw/aiu_web"), dictionary)
+            refresh = any(gap["day"] == day.isoformat()
+                          and gap.get("error_type") == "IncompleteArchiveError"
+                          for gap in ledger.get("gaps", []))
+            events = aiu_web.decode(aiu_web.fetch_day(
+                day, root / "raw/aiu_web", dictionary=dictionary, refresh=refresh,
+            ), dictionary)
             frame = event_records(events, locations)
+            check = _archive_completeness(events, frame, day, ledger, root, dictionary)
             partition = root / "normalized" / f"{day.isoformat()}.parquet"
             partition.parent.mkdir(parents=True, exist_ok=True)
             staging = partition.with_suffix(".part")
@@ -586,6 +680,7 @@ def reconcile_days(
             staging.replace(partition)
             reconciled = sorted(set(list(ledger.get("days", [])) + [day.isoformat()]))
             ledger["days"] = reconciled
+            ledger["day_checks"] = {**mapping(ledger.get("day_checks", {})), day.isoformat(): check}
             first = pd.Timestamp(str(ledger["cutover"])).tz_convert(KYIV_TZ).date()
             watermark = first - timedelta(days=1)
             while (watermark + timedelta(days=1)).isoformat() in reconciled:
@@ -601,6 +696,8 @@ def reconcile_days(
             start, end = aiu_web.day_bounds(day)
             gaps.append({"day": day.isoformat(), "start": _iso(start), "end": _iso(end),
                          "error_type": type(error).__name__})
+            if isinstance(error, IncompleteArchiveError):
+                gaps[-1]["reason"] = str(error)
             ledger["gaps"] = gaps
             atomic_json(root / "ledger.json", ledger)
             raise
@@ -723,30 +820,30 @@ an exact-onset source resolves it; these rows must not become onset labels.
     ])
     for column in ("alert_start", "at", "observed_at"):
         frame[column] = pd.to_datetime(frame[column], utc=True).astype("datetime64[us, UTC]")
-    if path.exists():
-        frame = pd.concat([pd.read_parquet(path), frame], ignore_index=True)
-    frame = frame.drop_duplicates(
-        ["raion_id", "source", "origin_uid", "at", "severity"], keep="first"
-    )
-    path.parent.mkdir(parents=True, exist_ok=True)
-    staging = path.with_suffix(".part")
-    frame.to_parquet(staging, index=False)
-    staging.replace(path)
+    with canonical_publication(PROCESSED_DIR):
+        if path.exists():
+            frame = pd.concat([pd.read_parquet(path), frame], ignore_index=True)
+        frame = frame.drop_duplicates(
+            ["raion_id", "source", "origin_uid", "at", "severity"], keep="first"
+        )
+        staging = path.with_suffix(".part")
+        frame.to_parquet(staging, index=False)
+        staging.replace(path)
 
 
 def _save_hazards(observed: pd.DataFrame) -> None:
     """Keep non-air hazards outside records; publish an empty typed table when absent."""
     path = PROCESSED_DIR / "hazards.parquet"
     hazards = observed.loc[~observed.hazard_type.eq("air_raid")].copy()
-    if path.exists():
-        hazards = pd.concat([pd.read_parquet(path), hazards], ignore_index=True)
-    hazards = hazards.sort_values("source_updated_at").drop_duplicates(
-        ["raion_id", "source", "origin_uid", "hazard_type", "started_at"], keep="last"
-    )
-    path.parent.mkdir(parents=True, exist_ok=True)
-    staging = path.with_suffix(".part")
-    hazards.to_parquet(staging, index=False)
-    staging.replace(path)
+    with canonical_publication(PROCESSED_DIR):
+        if path.exists():
+            hazards = pd.concat([pd.read_parquet(path), hazards], ignore_index=True)
+        hazards = hazards.sort_values("source_updated_at").drop_duplicates(
+            ["raion_id", "source", "origin_uid", "hazard_type", "started_at"], keep="last"
+        )
+        staging = path.with_suffix(".part")
+        hazards.to_parquet(staging, index=False)
+        staging.replace(path)
 
 
 def live_state(now: datetime, *, root: Path | None = None) -> dict[str, object]:
@@ -756,6 +853,7 @@ def live_state(now: datetime, *, root: Path | None = None) -> dict[str, object]:
     root = root or _live_dir()
     path = root / "state.json"
     previous = _read_json(path)
+    polled_source = "siren"
     try:
         locations = _locations(root)
         payload, raw = siren.fetch_alerts()
@@ -767,14 +865,12 @@ def live_state(now: datetime, *, root: Path | None = None) -> dict[str, object]:
         secondary = "disabled"
         token = aiu_api.token_from_env(REPO_ROOT / ".env")
         if token:
-            try:
-                api_payload, api_raw = aiu_api.fetch_alerts(token)
-                events += aiu_api.decode(api_payload)
-                cache_response(root / "raw/aiu_api" / f"{now.strftime('%Y%m%dT%H%M%S%fZ')}.json.gz",
-                               api_raw)
-                secondary = "observed"
-            except Exception:
-                secondary = "failed"
+            polled_source = "aiu_api"
+            api_payload, api_raw = aiu_api.fetch_alerts(token)
+            events += aiu_api.decode(api_payload)
+            cache_response(root / "raw/aiu_api" / f"{now.strftime('%Y%m%dT%H%M%S%fZ')}.json.gz",
+                           api_raw)
+            secondary = "observed"
         received_at = max(now.astimezone(UTC), datetime.now(UTC))
         polygons = polygon_state(
             events, locations, pd.read_csv(CROSSWALK_PATH, dtype=str), received_at
@@ -783,26 +879,27 @@ def live_state(now: datetime, *, root: Path | None = None) -> dict[str, object]:
             if polygon["oblast_id"] == "sevastopol-city":
                 polygon.update({"coverage": "unknown", "red": None, "yellow": None})
         sevastopol_status = "unknown"
-        try:
-            fallback_payload, fallback_raw = ubilling.fetch_alerts()
-            since = ubilling.sevastopol_since(fallback_payload)
-            cache_response(root / "raw/ubilling" / f"{now.strftime('%Y%m%dT%H%M%S%fZ')}.json.gz",
-                           fallback_raw)
-            if since is not None:
-                sevastopol_status = "reported_permanent_alert"
-                for polygon in polygons:
-                    if polygon["oblast_id"] == "sevastopol-city":
-                        polygon.update({"coverage": "inherited",
-                                        "red": {"active": True, "since": _iso(since)},
-                                        "yellow": None})
-        except Exception:
-            sevastopol_status = "failed"
+        # A missing secondary response cannot prove absence. Treat the complete
+        # display snapshot as failed so API consumers get preserved layers + stale.
+        polled_source = "ubilling"
+        fallback_payload, fallback_raw = ubilling.fetch_alerts()
+        since = ubilling.sevastopol_since(fallback_payload)
+        cache_response(root / "raw/ubilling" / f"{now.strftime('%Y%m%dT%H%M%S%fZ')}.json.gz",
+                       fallback_raw)
+        if since is not None:
+            sevastopol_status = "reported_permanent_alert"
+            for polygon in polygons:
+                if polygon["oblast_id"] == "sevastopol-city":
+                    polygon.update({"coverage": "inherited",
+                                    "red": {"active": True, "since": _iso(since)},
+                                    "yellow": None})
         state: dict[str, object] = {
             "fetched_at": _iso(received_at), "attempted_at": _iso(now), "stale": False,
             "sources": {"siren": "observed", "aiu_api": secondary,
                         "ubilling": sevastopol_status}, "polygons": polygons,
         }
         # Keep origin observations for an availability-aware online feature consumer.
+        polled_source = "publication"
         observed = event_records(events, locations)
         observed["observed_at"] = pd.Timestamp(received_at).as_unit("us")
         observations = root / "observations" / f"{now.strftime('%Y%m%dT%H%M%S%fZ')}.parquet"
@@ -828,6 +925,7 @@ def live_state(now: datetime, *, root: Path | None = None) -> dict[str, object]:
             } for row in pd.read_csv(CROSSWALK_PATH, dtype=str).fillna("").itertuples(index=False)]
             state = {"fetched_at": None, "polygons": polygons}
         state.update({"attempted_at": _iso(now), "stale": True, "error_type": type(error).__name__})
+        state["sources"] = {**mapping(state.get("sources", {})), polled_source: "failed"}
     atomic_json(path, state)
     return state
 

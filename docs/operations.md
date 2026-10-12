@@ -60,6 +60,9 @@ carry their actual later issuance clock and cannot count as timely predictions.
 Midnight is constructed with the IANA `Europe/Kyiv` timezone, including 23-hour
 and 25-hour DST days. Model publication and replay reloads are serialized.
 Live polling has its own lock and continues during long fits.
+Shared hazards and severity-transition read/merge/replace operations use the
+same short canonical publication lock as nightly replacement and rollback.
+An OS file lock also serializes participating standalone CLI writers.
 
 To run maintenance immediately, send `POST /api/system/reconcile` from a local
 same-origin client. HTTP 202 means the run was queued; `queued=false` means one
@@ -82,7 +85,7 @@ turn news off.
 | `data/processed/preds/v2/onset_selected.parquet` | Frozen selected validation/test2 predictions. |
 | `data/processed/preds/v2/issued/` | Immutable hourly production predictions, issuance time, model generation and the B0 reference captured at issuance. |
 | `data/processed/forecasts.parquet` | Atomically published API replay cache. Contains exactly `ForecastRow` fields plus `t`; served choices and input signature are Parquet metadata. |
-| `data/live/raw/` | Cached source responses. |
+| `data/live/raw/` | Cached source responses; archive cache hits must pass semantic decoding. |
 | `data/live/state.json` | Last complete live display state. |
 | `data/live/observations/` | Successful live snapshots with receipt clocks for model availability. |
 | `data/live/ledger.json` | Last reconciled Kyiv day, accepted partitions and unresolved coverage gaps. |
@@ -121,13 +124,32 @@ days reconcile in order; the watermark advances only after successful
 publication. A failed archive day remains a gap and blocks advancing past it.
 The subsequent feature/model/cache pipeline runs in the background.
 
+Before publication, each archive day must contain at least 100 unique national
+air-raid records and 20% of the preceding 14 reconciled days' median. Successful
+live receipt-time coverage must also appear in that day's archive, within the
+reviewed 120-second timing tolerance. Empty/truncated days produce an explicit
+ledger gap visible in `/api/system.coverage_gaps`, keep their records unpublished,
+and force a fresh archive fetch on the next catch-up. See
+[ingest.md](ingest.md#archive-completeness-and-publication-y1) for thresholds,
+bootstrap behavior and limits. A quiet national day is essentially impossible
+in this history; its recent daily starts number in the hundreds.
+
+Archive HTTP/JSON/schema failures are not admitted to the raw cache. Existing
+invalid cache entries are bypassed automatically, so normal catch-up retries
+after an upstream repair without manual deletion.
+
 A current ledger and completed pipeline reuse fitted artifacts. Startup obtains
 the current forecast without repeating a finished refit. An interrupted or
 failed downstream pipeline is retried, even when ingestion already advanced
 the watermark. Complete model pointers and atomic caches keep readers away
-from partial generations. A failed live poll keeps the previous alerts and
-marks them stale; it never clears them. Three minutes without a fresh
-successful poll also makes the display stale.
+from partial generations. A failure in siren, enabled `aiu_api`, or the ubilling
+Sevastopol fallback keeps the entire last complete display snapshot and its
+successful fetch clock, and marks the top-level API state stale. This retains
+Sevastopol's inherited alert and distinct optional-source contributions. Failed
+attempts never publish absence receipts; source-confirmed complete polls can
+clear alerts and stale again. This conservative choice uses the existing schema
+without per-unit staleness. Three minutes without a fresh successful poll also
+makes the display stale.
 
 The repaired August outage is accepted by archive validation. Current coverage
 gaps are empty. Archive imperfections, ended-only CSV history and missed events
@@ -447,8 +469,9 @@ No required verification remains failing.
 
 ### Contract change requests
 
-Move `PERSISTENT_LOCAL_ALERT_H` from `ingest.py` to lead-owned `config.py` during
-integration. No API schema or frontend source change is required. The new
+Resolved during final integration. `PERSISTENT_LOCAL_ALERT_H` now lives in
+`config.py`; ingest imports the unchanged 72-hour threshold. No API schema or
+frontend source change is required. The new
 receipt sidecars resolve the former empty-poll receipt-manifest handoff request.
 
 ### Dependencies added
