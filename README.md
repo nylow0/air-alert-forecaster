@@ -1,16 +1,18 @@
 # Air Alert Forecaster
 
-Hourly probabilities that an air raid alert starts within 1, 3 or 12 hours in each Ukrainian raion, plus P10/P50/P90 alert duration at onset. A Python pipeline computes forecasts in advance; a black Svelte dashboard replays the test period and shows the latest dataset snapshot.
+A local research dashboard for Ukrainian air raid alerts. It shows separate live red and yellow maps, hourly probabilities of a new alert within 1, 3 or 12 hours, and estimated remaining time for active alerts. The server updates its data and production models nightly. An optional news agent reads public Telegram previews and adds experimental probability adjustments.
 
-Hourly onset features use raw records, dropping starts `>= t` and masking ends `> t`; merged episodes supply targets. Duration is predicted at episode onset `s` and may include records with `started_at <= s`, with later ends masked, as specified in [AGENTS.md](AGENTS.md#hard-rule-the-as-of-contract). The [report](docs/report.md#the-as-of-rule) explains the merge-gap trap and the source's publication limitation. Validation calibration has a separate chronology caveat described below.
+Live display covers 139 map polygons; forecasts cover the fixed 119-unit universe. Crimea, Luhansk and Sevastopol can show inherited live status but have no forecast. Chornobyl has limited inherited coverage. See the [v2 overview](docs/overview-v2.md), [ingest evidence](docs/ingest.md) and [operations guide](docs/operations.md).
 
-## From a fresh clone
+**Research demo only. Do not use these forecasts or map colours for safety decisions. Follow official alert channels and instructions, including [UkraineAlarm](https://www.ukrainealarm.com/). Yellow is an active alert. A low forecast probability is not an all-clear.**
 
-Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and [bun](https://bun.sh/docs/installation), with both on PATH. uv manages Python 3.12 and the locked Python dependencies. Windows/PowerShell works; run the commands below one line at a time from the clone's root. Internet access is needed for dependencies, the alert CSV, and uncached boundaries.
+## Quickstart from a fresh clone
 
-This rebuild replaces generated data and reports. The committed selection at `reports/metrics/selection.json` freezes M1/D1 for the reported run. The training commands compare windows within each model family; they do not rewrite that selection.
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and [Bun](https://bun.sh/docs/installation). uv manages Python 3.12 and the locked Python dependencies. Run each command from the repository root unless a block says otherwise. Downloads require internet access.
 
-In terminal 1:
+### Build the data once
+
+The dates below reproduce the accepted source overlap and cutover in [the ingest report](docs/ingest.md). The archive gate must pass for the downloaded CSV before backfill can publish data. If the CSV changes, review and revalidate the overlap rather than treating old agreement as current.
 
 ```powershell
 uv sync
@@ -18,27 +20,46 @@ uv run airalert fetch
 uv run airalert episodes
 bunx mapshaper@0.7.83 -v
 uv run airalert geo
+uv run python -m airalert.ingest validate --days 2026-08-20 2026-08-21 2026-08-22 2026-08-23 2026-08-24 2026-08-25 2026-08-26 2026-08-27 2026-09-03 2026-09-04 2026-09-05 2026-09-06
+uv run python -m airalert.ingest backfill --cutover 2026-08-29T06:00:00+00:00
+uv run airalert backfill
 uv run airalert features
-uv run airalert train --model B0
-uv run airalert train --model D0
-uv run airalert train --model D1
-uv run airalert train --model B1
-uv run airalert train --model M1
-uv run airalert backtest
 ```
 
-The last command scores validation only. Review validation and freeze the model selection before the final evaluation. For the reported CSV, retain the committed M1/D1 selection. A different CSV requires a new validation decision.
+The `bunx` call caches the pinned mapshaper used by `geo`. The ingest module exposes validation and initial cutover selection; the main `airalert backfill` command exposes neither option. The module call initializes the ledger and reconciles through yesterday. The following `airalert backfill` resumes that ledger and is also the manual catch-up command.
 
-**Score test once, after selection is frozen.** The reported test set has already been scored once. The following command is the final-evaluation step for a fresh rebuild; do not rerun it to tune models or refresh the existing frozen results.
+The adopted cutover repairs the old CSV outage. With an empty ledger and no configured gaps, plain `airalert backfill` instead starts on the CSV's last day. Set the reviewed cutover on initialization. Existing ledgers retain their cutover.
+
+`airalert features` builds the main feature tables. V2 evaluation builds its separate tables through `airalert.features.build_v2()`, called by the onset module below. Committed `data/geo/static_features.csv` supplies static geography; rebuilding it uses `uv run python -m airalert.geo_features`. See [geography provenance](docs/geo-features.md).
+
+### Prepare models and serving artifacts
+
+**Fresh-clone release blocker:** the current checkout includes `reports/v2/test2_claim.json`, which makes `train_v2()` reject retraining. Evaluation models, predictions and serving Parquet are git-ignored. Production refit needs those evaluation models, and API startup needs serving Parquet. A plain clone therefore cannot finish model setup with the existing entrypoints. It needs a release artifact bundle or a bootstrap command that preserves the frozen evaluation. Neither is supplied here. See [operations](docs/operations.md).
+
+These are the implemented v2 evaluation entrypoints, documented in [onset](docs/report-v2.md#verified) and [duration](docs/duration-v2.md#verified). They rebuild evaluation artifacts and write validation results; they are not a workaround for the frozen claim:
 
 ```powershell
-uv run airalert backtest --final
-uv run python scripts/report_tables.py
-uv run airalert precompute
-uv run airalert serve --port 8000
+uv run python -m airalert.models.onset
+uv run python -m airalert.models.duration
 ```
 
-Leave the backend running at `http://127.0.0.1:8000`. In terminal 2, starting from the clone's root:
+There is no `airalert train --v2` or `airalert train --model D2`. The main `train` command is the older pipeline. Do not remove test2 markers or rescore the published evaluation to start the app.
+
+On a prepared checkout with the evaluation artifacts and predictions present, initialize the production duration model, refit the locked onset choices, issue a current-hour forecast, and build serving Parquet:
+
+```powershell
+uv run python -m airalert.models.duration --production
+uv run python -m airalert.production refit
+uv run python -m airalert.production forecast
+uv run airalert precompute
+uv run airalert serve
+```
+
+Production refit keeps the chosen model settings and uses eligible matured outcomes. It does not reopen test2 selection. `precompute` uses v2 predictions when present. The API binds to `http://127.0.0.1:8000`; `serve --port 8000` is also supported. Keep one server process running.
+
+### Start the dashboard
+
+In a second terminal, from the repository root:
 
 ```powershell
 cd web
@@ -46,103 +67,68 @@ bun install
 bun run dev
 ```
 
-Open the Local URL printed by Vite, normally `http://localhost:5173`. Vite proxies `/api` to the backend. Stop either server with Ctrl+C.
+Open the Local URL printed by Vite, normally `http://localhost:5173`. Vite proxies `/api` to the backend. Stop the servers with Ctrl+C.
 
-After final evaluation, a validation-only `backtest` omits test scores from the merged report. Reading `reports/metrics.json` or running `scripts/report_tables.py` prints existing results without scoring again.
+For a dashboard preview without data or models, run `bun run dev:mock` from `web/` after installing dependencies. It uses synthetic fixtures and labels them as mock data. The [frontend implementation report](web/IMPLEMENTATION.md) records browser checks.
 
-Recorded stage times on the build machine are approximate, not hardware guarantees:
+## What the server does automatically
 
-| Stage | Recorded time | Evidence |
-|---|---:|---|
-| Episodes | 3.18 s | [Data notes](docs/eda.md) |
-| Features | 10.02 s | [Feature notes](docs/features.md) |
-| B0 | 9.18 s | [B2 handoff](reports/B2-handoff.md) |
-| D0 / D1 | 2.61 s / 23.03 s | [Duration notes](docs/duration.md) |
-| B1 / M1 | 22.41 s / 250.61 s | [Onset notes](docs/onset.md) |
-| Precompute | 1.51 s | [Onset integration evidence](docs/onset.md) |
+Once initialized, `uv run airalert serve` owns the background jobs:
 
-Install, fetch, geography, and backtest times were not recorded in those handoffs. Network and cache state affect installation and downloads. Cache mapshaper before `geo`, which runs the pinned tool with `bunx --no-install`.
+- About every 60 seconds, poll live status and cache the raw response. A failed poll preserves the last state and marks it stale; it never clears alerts.
+- Every UTC hour on the hour, publish a forecast for now from inputs observed before that hour. The first stored forecast for an hour is immutable.
+- At 00:00 Europe/Kyiv, reconcile missing complete Kyiv days through yesterday, rebuild records, episodes and features, refit production duration and onset models, refresh serving data, and score matured stored forecasts, including yesterday's eligible forecasts.
+- On startup, run the same catch-up when the ledger watermark is behind yesterday. Failed reconciliation stops at the failed day and resumes there later.
 
-## Reproducibility
+The midnight scheduler handles Kyiv daylight-saving changes. Long jobs and upstream failures can delay polling or publication. Read live freshness and pipeline status in the UI; current live maps stay current even while viewing historical replay. Implementation is in [scheduler.py](src/airalert/scheduler.py); [operations](docs/operations.md) covers running it.
 
-`fetch` downloads the live GitHub `official_data_en.csv`, saves a UTC-dated copy under `data/raw/`, and records a `.csv.sha256` checksum. It reuses and verifies an existing copy for the same download date. The reported results use this SHA-256, recorded in [AGENTS.md](AGENTS.md) and `data/processed/snapshot.json`:
+## Optional features
 
-```text
-b396f87696243069eec0219880e87dcd642b20beb0a7bae0d0e1f61e1ed20ec4
-```
+### News agent
 
-The saved copy is named `official_data_en_2026-10-12.csv`, but its observation snapshot is **2026-09-07T05:00:00Z**. A different download can produce different dates, units, predictions, and scores. Keep the dated CSV and checksum for exact reproduction; raw data and fitted artifacts are git-ignored. `episodes` reads the newest dated CSV in `data/raw/`; the CLI has no historical-download flag.
+News is off by default. Install the [Codex CLI](https://learn.chatgpt.com/docs/codex/cli), make `codex` available on PATH to the backend, and use **Login with ChatGPT** in Settings. Run the backend under the same OS account as that CLI login. Codex owns the browser flow, credential storage and refresh; the app never reads the credential cache. [Official authentication documentation](https://learn.chatgpt.com/docs/auth) explains the login.
 
-The snapshot and regime date come from `snapshot.json`, not today's clock. The scoring policy excludes the source outage and a 168-hour onset-feature recovery. Frozen metrics and selection are committed under `reports/`. See the [full report](docs/report.md) for their provenance and limitations.
+Enable news deliberately in Settings after checking the source terms. Both selected models and reasoning efforts must be available to the signed-in account. Calls share that account's usage allowance. An unavailable model, quota limit or invalid output leaves the base forecast available.
 
-Only the all-validation M1 calibrators used for test/latest are saved; validation-fold calibrators are not. The [independent audit](docs/audit.md#findings) reproduced validation predictions exactly by refitting the folds from saved-model raw outputs and validation labels.
+The agent archives observed message versions locally, validates quoted evidence, and applies bounded upward adjustments only to an eligible current-hour base. Telegram never supplies alert labels. The overlay has no measured predictive benefit, and the CLI's reactive tool guard is not proof of a strict no-tools sandbox. See [news behavior and limits](docs/news.md), [harness research](docs/research/news-harness.md) and [privacy](docs/privacy.md).
+
+### alerts.in.ua token
+
+The default live source, siren.pp.ua, needs no token. The supported alerts.in.ua API is optional. Request a project token through the [official form](https://alerts.in.ua/api-request), copy [.env.example](.env.example) to a local `.env`, and set `ALERTS_IN_UA_TOKEN` there or in the backend process environment. The token stays server-side and must never reach git, logs or browser code. A token does not establish permission or unlimited retention for the private web archive. See [source research](docs/research/live-sources.md).
 
 ## Results
 
-These headlines come from [the frozen metrics](reports/metrics.json):
+These are the locked combined forecast's **served test2** scores against monotone-projected B0 on identical rows, after enforcing `p_1 <= p_3 <= p_12`. Values come from [v2 metrics](reports/v2/metrics.json), with intervals from [bootstrap.json](reports/v2/bootstrap.json).
 
-- Selected M1, 3-hour test BSS versus B0: **13.843%**.
-- Its 3-hour test Brier score: **0.142332**.
-- M1-full, which was not selected, has 3-hour test BSS **14.059%**.
-- D1's test P10-P90 duration interval covers **75.98%**, below its nominal 80%.
+| Horizon | Brier skill versus B0 | 90% interval |
+|---|---:|---|
+| 1 h | 15.92% | 14.30% to 17.36% |
+| 3 h | 21.31% | 18.83% to 23.56% |
+| 12 h | 28.52% | 24.98% to 32.01% |
 
-The selected M1 loses slightly to B0 at 12 hours on validation. Full-history M1 wins test Brier at every horizon, but switching after seeing test would be test-set tuning. All models, including losses, appear in the [results tables](docs/report.md#results).
+Test2 runs from September 8 through October 11, 2026, with 95,438 rows per horizon. The intervals resample 34 whole Kyiv calendar-day blocks in 2,000 paired draws. Correlated raion-hours are not independent samples. Selection used validation before test2 opened; test2 was scored once. [Protocol and uncertainty](docs/report-v2.md) give the exact boundaries and limits.
 
-M1's validation calibration uses July outcomes for June probabilities and June outcomes for July probabilities. Validation scores are model-comparison diagnostics, not chronological as-of forecasts. Test calibration uses all validation before test, so the headline test results remain chronologically valid under record-time reconstruction. The protocol stayed frozen after the audit to avoid re-opening selection after seeing test outcomes.
+Duration improved but remains under its nominal 80% coverage. D1c onset coverage is 77.26% on test2; D2 remaining-time coverage at eight elapsed hours is 70.23%. These values come from [duration_scores.json](reports/v2/duration_scores.json); [duration notes](docs/duration-v2.md) explain the comparison.
 
-The headlines score per-horizon outputs before serving orders the probabilities. The [report's results](docs/report.md#results) give the audit's served-score comparison, and its [independent audit section](docs/report.md#independent-audit) summarizes rebuild and browser evidence.
+V1 is a frozen earlier evaluation in [docs/report.md](docs/report.md) and [reports/metrics.json](reports/metrics.json). Its numbers are unchanged. Different periods, sources and targets prevent attributing the v2 gain to a single change. The production refit and news overlay need prospective evaluation; the published [rolling track record](reports/v2/track_record.json) currently has no matured eligible scores.
 
-## Tests and UI development
+## Sources, licenses and terms
 
-After preparing the data, run from the repository root:
-
-```powershell
-uv run pytest
-uv run ruff check
-```
-
-From `web/`, install Chromium once, then run the default mock e2e suite:
-
-```powershell
-bunx playwright install chromium
-bunx playwright test
-```
-
-For the same workflows against real data, leave `uv run airalert serve --port 8000` running in another terminal. In PowerShell, from `web/`:
-
-```powershell
-$env:E2E_TARGET = 'live'
-bunx playwright test
-$env:E2E_TARGET = 'mock'
-```
-
-Playwright starts its own Vite server on port 5187; leave that port free. Desktop and mobile projects check rendered interactions and API values. See [e2e instructions](web/tests/README.md) for prerequisites and artifacts. The [independent audit](docs/audit.md#browser-verification) records fresh-clone live and mock results; A3's subsequent UI follow-up is noted in the [report](docs/report.md#independent-audit).
-
-For UI work without a backend, from `web/`:
-
-```powershell
-bun run dev:mock
-```
-
-Mock forecasts and history are synthetic. Return to real data with `bun run dev` and `VITE_MOCK_API` unset or `0`. `bun run check` and `bun run build` provide frontend type and production-build checks.
-
-## Layout
-
-| Path | Purpose |
+| Source | Use and terms |
 |---|---|
-| `src/airalert/` | CLI, ingestion, as-of features, models, scoring, precompute, FastAPI |
-| `tests/` | Focused Python checks for leakage, boundaries, models, and API contracts |
-| `web/` | Svelte dashboard, mock API, and Playwright workflows |
-| `data/raw/`, `data/processed/`, `artifacts/` | Downloaded inputs, generated Parquet, and fitted models; git-ignored |
-| `data/geo/` | Committed map, adjacency, centroids, and crosswalk |
-| `reports/`, `scripts/report_tables.py` | Frozen scores, figures, selection, and Markdown table generator |
-| `docs/` | [Report](docs/report.md), [plan](docs/plan.md), and implementation evidence |
+| [Vadimkin CSV](https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset) | Historical official-series alerts before the accepted cutover. The repository declares [MIT](https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset/blob/main/LICENSE); preserve its license and copyright notice when redistributing covered material. |
+| [siren.pp.ua / uasiren](https://github.com/PaulAnnekov/uasiren), [UkraineAlarm](https://api.ukrainealarm.com/) | Current red/yellow air-raid levels. siren is an unofficial mirror with shared upstream inputs. The [source study](docs/research/live-sources.md) verified no general data/ML license or availability guarantee. |
+| [alerts.in.ua](https://devs.alerts.in.ua/) | Optional supported token API; historical reconciliation uses its web day archive. The archive is a private upstream schema and may change or break. Requests are cached, use a descriptive User-Agent and start at least two seconds apart. Archive acceptance and remaining discrepancies are in [ingest notes](docs/ingest.md). Public access is not a broad reuse license. |
+| [Ubilling](https://wiki.ubilling.net.ua/doku.php?id=aerialalertsapi) | Secondary, display-only permanent-alert evidence for Sevastopol. It is inherited status, not direct red/yellow observation or a forecast label. See [ingest handling](docs/ingest.md#actual-live-handling). |
+| [geoBoundaries humanitarian UKR ADM2](https://www.geoboundaries.org/api/current/gbHumanitarian/UKR/ADM2/), [OCHA / Kartographia](https://data.humdata.org/dataset/cod-ab-ukr) | Raion boundaries under CC BY 3.0 IGO, matched and simplified for display. Preserve attribution and identify modifications. [Geography notes](docs/geo.md) record provenance. |
+| [Natural Earth](https://www.naturalearthdata.com/about/terms-of-use/) | Public-domain border and coastline data for static geography. [M2c's report](docs/geo-features.md) pins the sources and explains the omitted front line. |
+| [Telegram public previews](https://telegram.org/tos/content-licensing) | Opt-in news only. Telegram's terms restrict AI use, including deployment, and describe explicit source-user consent for exceptions. The owner chose to pursue this feature; that choice does not establish the required consent or a reuse license. [News terms](docs/news.md#telegram-terms) record the unresolved basis. |
 
-## Sources and attribution
+Source-level evidence and availability matter. Historical event timestamps do not prove publication before a forecast. Live inputs retain an observation clock; CSV severity is unknown, and historical archive colour coverage is incomplete. Forecasts target air-raid episode starts; other hazards stay separate.
 
-Alert records are the official series in [Vadimkin/ukrainian-air-raid-sirens-dataset](https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset), maintained by Vadym Klymenko. The upstream repository declares the [MIT license](https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset/blob/main/LICENSE). Preserve its copyright and license notice when redistributing covered material. The volunteer series is not used for targets.
+## Development and publishing
 
-Boundaries come from [geoBoundaries gbHumanitarian UKR ADM2](https://www.geoboundaries.org/api/current/gbHumanitarian/UKR/ADM2/) and [OCHA COD-AB / Kartographia](https://data.humdata.org/dataset/cod-ab-ukr), under **CC BY 3.0 IGO**. This project matches dataset names and simplifies the boundaries for display; [geography notes](docs/geo.md) record downloads, hashes, and changes.
+Focused checks are `uv run pytest` and `uv run ruff check` from the root, plus `bun run check`, `bun run build` and `bun run e2e` from `web/`. Install the browser once with `bunx playwright install chromium`; see [e2e instructions](web/tests/README.md) for real and mock workflows.
 
-Stage 2 text signals were not integrated. The [source study](docs/research/text-sources.md) found early-warning examples, but [Telegram's content-licensing terms](https://telegram.org/tos/content-licensing) prohibit platform-data use for ML without the relevant explicit consent. No text features or text-model scores are included.
+Before publishing, follow [the privacy checklist](docs/privacy.md#pre-publish-checklist) and install the staged-content guard. Downloaded data, models, local settings and credentials stay out of git. The [v1 audit](docs/audit.md) is historical evidence; v2 evidence is in [onset](docs/report-v2.md), [duration](docs/duration-v2.md) and [frontend](web/IMPLEMENTATION.md) reports.
 

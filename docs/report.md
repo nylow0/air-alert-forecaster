@@ -1,5 +1,7 @@
 # Air Alert Forecaster report
 
+This is the frozen v1 evaluation. For live data, current forecasts and the newer evaluation, read the [v2 overview](overview-v2.md), [onset report](report-v2.md) and [duration report](duration-v2.md). The v1 numbers below are unchanged.
+
 The selected raion-regime LightGBM model, M1, achieves **13.843% test Brier skill versus climatology at 3 hours**, with Brier 0.142332 on 80,325 forecast rows. Full-history M1 has lower test Brier at every horizon, but validation selected the raion-regime model before test scoring. The duration intervals under-cover their nominal probability.
 
 Results below come from the frozen [`reports/metrics.json`](../reports/metrics.json). Data and implementation facts cite the agent notes; [AGENTS.md](../AGENTS.md) takes precedence where an earlier handoff describes a policy that later changed.
