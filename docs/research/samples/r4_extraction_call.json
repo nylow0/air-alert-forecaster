@@ -1,0 +1,94 @@
+{
+  "checked_at": "2026-10-12T15:27:28.546734Z",
+  "model_requested": "gpt-6-luna",
+  "reasoning_effort": "high",
+  "command_argv": [
+    "[private home path removed]",
+    "exec",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--ephemeral",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "read-only",
+    "--json",
+    "--color",
+    "never",
+    "--cd",
+    "[private home path removed]",
+    "--model",
+    "gpt-6-luna",
+    "--output-schema",
+    ".\\docs\\research\\samples\\r4_extraction_schema.json",
+    "-c",
+    "model_reasoning_effort=high",
+    "-c",
+    "approval_policy=never",
+    "-c",
+    "web_search=disabled",
+    "-c",
+    "mcp_servers={}",
+    "-c",
+    "features.shell_tool=false",
+    "-c",
+    "features.unified_exec=false",
+    "-c",
+    "features.apps=false",
+    "-c",
+    "features.plugins=false",
+    "-c",
+    "features.multi_agent=false",
+    "-c",
+    "features.view_image=false",
+    "-c",
+    "features.image_generation=false",
+    "-c",
+    "features.skill_search=false",
+    "-c",
+    "features.skip_host_skill_discovery=true",
+    "-c",
+    "shell_environment_policy.inherit=none",
+    "-"
+  ],
+  "working_directory": "[private home path removed]",
+  "seconds": 43.985,
+  "exit_code": 0,
+  "timed_out": false,
+  "prompt_utf8_bytes": 18265,
+  "events": [
+    {
+      "type": "thread.started",
+      "thread_id": "01a130b9-2e42-7ce0-866f-6d24d1b9e369"
+    },
+    {
+      "type": "item.completed",
+      "item": {
+        "id": "item_0",
+        "type": "error",
+        "message": "Under-development features enabled: skip_host_skill_discovery. Under-development features are incomplete and may behave unpredictably. To suppress this warning, set `suppress_unstable_features_warning = true` in [private home path removed]"
+      }
+    },
+    {
+      "type": "turn.started"
+    },
+    {
+      "type": "item.completed",
+      "item": {
+        "id": "item_1",
+        "type": "agent_message",
+        "text": "{\"events\":[{\"event_type\":\"drone_group\",\"status\":\"reported\",\"place_mentions\":[\"зону відчуження Чорнобильської АЕС\",\"Житомирщину\"],\"origin\":null,\"heading\":\"на Житомирщину\",\"confidence\":0.96,\"source_keys\":[\"kpszsu/85593\"],\"published_at\":\"2026-10-12T15:14:31Z\",\"evidence_quote\":\"Реактивний БпЛА через зону відчуження Чорнобильської АЕС курсом на Житомирщину.\"},{\"event_type\":\"drone_group\",\"status\":\"reported\",\"place_mentions\":[\"Одещини\",\"Вінничину\",\"Чечельник\",\"Вінниця\"],\"origin\":\"Одещини\",\"heading\":\"на Вінничину (Чечельник)\",\"confidence\":0.95,\"source_keys\":[\"monitorwarr/42426\",\"vanek_nikolaev/43345\",\"vanek_nikolaev/43346\",\"kpszsu/85594\"],\"published_at\":\"2026-10-12T15:19:28Z\",\"evidence_quote\":\"Реактивний БпЛА з Одещини курсом на Вінничину (Чечельник)\"},{\"event_type\":\"drone_group\",\"status\":\"reported\",\"place_mentions\":[\"Запоріжжя\",\"півдня\"],\"origin\":\"півдня\",\"heading\":\"на Запоріжжя\",\"confidence\":0.91,\"source_keys\":[\"kpszsu/85595\"],\"published_at\":\"2026-10-12T15:20:17Z\",\"evidence_quote\":\"БпЛА на Запоріжжя з півдня.\"},{\"event_type\":\"drone_group\",\"status\":\"reported\",\"place_mentions\":[\"півночі Київщини\",\"Житомирщини\",\"Коростеньський р-н\"],\"origin\":null,\"heading\":\"у бік Житомирщини\",\"confidence\":0.87,\"source_keys\":[\"monitorwarr/42426\"],\"published_at\":\"2026-10-12T11:55:55Z\",\"evidence_quote\":\"1 реактив на півночі Київщини у бік Житомирщини, Коростеньський р-н.\"},{\"event_type\":\"drone_group\",\"status\":\"reported\",\"place_mentions\":[\"Кіровоградщині\",\"Вінниччину\"],\"origin\":\"Кіровоградщині\",\"heading\":\"на Вінниччину\",\"confidence\":0.84,\"source_keys\":[\"monitorwarr/42426\"],\"published_at\":\"2026-10-12T11:55:55Z\",\"evidence_quote\":\"1 реактив на Кіровоградщині курсом на Вінниччину.\"},{\"event_type\":\"drone_group\",\"status\":\"reported\",\"place_mentions\":[\"Черкащині\",\"Київщини\",\"Вінниччини\"],\"origin\":\"Черкащині\",\"heading\":\"у бік Київщини/Вінниччини\",\"confidence\":0.84,\"source_keys\":[\"monitorwarr/42426\"],\"published_at\":\"2026-10-12T11:55:55Z\",\"evidence_quote\":\"1 реактив на Черкащині у бік Київщини/Вінниччини.\"},{\"event_type\":\"drone_group\",\"status\":\"reported\",\"place_mentions\":[\"Славутич\",\"Київщини\"],\"origin\":null,\"heading\":\"у бік Київщини\",\"confidence\":0.87,\"source_keys\":[\"monitorwarr/42426\"],\"published_at\":\"2026-10-12T11:55:55Z\",\"evidence_quote\":\"1 реактив пролітає Славутич у бік Київщини.\"},{\"event_type\":\"drone_group\",\"status\":\"reported\",\"place_mentions\":[\"Одеси\"],\"origin\":null,\"heading\":null,\"confidence\":0.82,\"source_keys\":[\"monitorwarr/42426\"],\"published_at\":\"2026-10-12T11:55:55Z\",\"evidence_quote\":\"1 реактив кружляє поблизу Одеси.\"},{\"event_type\":\"drone_group\",\"status\":\"reported\",\"place_mentions\":[\"межі Дніпропетровщини та Запоріжжя\",\"Криворізького р-ну\"],\"origin\":\"межі Дніпропетровщини та Запоріжжя\",\"heading\":\"у бік Криворізького р-ну\",\"confidence\":0.88,\"source_keys\":[\"monitorwarr/42426\"],\"published_at\":\"2026-10-12T11:55:55Z\",\"evidence_quote\":\"3 реактиви на межі Дніпропетровщини та Запоріжжя у бік Криворізького р-ну.\"},{\"event_type\":\"drone_group\",\"status\":\"reported\",\"place_mentions\":[\"Хмельниччині\",\"Тернопільщину\"],\"origin\":\"Хмельниччині\",\"heading\":\"на Тернопільщину\",\"confidence\":0.9,\"source_keys\":[\"monitorwarr/42427\",\"monitorwarr/42428\"],\"published_at\":\"2026-10-12T12:25:30Z\",\"evidence_quote\":\"1 реактив на Хмельниччині курсом на Тернопільщину.\"},{\"event_type\":\"drone_group\",\"status\":\"reported\",\"place_mentions\":[\"Вінниччини\",\"Хмельниччину\",\"Камʼянець-Подільський р-н\"],\"origin\":\"Вінниччини\",\"heading\":\"на Хмельниччину, Камʼянець-Подільський р-н\",\"confidence\":0.87,\"source_keys\":[\"monitorwarr/42427\"],\"published_at\":\"2026-10-12T12:25:30Z\",\"evidence_quote\":\"2 реактива перелітають з Вінниччини на Хмельниччину, Камʼянець-Подільський р-н.\"},{\"event_type\":\"drone_group\",\"status\":\"reported\",\"place_mentions\":[\"Вінниччини\",\"Житомирщини\",\"Хмельниччини\"],\"origin\":\"Вінниччини\",\"heading\":\"на Житомирщину, далі на Хмельниччину\",\"confidence\":0.85,\"source_keys\":[\"monitorwarr/42427\"],\"published_at\":\"2026-10-12T12:25:30Z\",\"evidence_quote\":\"1 реактив перелітає з Вінниччини на Житомирщину, далі на Хмельниччину.\"},{\"event_type\":\"drone_group\",\"status\":\"reported\",\"place_mentions\":[\"Житомирщини\",\"Вінниччину\"],\"origin\":\"Житомирщини\",\"heading\":\"на Вінниччину\",\"confidence\":0.85,\"source_keys\":[\"monitorwarr/42427\"],\"published_at\":\"2026-10-12T12:25:30Z\",\"evidence_quote\":\"1 реактив перелітає з Житомирщини на Вінниччину.\"},{\"event_type\":\"drone_group\",\"status\":\"reported\",\"place_mentions\":[\"півночі Чернігівщини\",\"Славутич\"],\"origin\":\"півночі Чернігівщини\",\"heading\":\"на Славутич\",\"confidence\":0.87,\"source_keys\":[\"monitorwarr/42427\"],\"published_at\":\"2026-10-12T12:25:30Z\",\"evidence_quote\":\"1 реактив на півночі Чернігівщини вектором на Славутич.\"},{\"event_type\":\"drone_group\",\"status\":\"reported\",\"place_mentions\":[\"Кіровоградщині\"],\"origin\":null,\"heading\":null,\"confidence\":0.83,\"source_keys\":[\"monitorwarr/42427\"],\"published_at\":\"2026-10-12T12:25:30Z\",\"evidence_quote\":\"2 реактиви кружляють на Кіровоградщині.\"},{\"event_type\":\"drone_group\",\"status\":\"reported\",\"place_mentions\":[\"Одесою\"],\"origin\":null,\"heading\":null,\"confidence\":0.83,\"source_keys\":[\"monitorwarr/42427\"],\"published_at\":\"2026-10-12T12:25:30Z\",\"evidence_quote\":\"1 реактив кружляє над Одесою.\"},{\"event_type\":\"drone_group\",\"status\":\"reported\",\"place_mentions\":[\"півночі Житомирщини\",\"Рівненщину\"],\"origin\":\"півночі Житомирщини\",\"heading\":\"на Рівненщину\",\"confidence\":0.87,\"source_keys\":[\"monitorwarr/42428\"],\"published_at\":\"2026-10-12T12:45:05Z\",\"evidence_quote\":\"1 реактив перелітає з півночі Житомирщини на Рівненщину.\"},{\"event_type\":\"drone_group\",\"status\":\"reported\",\"place_mentions\":[\"Чернігівщини\",\"Київщину\",\"Вишгородський р-н\"],\"origin\":\"Чернігівщини\",\"heading\":\"на Київщину, Вишгородський р-н\",\"confidence\":0.88,\"source_keys\":[\"monitorwarr/42428\"],\"published_at\":\"2026-10-12T12:45:05Z\",\"evidence_quote\":\"1 реактив перелітає з Чернігівщини на Київщину, Вишгородський р-н.\"},{\"event_type\":\"drone_group\",\"status\":\"reported\",\"place_mentions\":[\"півночі Чернігівщини\",\"Славутич\"],\"origin\":\"півночі Чернігівщини\",\"heading\":\"на Славутич\",\"confidence\":0.88,\"source_keys\":[\"monitorwarr/42428\"],\"published_at\":\"2026-10-12T12:45:05Z\",\"evidence_quote\":\"2 нові реактиви на півночі Чернігівщини вектором на Славутич.\"},{\"event_type\":\"drone_group\",\"status\":\"reported\",\"place_mentions\":[\"Кіровоградщині\",\"Вінниччини\"],\"origin\":\"Кіровоградщині\",\"heading\":\"у бік Вінниччини\",\"confidence\":0.85,\"source_keys\":[\"monitorwarr/42428\"],\"published_at\":\"2026-10-12T12:45:05Z\",\"evidence_quote\":\"1 реактив на Кіровоградщині у бік Вінниччини.\"},{\"event_type\":\"drone_group\",\"status\":\"reported\",\"place_mentions\":[\"западе Кировоградской области\",\"Умани\",\"Винницкой области\",\"Долинской\",\"Новоукраинки Кировоградской области\",\"Кременчуга\",\"Александрии\"],\"origin\":null,\"heading\":null,\"confidence\":0.84,\"source_keys\":[\"vanek_nikolaev/43344\"],\"published_at\":\"2026-10-12T09:44:40Z\",\"evidence_quote\":\"2 на западе Кировоградской области, курс в сторону Умани/Винницкой области\"},{\"event_type\":\"drone_group\",\"status\":\"reported\",\"place_mentions\":[\"Виннице\"],\"origin\":null,\"heading\":\"к Виннице\",\"confidence\":0.9,\"source_keys\":[\"vanek_nikolaev/43345\",\"vanek_nikolaev/43346\"],\"published_at\":\"2026-10-12T12:37:54Z\",\"evidence_quote\":\"1 реактивный мопед подлетает к Виннице - может быть громко!\"}]}"
+      }
+    },
+    {
+      "type": "turn.completed",
+      "usage": {
+        "input_tokens": 16135,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 4718,
+        "reasoning_output_tokens": 2231
+      }
+    }
+  ],
+  "stderr_summary": ""
+}

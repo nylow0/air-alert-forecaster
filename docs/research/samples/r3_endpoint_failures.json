@@ -1,0 +1,54 @@
+[
+  {
+    "url": "https://api.alerts.in.ua/v1/alerts/active.json",
+    "tested_at": "2026-10-12T15:15:49.927675Z",
+    "status": 401,
+    "response": {
+      "message": "API token required. Please contact api@alerts.in.ua for details."
+    }
+  },
+  {
+    "url": "https://api.alerts.in.ua/v1/regions/16/alerts/month_ago.json",
+    "tested_at": "2026-10-12T15:15:49.927675Z",
+    "status": 401,
+    "response": {
+      "message": "API token required. Please contact api@alerts.in.ua for details."
+    }
+  },
+  {
+    "url": "https://api.ukrainealarm.com/api/v3/alerts",
+    "tested_at": "2026-10-12T15:15:49.927675Z",
+    "status": 403,
+    "body_kind": "Cloudflare HTML block, not a JSON API auth response"
+  },
+  {
+    "url": "https://api.ukrainealarm.com/api/v3/regions",
+    "tested_at": "2026-10-12T15:15:49.928673Z",
+    "status": 403,
+    "body_kind": "Cloudflare HTML block"
+  },
+  {
+    "url": "https://api.ukrainealarm.com/api/v3/alerts/regionHistory?regionId=16",
+    "tested_at": "2026-10-12T15:15:50.048463Z",
+    "status": 403,
+    "body_kind": "Cloudflare HTML block"
+  },
+  {
+    "url": "https://map.ukrainealarm.com/api/data/getAlerts",
+    "tested_at": "2026-10-12T15:22:12.894986Z",
+    "status": 401,
+    "response_bytes": 0
+  },
+  {
+    "url": "https://alerts.com.ua/api/history",
+    "tested_at": "2026-10-12T15:21:07.816372Z",
+    "status": 404,
+    "body_kind": "nginx HTML"
+  },
+  {
+    "url": "https://ubilling.net.ua/aerialalerts/?source=aiu&raw",
+    "tested_at": "2026-10-12T15:17:31.907327Z",
+    "status": 429,
+    "body_kind": "nginx too many requests; concurrent same-host burst; later sequential request 200"
+  }
+]

@@ -1,0 +1,1 @@
+{"type":"object","additionalProperties":false,"properties":{"tool_names":{"type":"array","items":{"type":"string"}},"shell_available":{"type":"boolean"}},"required":["tool_names","shell_available"]}

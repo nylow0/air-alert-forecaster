@@ -1,0 +1,296 @@
+{
+  "checked_at": "2026-10-12T15:30:13.485952Z",
+  "codex_version": "codex-cli 0.162.1",
+  "login_status": "Logged in using ChatGPT",
+  "auth_file_existence_checked": true,
+  "auth_file_contents_accessed": false,
+  "account_state_changed": false,
+  "completion_calls": 3,
+  "model_list": [
+    {
+      "id": "gpt-6.1-sol",
+      "hidden": false,
+      "supported_reasoning_efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max",
+        "ultra"
+      ]
+    },
+    {
+      "id": "gpt-6-astra",
+      "hidden": false,
+      "supported_reasoning_efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max",
+        "ultra"
+      ]
+    },
+    {
+      "id": "gpt-6-sol",
+      "hidden": false,
+      "supported_reasoning_efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max",
+        "ultra"
+      ]
+    },
+    {
+      "id": "gpt-6-luna",
+      "hidden": false,
+      "supported_reasoning_efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ]
+    },
+    {
+      "id": "gpt-reserve",
+      "hidden": true,
+      "supported_reasoning_efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ]
+    },
+    {
+      "id": "gpt-5.6-sol",
+      "hidden": false,
+      "supported_reasoning_efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max",
+        "ultra"
+      ]
+    },
+    {
+      "id": "gpt-5.6-terra",
+      "hidden": false,
+      "supported_reasoning_efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max",
+        "ultra"
+      ]
+    },
+    {
+      "id": "gpt-5.6-luna",
+      "hidden": false,
+      "supported_reasoning_efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ]
+    },
+    {
+      "id": "gpt-5.5",
+      "hidden": true,
+      "supported_reasoning_efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh"
+      ]
+    },
+    {
+      "id": "codex-auto-review",
+      "hidden": true,
+      "supported_reasoning_efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ]
+    }
+  ],
+  "timings": [
+    {
+      "purpose": "tool discovery",
+      "model": "gpt-6-luna",
+      "seconds": 6.579,
+      "usage": {
+        "input_tokens": 11217,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 188,
+        "reasoning_output_tokens": 125
+      }
+    },
+    {
+      "purpose": "29 public messages and 1 synthetic injection",
+      "model": "gpt-6-luna",
+      "seconds": 43.985,
+      "usage": {
+        "input_tokens": 16135,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 4718,
+        "reasoning_output_tokens": 2231
+      }
+    },
+    {
+      "purpose": "3 curated events and 4 synthetic raions",
+      "model": "gpt-6.1-sol",
+      "seconds": 25.358,
+      "usage": {
+        "input_tokens": 13127,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 980,
+        "reasoning_output_tokens": 227
+      }
+    }
+  ],
+  "validation": {
+    "calls": [
+      {
+        "call": "tool_probe",
+        "schema_valid": true,
+        "tool_items_observed": 0
+      },
+      {
+        "call": "extraction",
+        "schema_valid": true,
+        "tool_items_observed": 0
+      },
+      {
+        "call": "adjustment",
+        "schema_valid": true,
+        "tool_items_observed": 0
+      }
+    ],
+    "real_messages": 29,
+    "synthetic_injections": 1,
+    "extracted_events": 22,
+    "source_keys_and_quotes_valid": true,
+    "injection_source_references": 0,
+    "adjustments": [
+      {
+        "raion_id": "zhytomyrska/korostenskyi",
+        "horizon_hours": 1,
+        "base": 0.1,
+        "logit_shift": 0.18,
+        "adjusted": 0.117406
+      },
+      {
+        "raion_id": "zhytomyrska/korostenskyi",
+        "horizon_hours": 3,
+        "base": 0.3,
+        "logit_shift": 0.1,
+        "adjusted": 0.32141
+      },
+      {
+        "raion_id": "zhytomyrska/korostenskyi",
+        "horizon_hours": 12,
+        "base": 0.6,
+        "logit_shift": 0.02,
+        "adjusted": 0.60479
+      },
+      {
+        "raion_id": "vinnytska/haisynskyi",
+        "horizon_hours": 1,
+        "base": 0.08,
+        "logit_shift": 0.24,
+        "adjusted": 0.09954
+      },
+      {
+        "raion_id": "vinnytska/haisynskyi",
+        "horizon_hours": 3,
+        "base": 0.23,
+        "logit_shift": 0.14,
+        "adjusted": 0.255724
+      },
+      {
+        "raion_id": "vinnytska/haisynskyi",
+        "horizon_hours": 12,
+        "base": 0.53,
+        "logit_shift": 0.03,
+        "adjusted": 0.537466
+      },
+      {
+        "raion_id": "zaporizka/zaporizkyi",
+        "horizon_hours": 1,
+        "base": 0.3,
+        "logit_shift": 0.25,
+        "adjusted": 0.354962
+      },
+      {
+        "raion_id": "zaporizka/zaporizkyi",
+        "horizon_hours": 3,
+        "base": 0.6,
+        "logit_shift": 0.15,
+        "adjusted": 0.635403
+      },
+      {
+        "raion_id": "zaporizka/zaporizkyi",
+        "horizon_hours": 12,
+        "base": 0.8,
+        "logit_shift": 0.03,
+        "adjusted": 0.804757
+      },
+      {
+        "raion_id": "kyiv-city/kyiv-city",
+        "horizon_hours": 1,
+        "base": 0.09,
+        "logit_shift": 0,
+        "adjusted": 0.09
+      },
+      {
+        "raion_id": "kyiv-city/kyiv-city",
+        "horizon_hours": 3,
+        "base": 0.23,
+        "logit_shift": 0,
+        "adjusted": 0.23
+      },
+      {
+        "raion_id": "kyiv-city/kyiv-city",
+        "horizon_hours": 12,
+        "base": 0.55,
+        "logit_shift": 0,
+        "adjusted": 0.55
+      }
+    ],
+    "monotonic_and_bounded": true,
+    "files_scanned_for_token_patterns": 16,
+    "token_pattern_matches": 0,
+    "strict_no_tools_guarantee": false,
+    "deduplication_warning": "43345 and 43346 each occur in two drone events"
+  },
+  "final_artifact_checks": {
+    "files": 18,
+    "missing_local_links": [],
+    "credential_pattern_files": [],
+    "snapshot": "2026-09-07T05:00:00Z",
+    "json_files_parsed": 13,
+    "report_words": 4486,
+    "report_sha256": "ccdba08c9561a0709b340fb52be64515a5ebaa09171a477ba6934d465e403602"
+  },
+  "ruff_output": "All checks passed!",
+  "final_login_status": "Logged in using ChatGPT",
+  "tracked_git_diff": "empty",
+  "notes": [
+    "One measurement per purpose, not latency percentiles.",
+    "Outputs completed after the probe input cutoff and were not issued as real forecasts.",
+    "Sol target mapping was manually curated; first-observed timestamps in its prompt were rounded to seconds. Use exact archived observation timestamps in production.",
+    "Stock exec retained advertised tools despite feature overrides; no tool items were observed in the calls."
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "day_utc": "2026-09-05",
+  "fetched_at": "2026-10-12T15:21:43.258908Z",
+  "english_ukrainian_rows_aligned": true,
+  "requests": 85,
+  "downloaded_messages": 1399,
+  "first_message": {
+    "id": "air_alert_ua/336870",
+    "published_at": "2026-09-04T23:37:15Z"
+  },
+  "last_message": {
+    "id": "air_alert_ua/338269",
+    "published_at": "2026-09-07T01:26:10Z"
+  },
+  "expected_csv_unique_events": 381,
+  "reconstructed_pairs": 371,
+  "exact_pairs": 359,
+  "pair_recall": 0.9422572178477691,
+  "pair_precision": 0.967654986522911,
+  "csv_only": 22,
+  "telegram_only": 12,
+  "unclosed_day_starts": 0,
+  "duplicate_start_messages": 0,
+  "non_onset_threat_messages": 137,
+  "orphan_end_messages_for_sample_locations": 387,
+  "ambiguous_location_tags": {},
+  "method": "Strict full-message onset/all-clear templates; UTC publish times including seconds; hashtags mapped using aligned English/Ukrainian dataset rows for locations present in the sample day; no synthetic ends; no old-name alias expansion. These rates measure that parser against the CSV, not an independent ground-truth source.",
+  "missing_sample": [
+    [
+      "Dnipropetrovska oblast",
+      "Samarivskyi raion",
+      "",
+      "raion",
+      "2026-09-05T03:33:38Z",
+      "2026-09-05T09:11:21Z"
+    ],
+    [
+      "Dnipropetrovska oblast",
+      "Nikopolskyi raion",
+      "m. Nikopol ta Nikopolska terytorialna hromada",
+      "hromada",
+      "2026-09-05T13:57:42Z",
+      "2026-09-05T13:57:52Z"
+    ]
+  ],
+  "extra_sample": [
+    [
+      "Kharkivska oblast",
+      "Kharkivskyi raion",
+      "m. Kharkiv ta Kharkivska terytorialna hromada",
+      "hromada",
+      "2026-09-05T04:00:50Z",
+      "2026-09-05T09:42:46Z"
+    ]
+  ]
+}

@@ -1,0 +1,265 @@
+{
+  "fetched_at": "2026-10-12T15:22:52.097242Z",
+  "source": "https://siren.pp.ua/api/v3/regions",
+  "language_rows_aligned": true,
+  "top_nodes": 29,
+  "node_count": 1606,
+  "type_counts": {
+    "State": 29,
+    "District": 122,
+    "Community": 1455
+  },
+  "forecast_universe_count": 119,
+  "mapped_forecast_units": 119,
+  "unmapped_forecast_units": [],
+  "special_source_nodes": [
+    {
+      "source_uid": "9999",
+      "name": "Автономна Республіка Крим",
+      "type": "State",
+      "oblast": "Автономна Республіка Крим",
+      "district": "",
+      "forecast_raion_id": null
+    },
+    {
+      "source_uid": "74",
+      "name": "Вишгородський район",
+      "type": "District",
+      "oblast": "Київська область",
+      "district": "Вишгородський район",
+      "forecast_raion_id": "kyivska/vyshhorodskyi"
+    },
+    {
+      "source_uid": "16",
+      "name": "Луганська область",
+      "type": "State",
+      "oblast": "Луганська область",
+      "district": "",
+      "forecast_raion_id": null
+    },
+    {
+      "source_uid": "86",
+      "name": "Старобільський район",
+      "type": "District",
+      "oblast": "Луганська область",
+      "district": "Старобільський район",
+      "forecast_raion_id": null
+    },
+    {
+      "source_uid": "85",
+      "name": "Сватівський район",
+      "type": "District",
+      "oblast": "Луганська область",
+      "district": "Сватівський район",
+      "forecast_raion_id": null
+    },
+    {
+      "source_uid": "84",
+      "name": "Сєвєродонецький район",
+      "type": "District",
+      "oblast": "Луганська область",
+      "district": "Сєвєродонецький район",
+      "forecast_raion_id": null
+    },
+    {
+      "source_uid": "87",
+      "name": "Щастинський район",
+      "type": "District",
+      "oblast": "Луганська область",
+      "district": "Щастинський район",
+      "forecast_raion_id": null
+    },
+    {
+      "source_uid": "43",
+      "name": "Самарівський район",
+      "type": "District",
+      "oblast": "Дніпропетровська область",
+      "district": "Самарівський район",
+      "forecast_raion_id": "dnipropetrovska/samarivskyi"
+    },
+    {
+      "source_uid": "46",
+      "name": "Криворізький район",
+      "type": "District",
+      "oblast": "Дніпропетровська область",
+      "district": "Криворізький район",
+      "forecast_raion_id": "dnipropetrovska/kryvorizkyi"
+    },
+    {
+      "source_uid": "60",
+      "name": "Звягельський район",
+      "type": "District",
+      "oblast": "Житомирська область",
+      "district": "Звягельський район",
+      "forecast_raion_id": "zhytomyrska/zviahelskyi"
+    }
+  ],
+  "sample_nodes": [
+    {
+      "source_uid": "15",
+      "name": "Кіровоградська область",
+      "type": "State",
+      "oblast": "Кіровоградська область",
+      "district": "",
+      "forecast_raion_id": null
+    },
+    {
+      "source_uid": "81",
+      "name": "Кропивницький район",
+      "type": "District",
+      "oblast": "Кіровоградська область",
+      "district": "Кропивницький район",
+      "forecast_raion_id": "kirovohradska/kropyvnytskyi"
+    },
+    {
+      "source_uid": "761",
+      "name": "м. Кропивницький та Кропивницька територіальна громада",
+      "type": "Community",
+      "oblast": "Кіровоградська область",
+      "district": "Кропивницький район",
+      "forecast_raion_id": "kirovohradska/kropyvnytskyi"
+    }
+  ],
+  "unmatched_map_polygons": [
+    {
+      "shape_id": "22097711B57509051638720",
+      "shape_name": "Bakhchysaraiskyi",
+      "oblast_id": "autonomous-republic-of-crimea",
+      "raion_id": "",
+      "method": "unmatched"
+    },
+    {
+      "shape_id": "22097711B13302951022231",
+      "shape_name": "Bilohirskyi",
+      "oblast_id": "autonomous-republic-of-crimea",
+      "raion_id": "",
+      "method": "unmatched"
+    },
+    {
+      "shape_id": "22097711B73657424691094",
+      "shape_name": "Dzhankoiskyi",
+      "oblast_id": "autonomous-republic-of-crimea",
+      "raion_id": "",
+      "method": "unmatched"
+    },
+    {
+      "shape_id": "22097711B84451678573744",
+      "shape_name": "Yevpatoriiskyi",
+      "oblast_id": "autonomous-republic-of-crimea",
+      "raion_id": "",
+      "method": "unmatched"
+    },
+    {
+      "shape_id": "22097711B47200263158981",
+      "shape_name": "Kerchynskyi",
+      "oblast_id": "autonomous-republic-of-crimea",
+      "raion_id": "",
+      "method": "unmatched"
+    },
+    {
+      "shape_id": "22097711B98776447047182",
+      "shape_name": "Kurmanskyi",
+      "oblast_id": "autonomous-republic-of-crimea",
+      "raion_id": "",
+      "method": "unmatched"
+    },
+    {
+      "shape_id": "22097711B45820000766767",
+      "shape_name": "Perekopskyi",
+      "oblast_id": "autonomous-republic-of-crimea",
+      "raion_id": "",
+      "method": "unmatched"
+    },
+    {
+      "shape_id": "22097711B78464626697108",
+      "shape_name": "Simferopolskyi",
+      "oblast_id": "autonomous-republic-of-crimea",
+      "raion_id": "",
+      "method": "unmatched"
+    },
+    {
+      "shape_id": "22097711B79933308021039",
+      "shape_name": "Feodosiiskyi",
+      "oblast_id": "autonomous-republic-of-crimea",
+      "raion_id": "",
+      "method": "unmatched"
+    },
+    {
+      "shape_id": "22097711B78371574799870",
+      "shape_name": "Yaltynskyi",
+      "oblast_id": "autonomous-republic-of-crimea",
+      "raion_id": "",
+      "method": "unmatched"
+    },
+    {
+      "shape_id": "22097711B27688590731099",
+      "shape_name": "Chornobylska zona vidchuzhennia",
+      "oblast_id": "kyivska",
+      "raion_id": "",
+      "method": "unmatched"
+    },
+    {
+      "shape_id": "22097711B73083160929140",
+      "shape_name": "Alchevskyi",
+      "oblast_id": "luhanska",
+      "raion_id": "",
+      "method": "unmatched"
+    },
+    {
+      "shape_id": "22097711B68059533687998",
+      "shape_name": "Dovzhanskyi",
+      "oblast_id": "luhanska",
+      "raion_id": "",
+      "method": "unmatched"
+    },
+    {
+      "shape_id": "22097711B53601754696899",
+      "shape_name": "Luhanskyi",
+      "oblast_id": "luhanska",
+      "raion_id": "",
+      "method": "unmatched"
+    },
+    {
+      "shape_id": "22097711B34124994132375",
+      "shape_name": "Rovenkivskyi",
+      "oblast_id": "luhanska",
+      "raion_id": "",
+      "method": "unmatched"
+    },
+    {
+      "shape_id": "22097711B77273801314169",
+      "shape_name": "Svativskyi",
+      "oblast_id": "luhanska",
+      "raion_id": "",
+      "method": "unmatched"
+    },
+    {
+      "shape_id": "22097711B7670173734536",
+      "shape_name": "Sievierodonetskyi",
+      "oblast_id": "luhanska",
+      "raion_id": "",
+      "method": "unmatched"
+    },
+    {
+      "shape_id": "22097711B56969234546212",
+      "shape_name": "Starobilskyi",
+      "oblast_id": "luhanska",
+      "raion_id": "",
+      "method": "unmatched"
+    },
+    {
+      "shape_id": "22097711B68855027767264",
+      "shape_name": "Shchastynskyi",
+      "oblast_id": "luhanska",
+      "raion_id": "",
+      "method": "unmatched"
+    },
+    {
+      "shape_id": "22097711B55202998529821",
+      "shape_name": "Sevastopilska",
+      "oblast_id": "sevastopol-city",
+      "raion_id": "",
+      "method": "unmatched"
+    }
+  ]
+}

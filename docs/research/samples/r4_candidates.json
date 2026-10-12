@@ -1,0 +1,1359 @@
+{
+  "checked_at": "2026-10-12T15:21:22.922033Z",
+  "rate_limit_seconds_between_request_starts": 1.05,
+  "pages": [
+    {
+      "handle_requested": "truexanewsua",
+      "handle": "truexanewsua",
+      "url": "https://t.me/s/truexanewsua",
+      "status": 200,
+      "checked_at": "2026-10-12T15:20:51.547325Z",
+      "title": "Труха⚡️Україна",
+      "subscribers": 3150000,
+      "subscribers_display": "3.15M  subscribers",
+      "sample_message_count": 18,
+      "last_post_time": "2026-10-12T15:16:07Z",
+      "sample_span_hours": 5.2614,
+      "posts_per_day_sample_estimate": 77.55,
+      "latency_seconds": 0.2688,
+      "decoded_body_bytes": 141455,
+      "downloaded_body_bytes": 21662,
+      "content_encoding": "gzip",
+      "body_sha256": "a166689fc7d4f796a44332d0c928ed822caa8da33064430ce2edc3ca5cc9b8ec",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 146155,
+          "published_at": "2026-10-12T12:31:04Z",
+          "edited": true,
+          "excerpt": "❗️Київ НЕ виробляє власну електроенергію, усі потужності знищені"
+        },
+        {
+          "id": 146158,
+          "published_at": "2026-10-12T14:20:15Z",
+          "edited": false,
+          "excerpt": "😳 Одеса, обстановка: чоловік «серфить» на шахеді, –"
+        },
+        {
+          "id": 146161,
+          "published_at": "2026-10-12T14:38:33Z",
+          "edited": true,
+          "excerpt": "⚠️ Загроза БпЛА! Київ та області, знову жовта"
+        }
+      ],
+      "signal_keyword_messages_on_page": 3,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "insiderUKR",
+      "handle": "insiderUKR",
+      "url": "https://t.me/s/insiderUKR",
+      "status": 200,
+      "checked_at": "2026-10-12T15:20:52.509380Z",
+      "title": "INSIDER UA | Україна | Новини",
+      "subscribers": 2190000,
+      "subscribers_display": "2.19M  subscribers",
+      "sample_message_count": 18,
+      "last_post_time": "2026-10-12T15:13:52Z",
+      "sample_span_hours": 5.6378,
+      "posts_per_day_sample_estimate": 72.37,
+      "latency_seconds": 0.189,
+      "decoded_body_bytes": 132012,
+      "downloaded_body_bytes": 20506,
+      "content_encoding": "gzip",
+      "body_sha256": "b5fe3d1521afc5d2f0fb9b7c60ad46790f7d39407f065999b09a25e6b3d6f2c7",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 135980,
+          "published_at": "2026-10-12T13:01:02Z",
+          "edited": false,
+          "excerpt": "Пока Киев обстреливают наравне с прифронтовыми регионами, деньги"
+        }
+      ],
+      "signal_keyword_messages_on_page": 1,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "uniannet",
+      "handle": "uniannet",
+      "url": "https://t.me/s/uniannet",
+      "status": 200,
+      "checked_at": "2026-10-12T15:20:53.578042Z",
+      "title": "УНИАН - новости Украины | война с Россией | новини України | війна з Росією | УНІАН",
+      "subscribers": 704000,
+      "subscribers_display": "704K  subscribers",
+      "sample_message_count": 20,
+      "last_post_time": "2026-10-12T15:10:01Z",
+      "sample_span_hours": 4.5522,
+      "posts_per_day_sample_estimate": 100.17,
+      "latency_seconds": 0.2017,
+      "decoded_body_bytes": 188788,
+      "downloaded_body_bytes": 25190,
+      "content_encoding": "gzip",
+      "body_sha256": "253a32735db1cd64fd2427ff0826e409549b9fa91b62cd47162fe0d860014751",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 203840,
+          "published_at": "2026-10-12T13:03:28Z",
+          "edited": true,
+          "excerpt": "❗️ В Киеве полностью уничтожена генерация электроэнергии в"
+        },
+        {
+          "id": 203841,
+          "published_at": "2026-10-12T13:08:37Z",
+          "edited": false,
+          "excerpt": "«Шахед» влупил по заводу Roshen в Виннице. На"
+        },
+        {
+          "id": 203844,
+          "published_at": "2026-10-12T13:55:12Z",
+          "edited": false,
+          "excerpt": "Всесильная Украина: как Киев “влияет” на мировой рынок"
+        }
+      ],
+      "signal_keyword_messages_on_page": 4,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "UkraineNow",
+      "handle": "UkraineNow",
+      "url": "https://t.me/s/UkraineNow",
+      "status": 200,
+      "checked_at": "2026-10-12T15:20:54.587543Z",
+      "title": "Ukraine NOW",
+      "subscribers": 409000,
+      "subscribers_display": "409K  subscribers",
+      "sample_message_count": 17,
+      "last_post_time": "2026-10-12T13:41:20Z",
+      "sample_span_hours": 17.6875,
+      "posts_per_day_sample_estimate": 21.71,
+      "latency_seconds": 0.1593,
+      "decoded_body_bytes": 125508,
+      "downloaded_body_bytes": 19130,
+      "content_encoding": "gzip",
+      "body_sha256": "2335935f06ff2de6fc35f4f1b876470c8ee08b734d2ec57bfbe86dd7fcac1ba0",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 84607,
+          "published_at": "2026-10-12T06:15:28Z",
+          "edited": false,
+          "excerpt": "У Харкові шахед влучив у багатоповерхівку, 5 постраждалих"
+        },
+        {
+          "id": 84615,
+          "published_at": "2026-10-12T09:13:33Z",
+          "edited": false,
+          "excerpt": "ЄС затвердив санкції проти 743 людей і 826"
+        },
+        {
+          "id": 84620,
+          "published_at": "2026-10-12T12:44:03Z",
+          "edited": false,
+          "excerpt": "У Києві 4 поранених внаслідок сьогоднішніх атак шахедами"
+        }
+      ],
+      "signal_keyword_messages_on_page": 5,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "u_now",
+      "handle": "u_now",
+      "url": "https://t.me/s/u_now",
+      "status": 200,
+      "checked_at": "2026-10-12T15:20:55.551062Z",
+      "title": "Україна сейчас",
+      "subscribers": 4180,
+      "subscribers_display": "4.18K  subscribers",
+      "sample_message_count": 3,
+      "last_post_time": "2024-05-06T10:15:50Z",
+      "sample_span_hours": 39405.1414,
+      "posts_per_day_sample_estimate": 0,
+      "latency_seconds": 0.068,
+      "decoded_body_bytes": 31545,
+      "downloaded_body_bytes": 6933,
+      "content_encoding": "gzip",
+      "body_sha256": "be9cf376338595ea2fa0bfca730336d1304132367d8b6cf8f6e3b284752c745f",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 1,
+          "published_at": "2019-11-07T13:07:21Z",
+          "edited": false,
+          "excerpt": "Channel created"
+        },
+        {
+          "id": 275,
+          "published_at": "2024-05-06T10:15:13Z",
+          "edited": false,
+          "excerpt": "Channel photo updated"
+        },
+        {
+          "id": 276,
+          "published_at": "2024-05-06T10:15:50Z",
+          "edited": false,
+          "excerpt": "Підписатися: https://t.me/+jDz9V-dcCPFjN2My"
+        }
+      ],
+      "signal_keyword_messages_on_page": 0,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "lachentyt",
+      "handle": "lachentyt",
+      "url": "https://t.me/s/lachentyt",
+      "status": 200,
+      "checked_at": "2026-10-12T15:20:56.681202Z",
+      "title": "Лачен пише",
+      "subscribers": 1590000,
+      "subscribers_display": "1.59M  subscribers",
+      "sample_message_count": 20,
+      "last_post_time": "2026-10-12T14:45:24Z",
+      "sample_span_hours": 6.4861,
+      "posts_per_day_sample_estimate": 70.3,
+      "latency_seconds": 0.1394,
+      "decoded_body_bytes": 128226,
+      "downloaded_body_bytes": 17924,
+      "content_encoding": "gzip",
+      "body_sha256": "f1c3f6e0aff4e5b41212ff020fd4bac9c61285688763687478f1d4ad1865e2ec",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 68839,
+          "published_at": "2026-10-12T12:41:31Z",
+          "edited": false,
+          "excerpt": "У Вінниці пролунав вибух. Оголошено загрозу БПЛА для"
+        },
+        {
+          "id": 68841,
+          "published_at": "2026-10-12T13:21:04Z",
+          "edited": true,
+          "excerpt": "У Вінниці пролунав вибух. Оголошено загрозу БПЛА для"
+        }
+      ],
+      "signal_keyword_messages_on_page": 2,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "voynareal",
+      "handle": "voynareal",
+      "url": "https://t.me/s/voynareal",
+      "status": 200,
+      "checked_at": "2026-10-12T15:20:57.778173Z",
+      "title": "Реальна Війна | Україна | Новини",
+      "subscribers": 1510000,
+      "subscribers_display": "1.51M  subscribers",
+      "sample_message_count": 19,
+      "last_post_time": "2026-10-12T15:16:46Z",
+      "sample_span_hours": 6.6344,
+      "posts_per_day_sample_estimate": 65.11,
+      "latency_seconds": 0.1835,
+      "decoded_body_bytes": 142811,
+      "downloaded_body_bytes": 21958,
+      "content_encoding": "gzip",
+      "body_sha256": "fc7313dd412c53fb857ff07d180e348ee105b31c2ac1a022b5b5b989be80c0de",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 144668,
+          "published_at": "2026-10-12T12:26:27Z",
+          "edited": true,
+          "excerpt": "❗️Генерація в Києві знищена повністю (!) балістичними атаками"
+        },
+        {
+          "id": 144671,
+          "published_at": "2026-10-12T13:18:01Z",
+          "edited": false,
+          "excerpt": "❗️Щойно росія атакувала завод «Рошен» у Вінниці —"
+        },
+        {
+          "id": 144675,
+          "published_at": "2026-10-12T14:28:47Z",
+          "edited": false,
+          "excerpt": "❗️Пентагон та Держдеп офіційно попередили, що Україна залишиться"
+        }
+      ],
+      "signal_keyword_messages_on_page": 3,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "TSNua",
+      "handle": "TSNua",
+      "url": "https://t.me/TSNua",
+      "status": 200,
+      "checked_at": "2026-10-12T15:20:58.741999Z",
+      "title": "",
+      "subscribers": null,
+      "subscribers_display": null,
+      "sample_message_count": 0,
+      "last_post_time": null,
+      "sample_span_hours": null,
+      "posts_per_day_sample_estimate": null,
+      "latency_seconds": 0.0998,
+      "decoded_body_bytes": 9561,
+      "downloaded_body_bytes": 3661,
+      "content_encoding": "gzip",
+      "body_sha256": "14b6957f5fb3acb3fbc64f6af6b32e9223d0f9b64b226219a8e38f3878bf05a8",
+      "http_request_count": 2,
+      "messages": [],
+      "signal_keyword_messages_on_page": 0,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "RBC_ua_news",
+      "handle": "RBC_ua_news",
+      "url": "https://t.me/s/RBC_ua_news",
+      "status": 200,
+      "checked_at": "2026-10-12T15:20:59.868536Z",
+      "title": "РБК-Україна",
+      "subscribers": 75100,
+      "subscribers_display": "75.1K  subscribers",
+      "sample_message_count": 17,
+      "last_post_time": "2026-10-12T15:19:10Z",
+      "sample_span_hours": 3.6658,
+      "posts_per_day_sample_estimate": 104.75,
+      "latency_seconds": 0.1687,
+      "decoded_body_bytes": 130732,
+      "downloaded_body_bytes": 20620,
+      "content_encoding": "gzip",
+      "body_sha256": "5e02b7f2513a4af3cabf2bd3439fb1b571ea0701808fa792efe44dd76e969c29",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 208481,
+          "published_at": "2026-10-12T14:23:01Z",
+          "edited": false,
+          "excerpt": "Адвокати не приходять, засідання скасовують: справа лікарів Odrex"
+        },
+        {
+          "id": 208489,
+          "published_at": "2026-10-12T15:19:10Z",
+          "edited": false,
+          "excerpt": "🔥Реактивний дрон-перехоплювач наздогнав та збив \"Герань-5\" Екіпаж \"Спалах\""
+        }
+      ],
+      "signal_keyword_messages_on_page": 2,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "suspilnenews",
+      "handle": "suspilnenews",
+      "url": "https://t.me/s/suspilnenews",
+      "status": 200,
+      "checked_at": "2026-10-12T15:21:00.892242Z",
+      "title": "СУСПІЛЬНЕ НОВИНИ",
+      "subscribers": 262000,
+      "subscribers_display": "262K  subscribers",
+      "sample_message_count": 20,
+      "last_post_time": "2026-10-12T15:11:10Z",
+      "sample_span_hours": 7.2611,
+      "posts_per_day_sample_estimate": 62.8,
+      "latency_seconds": 0.1417,
+      "decoded_body_bytes": 123217,
+      "downloaded_body_bytes": 16727,
+      "content_encoding": "gzip",
+      "body_sha256": "8974f8636c85ff9e8d9f2c4a0bfe5cb1f10fcd7a26c35e7eaf30f6d7e04df754",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 77293,
+          "published_at": "2026-10-12T09:27:12Z",
+          "edited": true,
+          "excerpt": "Міністри закордонних справ ЄС запровадили санкції проти майже"
+        },
+        {
+          "id": 77301,
+          "published_at": "2026-10-12T12:40:22Z",
+          "edited": true,
+          "excerpt": "UPD // У Вінниці внаслідок атаки РФ є"
+        }
+      ],
+      "signal_keyword_messages_on_page": 2,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "operativnoZSU",
+      "handle": "operativnoZSU",
+      "url": "https://t.me/s/operativnoZSU",
+      "status": 200,
+      "checked_at": "2026-10-12T15:21:01.960106Z",
+      "title": "Оперативний ЗСУ",
+      "subscribers": 364000,
+      "subscribers_display": "364K  subscribers",
+      "sample_message_count": 20,
+      "last_post_time": "2026-10-12T15:13:37Z",
+      "sample_span_hours": 4.8864,
+      "posts_per_day_sample_estimate": 93.32,
+      "latency_seconds": 0.1552,
+      "decoded_body_bytes": 148738,
+      "downloaded_body_bytes": 21755,
+      "content_encoding": "gzip",
+      "body_sha256": "b4caa0d4733cef8ef183d2f4030c4a8d417ba8372177684e669a49642f9d35b3",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 223365,
+          "published_at": "2026-10-12T11:15:35Z",
+          "edited": false,
+          "excerpt": "Збиття реактивного шахеда перехоплювачем STING S від «Диких"
+        },
+        {
+          "id": 223370,
+          "published_at": "2026-10-12T12:35:02Z",
+          "edited": false,
+          "excerpt": "❗️Внаслідок удару БПЛА в Києві постраждала людина, —"
+        },
+        {
+          "id": 223378,
+          "published_at": "2026-10-12T14:39:49Z",
+          "edited": false,
+          "excerpt": "❗️Київ - повітряна тривога через загрозу БПЛА 🫡https://t.me/operativnoZSU/"
+        }
+      ],
+      "signal_keyword_messages_on_page": 4,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "kpszsu",
+      "handle": "kpszsu",
+      "url": "https://t.me/s/kpszsu",
+      "status": 200,
+      "checked_at": "2026-10-12T15:21:02.952168Z",
+      "title": "Повітряні Сили ЗС України / Air Force of the Armed Forces of Ukraine",
+      "subscribers": 909000,
+      "subscribers_display": "909K  subscribers",
+      "sample_message_count": 20,
+      "last_post_time": "2026-10-12T15:20:17Z",
+      "sample_span_hours": 1.5833,
+      "posts_per_day_sample_estimate": 288,
+      "latency_seconds": 0.0951,
+      "decoded_body_bytes": 116419,
+      "downloaded_body_bytes": 9220,
+      "content_encoding": "gzip",
+      "body_sha256": "471002294e2984f86707ed7b5fec77d257f2b628571113545eb6ea3823149f1d",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 85593,
+          "published_at": "2026-10-12T15:14:31Z",
+          "edited": false,
+          "excerpt": "🏍 Реактивний БпЛА через зону відчуження Чорнобильської АЕС"
+        },
+        {
+          "id": 85594,
+          "published_at": "2026-10-12T15:19:28Z",
+          "edited": false,
+          "excerpt": "🏍 Реактивний БпЛА з Одещини курсом на Вінничину"
+        },
+        {
+          "id": 85595,
+          "published_at": "2026-10-12T15:20:17Z",
+          "edited": false,
+          "excerpt": "🛵 БпЛА на Запоріжжя з півдня."
+        }
+      ],
+      "signal_keyword_messages_on_page": 19,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "war_monitor",
+      "handle": "war_monitor",
+      "url": "https://t.me/s/war_monitor",
+      "status": 200,
+      "checked_at": "2026-10-12T15:21:04.007920Z",
+      "title": "monitor",
+      "subscribers": 968000,
+      "subscribers_display": "968K  subscribers",
+      "sample_message_count": 20,
+      "last_post_time": "2026-10-11T10:02:55Z",
+      "sample_span_hours": 29.2164,
+      "posts_per_day_sample_estimate": 15.61,
+      "latency_seconds": 0.112,
+      "decoded_body_bytes": 106866,
+      "downloaded_body_bytes": 9315,
+      "content_encoding": "gzip",
+      "body_sha256": "ef052991a44ed0bc938b2f23035076cc8cf21c05f10d7de7b1e31819a5b39f98",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 47552,
+          "published_at": "2026-10-10T11:36:43Z",
+          "edited": false,
+          "excerpt": "⚪️ Відбій загрози балістики."
+        },
+        {
+          "id": 47553,
+          "published_at": "2026-10-11T09:52:27Z",
+          "edited": false,
+          "excerpt": "🟣 Загроза балістики з Брянська. Увага. Імовірний пуск"
+        },
+        {
+          "id": 47554,
+          "published_at": "2026-10-11T10:02:46Z",
+          "edited": false,
+          "excerpt": "⚪️ Відбій загрози балістики."
+        }
+      ],
+      "signal_keyword_messages_on_page": 7,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "monitorwarr",
+      "handle": "monitorwarr",
+      "url": "https://t.me/s/monitorwarr",
+      "status": 200,
+      "checked_at": "2026-10-12T15:21:05.075990Z",
+      "title": "monitoring",
+      "subscribers": 85800,
+      "subscribers_display": "85.8K  subscribers",
+      "sample_message_count": 20,
+      "last_post_time": "2026-10-12T12:45:05Z",
+      "sample_span_hours": 4.1789,
+      "posts_per_day_sample_estimate": 109.12,
+      "latency_seconds": 0.1227,
+      "decoded_body_bytes": 113223,
+      "downloaded_body_bytes": 9999,
+      "content_encoding": "gzip",
+      "body_sha256": "7592b3284f0bbc12f732ff137a0248b1cf702ed66257a476f7f21543c6e92c37",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 42426,
+          "published_at": "2026-10-12T11:55:55Z",
+          "edited": false,
+          "excerpt": "⚠️ 1 реактив перелітає з Одещини на Вінниччину."
+        },
+        {
+          "id": 42427,
+          "published_at": "2026-10-12T12:25:30Z",
+          "edited": false,
+          "excerpt": "⚠️ 1 реактив на Хмельниччині курсом на Тернопільщину."
+        },
+        {
+          "id": 42428,
+          "published_at": "2026-10-12T12:45:05Z",
+          "edited": false,
+          "excerpt": "⚠️ 1 реактив перелітає з Хмельниччини на Тернопільщину."
+        }
+      ],
+      "signal_keyword_messages_on_page": 0,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "vanek_nikolaev",
+      "handle": "vanek_nikolaev",
+      "url": "https://t.me/s/vanek_nikolaev",
+      "status": 200,
+      "checked_at": "2026-10-12T15:21:06.121036Z",
+      "title": "Николаевский Ванёк",
+      "subscribers": 2610000,
+      "subscribers_display": "2.61M  subscribers",
+      "sample_message_count": 20,
+      "last_post_time": "2026-10-12T12:43:05Z",
+      "sample_span_hours": 128.9119,
+      "posts_per_day_sample_estimate": 3.54,
+      "latency_seconds": 0.118,
+      "decoded_body_bytes": 126553,
+      "downloaded_body_bytes": 13962,
+      "content_encoding": "gzip",
+      "body_sha256": "297934c55e1f4e2a9df2c70813903c4f3a6aec0d5f351ae861f62132f9ab3d84",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 43344,
+          "published_at": "2026-10-12T09:44:40Z",
+          "edited": false,
+          "excerpt": "общая по реактивным мопедам на сейчас: 2 на"
+        },
+        {
+          "id": 43345,
+          "published_at": "2026-10-12T12:37:54Z",
+          "edited": false,
+          "excerpt": "1 реактивный мопед подлетает к Виннице - может"
+        },
+        {
+          "id": 43346,
+          "published_at": "2026-10-12T12:43:05Z",
+          "edited": false,
+          "excerpt": "1 реактивный мопед подлетает к Виннице - может"
+        }
+      ],
+      "signal_keyword_messages_on_page": 11,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "kievreal1",
+      "handle": "kievreal1",
+      "url": "https://t.me/s/kievreal1",
+      "status": 200,
+      "checked_at": "2026-10-12T15:21:07.294129Z",
+      "title": "Реальний Київ | Украина",
+      "subscribers": 1560000,
+      "subscribers_display": "1.56M  subscribers",
+      "sample_message_count": 9,
+      "last_post_time": "2026-10-12T15:00:38Z",
+      "sample_span_hours": 2.4192,
+      "posts_per_day_sample_estimate": 79.37,
+      "latency_seconds": 0.2308,
+      "decoded_body_bytes": 92752,
+      "downloaded_body_bytes": 16871,
+      "content_encoding": "gzip",
+      "body_sha256": "fc98cebb30adbb072f6a7cee1bc46e5726cc141a9d7e7d2fedfb9e878b13373d",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 136818,
+          "published_at": "2026-10-12T13:42:44Z",
+          "edited": true,
+          "excerpt": "🚨 КИЇВСЬКА ОБЛАСТЬ - ОГОЛОШЕНА ПОВІТРЯНА ТРИВОГА ㅤ"
+        },
+        {
+          "id": 136819,
+          "published_at": "2026-10-12T14:27:10Z",
+          "edited": true,
+          "excerpt": "1 бпла на Іванків з Чорнобильської зони 1"
+        },
+        {
+          "id": 136821,
+          "published_at": "2026-10-12T14:38:34Z",
+          "edited": true,
+          "excerpt": "🚨 М. КИЇВ - ОГОЛОШЕНА ПОВІТРЯНА ТРИВОГА ㅤ"
+        }
+      ],
+      "signal_keyword_messages_on_page": 4,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "kievinfo_kyiv",
+      "handle": "kievinfo_kyiv",
+      "url": "https://t.me/s/kievinfo_kyiv",
+      "status": 200,
+      "checked_at": "2026-10-12T15:21:08.327061Z",
+      "title": "Київ ІНФО | Новини Україна🇺🇦",
+      "subscribers": 1250000,
+      "subscribers_display": "1.25M  subscribers",
+      "sample_message_count": 17,
+      "last_post_time": "2026-10-12T15:19:37Z",
+      "sample_span_hours": 5.5481,
+      "posts_per_day_sample_estimate": 69.21,
+      "latency_seconds": 0.215,
+      "decoded_body_bytes": 152519,
+      "downloaded_body_bytes": 20444,
+      "content_encoding": "gzip",
+      "body_sha256": "2eacf06bd2b7e5485e4fe66f821eb9fe7f96a7e739383b2858fe58977aaeabe5",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 102891,
+          "published_at": "2026-10-12T12:44:06Z",
+          "edited": true,
+          "excerpt": "‼️ У Києві повністю знищено генерацію електроенергії внаслідок"
+        }
+      ],
+      "signal_keyword_messages_on_page": 1,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "kyivoperativ",
+      "handle": "kyivoperativ",
+      "url": "https://t.me/s/kyivoperativ",
+      "status": 200,
+      "checked_at": "2026-10-12T15:21:09.300293Z",
+      "title": "КО резерв",
+      "subscribers": 802,
+      "subscribers_display": "802  subscribers",
+      "sample_message_count": 9,
+      "last_post_time": "2025-11-02T20:02:45Z",
+      "sample_span_hours": 0.0861,
+      "posts_per_day_sample_estimate": 2229.68,
+      "latency_seconds": 0.1392,
+      "decoded_body_bytes": 74748,
+      "downloaded_body_bytes": 14679,
+      "content_encoding": "gzip",
+      "body_sha256": "14016d72d102dcea8ee7922e0e905ccf0aeb8b1f2b6bc13015f79615a02c8d5f",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 23483,
+          "published_at": "2025-11-02T19:57:35Z",
+          "edited": false,
+          "excerpt": "«Догонялки» на Победы, под путепроводом на Берестейской, в"
+        },
+        {
+          "id": 23484,
+          "published_at": "2025-11-02T19:57:35Z",
+          "edited": false,
+          "excerpt": "«Ребят, я тут припаркуюсь и в зальчик схожу"
+        },
+        {
+          "id": 23485,
+          "published_at": "2025-11-02T20:02:45Z",
+          "edited": false,
+          "excerpt": ""
+        }
+      ],
+      "signal_keyword_messages_on_page": 0,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "kharkivlife",
+      "handle": "kharkivlife",
+      "url": "https://t.me/s/kharkivlife",
+      "status": 200,
+      "checked_at": "2026-10-12T15:21:10.348938Z",
+      "title": "Харьков life | Харків🇺🇦",
+      "subscribers": 667000,
+      "subscribers_display": "667K  subscribers",
+      "sample_message_count": 19,
+      "last_post_time": "2026-10-12T15:14:11Z",
+      "sample_span_hours": 3.5611,
+      "posts_per_day_sample_estimate": 121.31,
+      "latency_seconds": 0.1366,
+      "decoded_body_bytes": 134262,
+      "downloaded_body_bytes": 14888,
+      "content_encoding": "gzip",
+      "body_sha256": "40fa08e5ff5ed5cb8ff527f06b7b69c5e5dcdb223d828831dce77cdc1af2428c",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 156127,
+          "published_at": "2026-10-12T14:38:39Z",
+          "edited": true,
+          "excerpt": "БпЛА над Дергачами ㅤ Надіслати новину @Kharkiv_Lifebot 👉ПІДПИСАТИСЯ"
+        },
+        {
+          "id": 156128,
+          "published_at": "2026-10-12T15:02:15Z",
+          "edited": true,
+          "excerpt": "БпЛА на Золочів ㅤ Надіслати новину @Kharkiv_Lifebot 👉ПІДПИСАТИСЯ"
+        },
+        {
+          "id": 156129,
+          "published_at": "2026-10-12T15:14:11Z",
+          "edited": true,
+          "excerpt": "БпЛА на Люботин ㅤ Надіслати новину @Kharkiv_Lifebot 👉ПІДПИСАТИСЯ"
+        }
+      ],
+      "signal_keyword_messages_on_page": 9,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "truexakharkiv",
+      "handle": "truexakharkiv",
+      "url": "https://t.me/s/truexakharkiv",
+      "status": 200,
+      "checked_at": "2026-10-12T15:21:11.448527Z",
+      "title": "Труха⚡️Харків | Новини",
+      "subscribers": 581000,
+      "subscribers_display": "581K  subscribers",
+      "sample_message_count": 18,
+      "last_post_time": "2026-10-12T14:34:12Z",
+      "sample_span_hours": 7.0178,
+      "posts_per_day_sample_estimate": 58.14,
+      "latency_seconds": 0.1894,
+      "decoded_body_bytes": 138545,
+      "downloaded_body_bytes": 19430,
+      "content_encoding": "gzip",
+      "body_sha256": "99b5392ede224f85a55e03d4ef14379a15bbfb74e7b73482f8db9be5ce2b1244",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 102960,
+          "published_at": "2026-10-12T10:30:55Z",
+          "edited": false,
+          "excerpt": "‼️Відео моменту ракетного удару по Пісочину, – прокуратура."
+        },
+        {
+          "id": 102968,
+          "published_at": "2026-10-12T12:44:39Z",
+          "edited": true,
+          "excerpt": "Реактивний шахед на Мерефу. Труха⚡️Харків | Надіслати новину"
+        },
+        {
+          "id": 102969,
+          "published_at": "2026-10-12T12:53:30Z",
+          "edited": true,
+          "excerpt": "Реактивний шахед на Мерефу. Труха⚡️Харків | Надіслати новину"
+        }
+      ],
+      "signal_keyword_messages_on_page": 3,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "hueviykharkov",
+      "handle": "hueviykharkov",
+      "url": "https://t.me/hueviykharkov",
+      "status": 200,
+      "checked_at": "2026-10-12T15:21:12.420362Z",
+      "title": "",
+      "subscribers": null,
+      "subscribers_display": null,
+      "sample_message_count": 0,
+      "last_post_time": null,
+      "sample_span_hours": null,
+      "posts_per_day_sample_estimate": null,
+      "latency_seconds": 0.109,
+      "decoded_body_bytes": 9673,
+      "downloaded_body_bytes": 3668,
+      "content_encoding": "gzip",
+      "body_sha256": "5c6721a1746bd1e72ea5c47be7a57044f3f0553718f93a4017fdbaa45c284f83",
+      "http_request_count": 2,
+      "messages": [],
+      "signal_keyword_messages_on_page": 0,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "kharkiv_1654",
+      "handle": "kharkiv_1654",
+      "url": "https://t.me/s/kharkiv_1654",
+      "status": 200,
+      "checked_at": "2026-10-12T15:21:13.590534Z",
+      "title": "Харків 1654 | Місто-герой🇺🇦",
+      "subscribers": 243000,
+      "subscribers_display": "243K  subscribers",
+      "sample_message_count": 14,
+      "last_post_time": "2026-10-12T15:13:01Z",
+      "sample_span_hours": 6.2139,
+      "posts_per_day_sample_estimate": 50.21,
+      "latency_seconds": 0.227,
+      "decoded_body_bytes": 130586,
+      "downloaded_body_bytes": 23914,
+      "content_encoding": "gzip",
+      "body_sha256": "4ec78798a9cf9cacf07d2c2dd3ef9455b83deebfeeb12817fd0802938bc0fba8",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 158574,
+          "published_at": "2026-10-12T14:07:25Z",
+          "edited": false,
+          "excerpt": "На видео — женщина, которую покалечили ТЦКашники. Как"
+        },
+        {
+          "id": 158575,
+          "published_at": "2026-10-12T14:33:11Z",
+          "edited": false,
+          "excerpt": "Юридичні питання не завжди мають очевидні відповіді. Іноді"
+        },
+        {
+          "id": 158576,
+          "published_at": "2026-10-12T15:13:01Z",
+          "edited": false,
+          "excerpt": "‼️Якщо ви хочете, щоб ТЦКшники понесли відповідальність за"
+        }
+      ],
+      "signal_keyword_messages_on_page": 0,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "odessa_infonews",
+      "handle": "odessa_infonews",
+      "url": "https://t.me/s/odessa_infonews",
+      "status": 200,
+      "checked_at": "2026-10-12T15:21:14.574392Z",
+      "title": "Одесса INFO⚓️🇺🇦Новости | Одеса",
+      "subscribers": 991000,
+      "subscribers_display": "991K  subscribers",
+      "sample_message_count": 20,
+      "last_post_time": "2026-10-12T15:09:26Z",
+      "sample_span_hours": 3.4508,
+      "posts_per_day_sample_estimate": 132.14,
+      "latency_seconds": 0.1484,
+      "decoded_body_bytes": 140527,
+      "downloaded_body_bytes": 14556,
+      "content_encoding": "gzip",
+      "body_sha256": "016407dd6ace8650fd3cf254b6c6d0dfa699ab979371113e4a83a521da50b68d",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 101592,
+          "published_at": "2026-10-12T11:43:13Z",
+          "edited": false,
+          "excerpt": "РБпЛА вдоль берега напротив Одессы"
+        },
+        {
+          "id": 101598,
+          "published_at": "2026-10-12T12:23:52Z",
+          "edited": false,
+          "excerpt": "Новые рБПЛА с моря идут на Черноморск/411/Фонтанка/Пересыпь"
+        }
+      ],
+      "signal_keyword_messages_on_page": 2,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "odessahello",
+      "handle": "odessahello",
+      "url": "https://t.me/s/odessahello",
+      "status": 200,
+      "checked_at": "2026-10-12T15:21:15.593957Z",
+      "title": "Подслушано Одесса [истории]",
+      "subscribers": 114,
+      "subscribers_display": "114  subscribers",
+      "sample_message_count": 20,
+      "last_post_time": "2020-10-07T19:21:50Z",
+      "sample_span_hours": 609.1314,
+      "posts_per_day_sample_estimate": 0.75,
+      "latency_seconds": 0.1088,
+      "decoded_body_bytes": 130599,
+      "downloaded_body_bytes": 17096,
+      "content_encoding": "gzip",
+      "body_sha256": "6ddb4ca18fcd2cc119515ac28bb1ca888ee05c7fb50959160e7ad17b38a70db7",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 201,
+          "published_at": "2020-10-02T12:30:07Z",
+          "edited": false,
+          "excerpt": "Скучаете?)"
+        },
+        {
+          "id": 202,
+          "published_at": "2020-10-04T17:57:06Z",
+          "edited": false,
+          "excerpt": "Анонимно пожалуйста. Мой парень приезжий. Я тоже. Мы"
+        },
+        {
+          "id": 204,
+          "published_at": "2020-10-07T19:21:50Z",
+          "edited": false,
+          "excerpt": "Я долго наблюдаю за теми, кто хаит девушек"
+        }
+      ],
+      "signal_keyword_messages_on_page": 0,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "dnepr_operativ",
+      "handle": "dnepr_operativ",
+      "url": "https://t.me/s/dnepr_operativ",
+      "status": 200,
+      "checked_at": "2026-10-12T15:21:16.703838Z",
+      "title": "Дніпро Оперативний🇺🇦| Війна",
+      "subscribers": 314000,
+      "subscribers_display": "314K  subscribers",
+      "sample_message_count": 14,
+      "last_post_time": "2026-10-12T14:53:49Z",
+      "sample_span_hours": 2.8781,
+      "posts_per_day_sample_estimate": 108.41,
+      "latency_seconds": 0.1672,
+      "decoded_body_bytes": 111109,
+      "downloaded_body_bytes": 15165,
+      "content_encoding": "gzip",
+      "body_sha256": "8130765034b40c971257ef56c2281902d3b5942a2463adc2fb9fe45e93f3ce51",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 115341,
+          "published_at": "2026-10-12T12:01:08Z",
+          "edited": true,
+          "excerpt": "🔴Реактивні БпЛА у напрямку Дніпра"
+        },
+        {
+          "id": 115350,
+          "published_at": "2026-10-12T12:54:41Z",
+          "edited": false,
+          "excerpt": "🔴 Дніпровський район — повітряна тривога, червоний рівень:"
+        },
+        {
+          "id": 115356,
+          "published_at": "2026-10-12T14:25:35Z",
+          "edited": false,
+          "excerpt": "🔴 Дніпровський район — повітряна тривога, червоний рівень:"
+        }
+      ],
+      "signal_keyword_messages_on_page": 3,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "dnepr_info",
+      "handle": "dnepr_info",
+      "url": "https://t.me/dnepr_info",
+      "status": 200,
+      "checked_at": "2026-10-12T15:21:17.675881Z",
+      "title": "",
+      "subscribers": null,
+      "subscribers_display": null,
+      "sample_message_count": 0,
+      "last_post_time": null,
+      "sample_span_hours": null,
+      "posts_per_day_sample_estimate": null,
+      "latency_seconds": 0.0922,
+      "decoded_body_bytes": 9631,
+      "downloaded_body_bytes": 3666,
+      "content_encoding": "gzip",
+      "body_sha256": "7fc3ce3f0b86046fc87563e6e1f4307ac80622a4cc7d7853cc48f81d70a38608",
+      "http_request_count": 2,
+      "messages": [],
+      "signal_keyword_messages_on_page": 0,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "dnipro_alerts",
+      "handle": "dnipro_alerts",
+      "url": "https://t.me/s/dnipro_alerts",
+      "status": 200,
+      "checked_at": "2026-10-12T15:21:18.763445Z",
+      "title": "Дніпро Alerts🚀🚨",
+      "subscribers": 810000,
+      "subscribers_display": "810K  subscribers",
+      "sample_message_count": 20,
+      "last_post_time": "2026-10-12T15:04:42Z",
+      "sample_span_hours": 3.0589,
+      "posts_per_day_sample_estimate": 149.07,
+      "latency_seconds": 0.1296,
+      "decoded_body_bytes": 140047,
+      "downloaded_body_bytes": 10797,
+      "content_encoding": "gzip",
+      "body_sha256": "e8fb155b2a635c0f98ef225c3431f6e9017958690913e56b22c081cebdd367b3",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 57402,
+          "published_at": "2026-10-12T13:17:00Z",
+          "edited": true,
+          "excerpt": "Дніпро та область жовтий 🟨. ℹ️ Alerts Live"
+        },
+        {
+          "id": 57403,
+          "published_at": "2026-10-12T14:26:05Z",
+          "edited": true,
+          "excerpt": "Транзитний рух турби в самарівському районі області далі"
+        },
+        {
+          "id": 57404,
+          "published_at": "2026-10-12T15:04:42Z",
+          "edited": true,
+          "excerpt": "Вся область жовта 🟨 У павлоградському районі є"
+        }
+      ],
+      "signal_keyword_messages_on_page": 0,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "lvivych",
+      "handle": "lvivych",
+      "url": "https://t.me/lvivych",
+      "status": 200,
+      "checked_at": "2026-10-12T15:21:19.771880Z",
+      "title": "",
+      "subscribers": null,
+      "subscribers_display": null,
+      "sample_message_count": 0,
+      "last_post_time": null,
+      "sample_span_hours": null,
+      "posts_per_day_sample_estimate": null,
+      "latency_seconds": 0.0983,
+      "decoded_body_bytes": 9589,
+      "downloaded_body_bytes": 3663,
+      "content_encoding": "gzip",
+      "body_sha256": "356783295a9956b787ed0ee47893e5fd65868f073921b9ef6b832f35d377078e",
+      "http_request_count": 2,
+      "messages": [],
+      "signal_keyword_messages_on_page": 0,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "lviv24_7",
+      "handle": "lviv24_7",
+      "url": "https://t.me/s/lviv24_7",
+      "status": 200,
+      "checked_at": "2026-10-12T15:21:20.827538Z",
+      "title": "Львів 24/7",
+      "subscribers": 13,
+      "subscribers_display": "13  subscribers",
+      "sample_message_count": 11,
+      "last_post_time": "2022-02-27T11:03:50Z",
+      "sample_span_hours": 24313.7425,
+      "posts_per_day_sample_estimate": 0.01,
+      "latency_seconds": 0.0979,
+      "decoded_body_bytes": 59764,
+      "downloaded_body_bytes": 9229,
+      "content_encoding": "gzip",
+      "body_sha256": "320ae9692323f5637b313d0beb8ca15f6bbc734f8482533c3424c8a1b73eca09",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 6,
+          "published_at": "2022-02-27T10:39:43Z",
+          "edited": false,
+          "excerpt": "⚡️Командування Повітряних Сил ЗСУ повідомляє: Від наших західних"
+        }
+      ],
+      "signal_keyword_messages_on_page": 1,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "lviv1256",
+      "handle": "lviv1256",
+      "url": "https://t.me/s/lviv1256",
+      "status": 200,
+      "checked_at": "2026-10-12T15:21:21.972255Z",
+      "title": "✙ То Львів, курва! #УкрТґ ✙",
+      "subscribers": 597,
+      "subscribers_display": "597  subscribers",
+      "sample_message_count": 17,
+      "last_post_time": "2025-04-01T12:56:15Z",
+      "sample_span_hours": 8776.2228,
+      "posts_per_day_sample_estimate": 0.04,
+      "latency_seconds": 0.2018,
+      "decoded_body_bytes": 102941,
+      "downloaded_body_bytes": 17280,
+      "content_encoding": "gzip",
+      "body_sha256": "e50ace91d0e41c728a844fb57360c990801345ea7a16e3ebf8364db8a0dd5542",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 6795,
+          "published_at": "2025-02-27T09:23:36Z",
+          "edited": false,
+          "excerpt": ""
+        },
+        {
+          "id": 6796,
+          "published_at": "2025-02-28T18:33:46Z",
+          "edited": false,
+          "excerpt": "‼️ Україна отримає ядерку але є один нюанс"
+        },
+        {
+          "id": 6797,
+          "published_at": "2025-04-01T12:56:15Z",
+          "edited": false,
+          "excerpt": "Розказуйте, які найкрінжовіший і найсмішніший жарт ви сьогодні"
+        }
+      ],
+      "signal_keyword_messages_on_page": 0,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "truexalviv",
+      "handle": "truexalviv",
+      "url": "https://t.me/truexalviv",
+      "status": 200,
+      "checked_at": "2026-10-12T15:21:22.911371Z",
+      "title": "",
+      "subscribers": null,
+      "subscribers_display": null,
+      "sample_message_count": 0,
+      "last_post_time": null,
+      "sample_span_hours": null,
+      "posts_per_day_sample_estimate": null,
+      "latency_seconds": 0.0912,
+      "decoded_body_bytes": 9630,
+      "downloaded_body_bytes": 3665,
+      "content_encoding": "gzip",
+      "body_sha256": "527cd24a518e00d6b32ff2bb6f4a10a43fc927e9532a86abcc39212e162e8587",
+      "http_request_count": 2,
+      "messages": [],
+      "signal_keyword_messages_on_page": 0,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "lvivych_news",
+      "handle": "lvivych_news",
+      "url": "https://t.me/s/lvivych_news",
+      "status": 200,
+      "checked_at": "2026-10-12T15:21:33.652928Z",
+      "title": "Львівич | Новини",
+      "subscribers": 436000,
+      "subscribers_display": "436K  subscribers",
+      "sample_message_count": 14,
+      "last_post_time": "2026-10-12T15:00:08Z",
+      "sample_span_hours": 4.7597,
+      "posts_per_day_sample_estimate": 65.55,
+      "latency_seconds": 0.308,
+      "decoded_body_bytes": 115413,
+      "downloaded_body_bytes": 17495,
+      "content_encoding": "gzip",
+      "body_sha256": "4e7f3dccaf8957abe0d362d38a44ee0cd0579d4ed9881b4bb5c8cb2a79d1ae02",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 76168,
+          "published_at": "2026-10-12T14:24:20Z",
+          "edited": false,
+          "excerpt": "🚨 Тривога в сусідніх областях через реактивний шахед."
+        },
+        {
+          "id": 76169,
+          "published_at": "2026-10-12T14:50:05Z",
+          "edited": false,
+          "excerpt": "🚨 Тривога в сусідніх областях через реактивний шахед."
+        }
+      ],
+      "signal_keyword_messages_on_page": 2,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "lvivtruexa",
+      "handle": "lvivtruexa",
+      "url": "https://t.me/s/lvivtruexa",
+      "status": 200,
+      "checked_at": "2026-10-12T15:21:34.604345Z",
+      "title": "Труха⚡️Львів",
+      "subscribers": 325000,
+      "subscribers_display": "325K  subscribers",
+      "sample_message_count": 20,
+      "last_post_time": "2026-10-12T15:02:54Z",
+      "sample_span_hours": 23.05,
+      "posts_per_day_sample_estimate": 19.78,
+      "latency_seconds": 0.2094,
+      "decoded_body_bytes": 150936,
+      "downloaded_body_bytes": 22724,
+      "content_encoding": "gzip",
+      "body_sha256": "35b89fc371022038ffb02bf83e001b098b96cdf9197a87cb693420550dbe74f7",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 45717,
+          "published_at": "2026-10-11T17:23:29Z",
+          "edited": false,
+          "excerpt": "❗️Двоє людей загинули внаслідок атаки БпЛА у сусідньому"
+        },
+        {
+          "id": 45731,
+          "published_at": "2026-10-12T12:35:43Z",
+          "edited": false,
+          "excerpt": "🔥Момент збиття реактивного БпЛА за допомогою ПЗРК «Ігла-1»."
+        }
+      ],
+      "signal_keyword_messages_on_page": 2,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "lv1256",
+      "handle": "Lv1256",
+      "url": "https://t.me/s/lv1256",
+      "status": 200,
+      "checked_at": "2026-10-12T15:21:36.061883Z",
+      "title": "Так люблю той Львів",
+      "subscribers": 132000,
+      "subscribers_display": "132K  subscribers",
+      "sample_message_count": 11,
+      "last_post_time": "2026-10-12T15:10:28Z",
+      "sample_span_hours": 2.1392,
+      "posts_per_day_sample_estimate": 112.19,
+      "latency_seconds": 0.6083,
+      "decoded_body_bytes": 95066,
+      "downloaded_body_bytes": 18705,
+      "content_encoding": "gzip",
+      "body_sha256": "46304211de4d773526ca87911e6250da8eeb45527f92a3722e0d331e47e48445",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 116248,
+          "published_at": "2026-10-12T14:35:30Z",
+          "edited": false,
+          "excerpt": "Львів оголосив конкурс на будівництво хірургічного корпусу реабілітаційного"
+        },
+        {
+          "id": 116250,
+          "published_at": "2026-10-12T14:50:18Z",
+          "edited": false,
+          "excerpt": "Автором тексту цьогорічного радіодиктанту став письменник і ветеран"
+        },
+        {
+          "id": 116251,
+          "published_at": "2026-10-12T14:52:26Z",
+          "edited": false,
+          "excerpt": "росія сьогодні атакувала шість енергетичних об’єктів України, попри"
+        },
+        {
+          "id": 116252,
+          "published_at": "2026-10-12T15:10:28Z",
+          "edited": false,
+          "excerpt": "Андрію Парубію посмертно присудили премію імені Степана Бандери"
+        }
+      ],
+      "signal_keyword_messages_on_page": 0,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "ukraina_novosti",
+      "handle": "ukraina_novosti",
+      "url": "https://t.me/s/ukraina_novosti",
+      "status": 200,
+      "checked_at": "2026-10-12T15:22:44.056823Z",
+      "title": "Україна 24/7 - новини",
+      "subscribers": 1370000,
+      "subscribers_display": "1.37M  subscribers",
+      "sample_message_count": 18,
+      "last_post_time": "2026-10-12T15:13:27Z",
+      "sample_span_hours": 7.0919,
+      "posts_per_day_sample_estimate": 57.53,
+      "latency_seconds": 0.2416,
+      "decoded_body_bytes": 127046,
+      "downloaded_body_bytes": 18776,
+      "content_encoding": "gzip",
+      "body_sha256": "0c0d594c457f2e1013f0a7e83de3a6967c73af7d61ad6d6f9d5c13f5f8cb930c",
+      "http_request_count": 1,
+      "messages": [
+        {
+          "id": 117532,
+          "published_at": "2026-10-12T13:16:05Z",
+          "edited": false,
+          "excerpt": "❗️В Виннице \"шахед\" ударил по заводу Roshen, на"
+        }
+      ],
+      "signal_keyword_messages_on_page": 1,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "UkrainaOnlline",
+      "handle": "UkrainaOnlline",
+      "url": "https://t.me/UkrainaOnlline",
+      "status": 200,
+      "checked_at": "2026-10-12T15:22:44.940713Z",
+      "title": "",
+      "subscribers": null,
+      "subscribers_display": null,
+      "sample_message_count": 0,
+      "last_post_time": null,
+      "sample_span_hours": null,
+      "posts_per_day_sample_estimate": null,
+      "latency_seconds": 0.083,
+      "decoded_body_bytes": 9687,
+      "downloaded_body_bytes": 3670,
+      "content_encoding": "gzip",
+      "body_sha256": "73fcbff2f8526bf9be6b52a48a1b3bc1462b47d75ebae073c53ac9d26fbd0b25",
+      "http_request_count": 2,
+      "messages": [],
+      "signal_keyword_messages_on_page": 0,
+      "sample_text_truncated_at_characters": 500
+    },
+    {
+      "handle_requested": "tsn_news",
+      "handle": "tsn_news",
+      "url": "https://t.me/tsn_news",
+      "status": 200,
+      "checked_at": "2026-10-12T15:22:45.995483Z",
+      "title": "",
+      "subscribers": null,
+      "subscribers_display": null,
+      "sample_message_count": 0,
+      "last_post_time": null,
+      "sample_span_hours": null,
+      "posts_per_day_sample_estimate": null,
+      "latency_seconds": 0.0825,
+      "decoded_body_bytes": 9603,
+      "downloaded_body_bytes": 3661,
+      "content_encoding": "gzip",
+      "body_sha256": "d3da4eaa0a7165023387e046b438fd54580d00e0d54d31ced31ec08316dec457",
+      "http_request_count": 2,
+      "messages": [],
+      "signal_keyword_messages_on_page": 0,
+      "sample_text_truncated_at_characters": 500
+    }
+  ],
+  "cursor_pages": [],
+  "poll": {
+    "channels": 31,
+    "requests": 36,
+    "decoded_body_bytes": 3212576,
+    "downloaded_body_bytes": 447573,
+    "wall_seconds_including_polite_waits": 31.6362,
+    "http_latency_median_seconds": 0.1394,
+    "http_latency_max_seconds": 0.2688
+  }
+}

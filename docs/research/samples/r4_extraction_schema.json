@@ -1,0 +1,26 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "event_type": {"type": "string", "enum": ["bomber_takeoff", "mig31k_takeoff", "drone_group", "ballistic_threat", "missile_launch", "threat_clear"]},
+          "status": {"type": "string", "enum": ["reported", "preliminary", "cleared"]},
+          "place_mentions": {"type": "array", "items": {"type": "string"}},
+          "origin": {"type": ["string", "null"]},
+          "heading": {"type": ["string", "null"]},
+          "confidence": {"type": "number"},
+          "source_keys": {"type": "array", "items": {"type": "string"}},
+          "published_at": {"type": "string"},
+          "evidence_quote": {"type": "string"}
+        },
+        "required": ["event_type", "status", "place_mentions", "origin", "heading", "confidence", "source_keys", "published_at", "evidence_quote"]
+      }
+    }
+  },
+  "required": ["events"]
+}

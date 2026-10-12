@@ -1,0 +1,214 @@
+{
+  "checked_at": "2026-10-12T15:23:54.292739Z",
+  "profiles": [
+    {
+      "handle": "truexanewsua",
+      "url": "https://t.me/truexanewsua",
+      "checked_at": "2026-10-12T15:23:35.473656Z",
+      "status": 200,
+      "title": "Труха⚡️Україна",
+      "subscribers_display": "3 147 096 subscribers",
+      "subscribers": 3147096,
+      "latency_seconds": 0.1481,
+      "downloaded_body_bytes": 4526
+    },
+    {
+      "handle": "vanek_nikolaev",
+      "url": "https://t.me/vanek_nikolaev",
+      "checked_at": "2026-10-12T15:23:36.434145Z",
+      "status": 200,
+      "title": "Николаевский Ванёк✔",
+      "subscribers_display": "2 605 587 subscribers",
+      "subscribers": 2605587,
+      "latency_seconds": 0.0502,
+      "downloaded_body_bytes": 4547
+    },
+    {
+      "handle": "insiderUKR",
+      "url": "https://t.me/insiderUKR",
+      "checked_at": "2026-10-12T15:23:37.489505Z",
+      "status": 200,
+      "title": "INSIDER UA | Україна | Новини",
+      "subscribers_display": "2 189 775 subscribers",
+      "subscribers": 2189775,
+      "latency_seconds": 0.0526,
+      "downloaded_body_bytes": 4399
+    },
+    {
+      "handle": "lachentyt",
+      "url": "https://t.me/lachentyt",
+      "checked_at": "2026-10-12T15:23:38.535814Z",
+      "status": 200,
+      "title": "Лачен пише✔",
+      "subscribers_display": "1 591 448 subscribers",
+      "subscribers": 1591448,
+      "latency_seconds": 0.0431,
+      "downloaded_body_bytes": 4332
+    },
+    {
+      "handle": "voynareal",
+      "url": "https://t.me/voynareal",
+      "checked_at": "2026-10-12T15:23:39.601023Z",
+      "status": 200,
+      "title": "Реальна Війна | Україна | Новини",
+      "subscribers_display": "1 511 612 subscribers",
+      "subscribers": 1511612,
+      "latency_seconds": 0.0604,
+      "downloaded_body_bytes": 4424
+    },
+    {
+      "handle": "ukraina_novosti",
+      "url": "https://t.me/ukraina_novosti",
+      "checked_at": "2026-10-12T15:23:40.635519Z",
+      "status": 200,
+      "title": "Україна 24/7 - новини",
+      "subscribers_display": "1 373 007 subscribers",
+      "subscribers": 1373007,
+      "latency_seconds": 0.0474,
+      "downloaded_body_bytes": 4528
+    },
+    {
+      "handle": "war_monitor",
+      "url": "https://t.me/war_monitor",
+      "checked_at": "2026-10-12T15:23:41.688949Z",
+      "status": 200,
+      "title": "monitor",
+      "subscribers_display": "968 491 subscribers",
+      "subscribers": 968491,
+      "latency_seconds": 0.0497,
+      "downloaded_body_bytes": 4304
+    },
+    {
+      "handle": "kpszsu",
+      "url": "https://t.me/kpszsu",
+      "checked_at": "2026-10-12T15:23:42.741468Z",
+      "status": 200,
+      "title": "Повітряні Сили ЗС України / Air Force of the Armed Forces of Ukraine✔",
+      "subscribers_display": "908 899 subscribers",
+      "subscribers": 908899,
+      "latency_seconds": 0.0503,
+      "downloaded_body_bytes": 4457
+    },
+    {
+      "handle": "uniannet",
+      "url": "https://t.me/uniannet",
+      "checked_at": "2026-10-12T15:23:43.801824Z",
+      "status": 200,
+      "title": "УНИАН - новости Украины | война с Россией | новини України | війна з Росією | УНІАН✔",
+      "subscribers_display": "703 767 subscribers",
+      "subscribers": 703767,
+      "latency_seconds": 0.0571,
+      "downloaded_body_bytes": 4553
+    },
+    {
+      "handle": "UkraineNow",
+      "url": "https://t.me/UkraineNow",
+      "checked_at": "2026-10-12T15:23:44.833323Z",
+      "status": 200,
+      "title": "Ukraine NOW",
+      "subscribers_display": "408 999 subscribers",
+      "subscribers": 408999,
+      "latency_seconds": 0.0422,
+      "downloaded_body_bytes": 4296
+    },
+    {
+      "handle": "operativnoZSU",
+      "url": "https://t.me/operativnoZSU",
+      "checked_at": "2026-10-12T15:23:45.890009Z",
+      "status": 200,
+      "title": "Оперативний ЗСУ",
+      "subscribers_display": "363 574 subscribers",
+      "subscribers": 363574,
+      "latency_seconds": 0.0529,
+      "downloaded_body_bytes": 4432
+    },
+    {
+      "handle": "suspilnenews",
+      "url": "https://t.me/suspilnenews",
+      "checked_at": "2026-10-12T15:23:46.922027Z",
+      "status": 200,
+      "title": "СУСПІЛЬНЕ НОВИНИ✔",
+      "subscribers_display": "262 449 subscribers",
+      "subscribers": 262449,
+      "latency_seconds": 0.0444,
+      "downloaded_body_bytes": 4409
+    },
+    {
+      "handle": "monitorwarr",
+      "url": "https://t.me/monitorwarr",
+      "checked_at": "2026-10-12T15:23:47.981023Z",
+      "status": 200,
+      "title": "monitoring",
+      "subscribers_display": "85 759 subscribers",
+      "subscribers": 85759,
+      "latency_seconds": 0.0562,
+      "downloaded_body_bytes": 4378
+    },
+    {
+      "handle": "kievreal1",
+      "url": "https://t.me/kievreal1",
+      "checked_at": "2026-10-12T15:23:49.019057Z",
+      "status": 200,
+      "title": "Реальний Київ | Украина",
+      "subscribers_display": "1 560 042 subscribers",
+      "subscribers": 1560042,
+      "latency_seconds": 0.0499,
+      "downloaded_body_bytes": 4427
+    },
+    {
+      "handle": "kievinfo_kyiv",
+      "url": "https://t.me/kievinfo_kyiv",
+      "checked_at": "2026-10-12T15:23:50.071247Z",
+      "status": 200,
+      "title": "Київ ІНФО | Новини Україна 🇺🇦",
+      "subscribers_display": "1 250 167 subscribers",
+      "subscribers": 1250167,
+      "latency_seconds": 0.0493,
+      "downloaded_body_bytes": 4556
+    },
+    {
+      "handle": "kharkivlife",
+      "url": "https://t.me/kharkivlife",
+      "checked_at": "2026-10-12T15:23:51.123281Z",
+      "status": 200,
+      "title": "Харьков life | Харків 🇺🇦",
+      "subscribers_display": "666 916 subscribers",
+      "subscribers": 666916,
+      "latency_seconds": 0.0486,
+      "downloaded_body_bytes": 4466
+    },
+    {
+      "handle": "odessa_infonews",
+      "url": "https://t.me/odessa_infonews",
+      "checked_at": "2026-10-12T15:23:52.182010Z",
+      "status": 200,
+      "title": "Одесса INFO ⚓️ 🇺🇦 Новости | Одеса",
+      "subscribers_display": "991 068 subscribers",
+      "subscribers": 991068,
+      "latency_seconds": 0.0556,
+      "downloaded_body_bytes": 4492
+    },
+    {
+      "handle": "dnipro_alerts",
+      "url": "https://t.me/dnipro_alerts",
+      "checked_at": "2026-10-12T15:23:53.229896Z",
+      "status": 200,
+      "title": "Дніпро Alerts 🚀 🚨",
+      "subscribers_display": "810 055 subscribers",
+      "subscribers": 810055,
+      "latency_seconds": 0.0439,
+      "downloaded_body_bytes": 4492
+    },
+    {
+      "handle": "lvivych_news",
+      "url": "https://t.me/lvivych_news",
+      "checked_at": "2026-10-12T15:23:54.292739Z",
+      "status": 200,
+      "title": "Львівич | Новини",
+      "subscribers_display": "436 292 subscribers",
+      "subscribers": 436292,
+      "latency_seconds": 0.0434,
+      "downloaded_body_bytes": 4522
+    }
+  ]
+}

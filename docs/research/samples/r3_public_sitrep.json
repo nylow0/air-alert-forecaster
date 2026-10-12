@@ -1,0 +1,37 @@
+[
+  {
+    "url": "https://alerts.in.ua/llm",
+    "fetched_at": "2026-10-12T15:16:34.440282Z",
+    "status": 200,
+    "final_url": "https://api.alerts.in.ua/v3/alerts/active.md",
+    "elapsed_s": 0.203,
+    "bytes": 24676,
+    "sha256": "bbeaa0f8f03d43f58e9c7ea6cef722045809214e408ec40f067965ba36d4b9c1",
+    "headers": {
+      "date": "Mon, 12 Oct 2026 15:16:34 GMT",
+      "content-type": "text/plain; charset=utf-8",
+      "last-modified": "Mon, 12 Oct 2026 15:15:19 GMT",
+      "cache-control": "max-age=1"
+    },
+    "text": "# SITREP — UKRAINE AIR RAID WARNING STATUS ``` DTG 121815C OCT 26 LOCAL TIME Monday, 12 October 2026, 18:15 (Europe/Kyiv, 2026-10-12T18:15:19+03:00) DAY D+1692 of the full-scale invasion WARNING STATE ACTIVE — 54 areas in 13 oblasts (17 red, 37 yellow) ORIGINATOR alerts.in.ua — open-source civil-defence alert monitoring RELEASABILITY OPEN SOURCE / PUBLIC INFORMATION ``` > This is an open-source civil-defence monitoring product presented in report format. > It is not an official military document and carries no security classification. **ALERT LEVELS** (see [alert levels](https://blog.alerts.in.ua/p/alert-levels)) - **Red** — issued for missile threats and mass strikes. Requires an immediate move to shelter; businesses and public transit should suspend operations. - **Yellow** — declared during drone attacks. Businesses, public transit and civic facilities may keep operating under defined safety criteria; people should stay alert but can continue normal activity. - Each level has its own outdoor siren pattern, and sirens no longer sound for the all-clear. Where no level is reported, the warning is treated as red. ## 1. SITUATION (BLUF) Air raid sirens are currently sounding across Dnipropetrovska oblast, Donetska oblast, Kharkivska oblast, Sumska oblast, Chernihivska oblast, Poltavska oblast, Kyivska oblast, Kirovohradska oblast, Cherkaska oblast, Mykolaivska oblast, Odeska oblast, Rivnenska oblast and Zaporizka oblast, covering 54 areas in 13 oblasts, as attack drones are being tracked over Ukrainian territory. By level: 17 red (missile / mass-strike level), 37 yellow (dron",
+    "links": []
+  },
+  {
+    "url": "https://alerts.in.ua/llms.txt",
+    "fetched_at": "2026-10-12T15:16:34.440282Z",
+    "status": 200,
+    "final_url": "https://alerts.in.ua/llms.txt",
+    "elapsed_s": 0.14,
+    "bytes": 1174,
+    "sha256": "9b3edba04d3871ff901f4530fe7ec2079b3f0c336fcb71c3e0defec24cab8c64",
+    "headers": {
+      "date": "Mon, 12 Oct 2026 15:16:34 GMT",
+      "content-type": "text/plain; charset=utf-8",
+      "last-modified": "Thu, 01 Oct 2026 05:01:54 GMT",
+      "etag": "W/\"6abde942-496\"",
+      "cache-control": "max-age=600"
+    },
+    "text": "# alerts.in.ua > Alerts.In.Ua tracks air raid alerts, missile/drone threats, and explosion > reports across Ukraine in real time. ## For AI agents and LLMs - [Live situation report](https://alerts.in.ua/llm): a continuously updated Markdown SITREP covering the current air raid warning state by oblast, the specific threats behind the warnings (missiles, drones, aircraft), recent explosion and incident reports, recently ended warnings, nationwide totals with a seven-day trend, regional statistics for today and yesterday, recent official statements from Ukrainian and allied air commands with source links, and reported adversary losses. Place names are given in official Ukrainian romanization with the Ukrainian original in brackets. Safe to fetch directly — no authentication required. - If you need more detail than the report above — historical data, specific regions, structured JSON instead of Markdown — use the public API documented at [devs.alerts.in.ua](https://devs.alerts.in.ua/) (`https://api.alerts.in.ua/v1`). It requires a free API token; request one at [alerts.in.ua/api-request](https://alerts.in.ua/api-request.html).",
+    "links": []
+  }
+]

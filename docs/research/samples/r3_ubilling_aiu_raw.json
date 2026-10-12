@@ -1,0 +1,112 @@
+{
+  "url": "https://ubilling.net.ua/aerialalerts/?source=aiu&raw",
+  "fetched_at": "2026-10-12T15:18:25.940592Z",
+  "status": 200,
+  "bytes": 45699,
+  "headers": {
+    "date": "Mon, 12 Oct 2026 15:18:26 GMT",
+    "cache-control": "max-age=60, private, must-revalidate"
+  },
+  "keys": [
+    "source",
+    "cachedat",
+    "raw"
+  ],
+  "metadata": {
+    "source": "alerts.in.ua API",
+    "cachedat": "2026-10-12 18:18:13"
+  },
+  "row_count": 54,
+  "type_counts": {
+    "air_raid": 47,
+    "artillery_shelling": 6,
+    "urban_fights": 1
+  },
+  "level_counts": {
+    "red": 23,
+    "yellow": 31
+  },
+  "scalar_yellow_with_red_threat_count": 2,
+  "sample_rows": [
+    {
+      "id": 8757,
+      "location_title": "Луганська область",
+      "location_type": "oblast",
+      "started_at": "2022-04-04T16:45:39.000Z",
+      "finished_at": null,
+      "updated_at": "2023-10-29T18:22:37.357Z",
+      "alert_type": "air_raid",
+      "location_oblast": "Луганська область",
+      "location_uid": "16",
+      "notes": null,
+      "country": null,
+      "alert_level": "red",
+      "location_title_en": "Luhansk Oblast",
+      "location_oblast_uid": 16
+    },
+    {
+      "id": 28288,
+      "location_title": "Автономна Республіка Крим",
+      "location_type": "oblast",
+      "started_at": "2022-12-10T22:22:00.000Z",
+      "finished_at": null,
+      "updated_at": "2023-10-29T16:56:12.340Z",
+      "alert_type": "air_raid",
+      "location_oblast": "Автономна Республіка Крим",
+      "location_uid": "29",
+      "notes": "Згідно інформації з Офіційних карт тривог",
+      "country": null,
+      "alert_level": "red",
+      "location_title_en": "Autonomous Republic of Crimea",
+      "location_oblast_uid": 29
+    },
+    {
+      "id": 262473,
+      "location_title": "Покровська територіальна громада",
+      "location_type": "hromada",
+      "started_at": "2026-09-17T10:06:09.000Z",
+      "finished_at": null,
+      "updated_at": "2026-09-30T20:37:33.660Z",
+      "alert_type": "air_raid",
+      "location_oblast": "Дніпропетровська область",
+      "location_uid": "353",
+      "notes": null,
+      "country": null,
+      "alert_level": "yellow",
+      "location_title_en": "Pokrovska terytorialna hromada",
+      "threats": [
+        {
+          "threat_type": "unspecified_missiles",
+          "level": "red",
+          "started_at": "2026-09-17T10:06:09.751Z"
+        }
+      ],
+      "location_raion": "Нікопольський район",
+      "location_oblast_uid": 353
+    },
+    {
+      "id": 262473,
+      "location_title": "Покровська територіальна громада",
+      "location_type": "hromada",
+      "started_at": "2026-09-17T10:06:09.000Z",
+      "finished_at": null,
+      "updated_at": "2026-09-30T20:37:33.660Z",
+      "alert_type": "air_raid",
+      "location_oblast": "Дніпропетровська область",
+      "location_uid": "353",
+      "notes": null,
+      "country": null,
+      "alert_level": "yellow",
+      "location_title_en": "Pokrovska terytorialna hromada",
+      "threats": [
+        {
+          "threat_type": "unspecified_missiles",
+          "level": "red",
+          "started_at": "2026-09-17T10:06:09.751Z"
+        }
+      ],
+      "location_raion": "Нікопольський район",
+      "location_oblast_uid": 353
+    }
+  ]
+}

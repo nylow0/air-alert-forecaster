@@ -1,0 +1,23 @@
+{
+  "url": "https://raw.githubusercontent.com/Vadimkin/ukrainian-air-raid-sirens-dataset/main/datasets/official_data_en.csv",
+  "fetched_at": "2026-10-12T15:24:17.080230Z",
+  "status": 200,
+  "bytes": 31025633,
+  "sha256": "b396f87696243069eec0219880e87dcd642b20beb0a7bae0d0e1f61e1ed20ec4",
+  "saved_sha256": "b396f87696243069eec0219880e87dcd642b20beb0a7bae0d0e1f61e1ed20ec4",
+  "rows": 299275,
+  "unique_rows": 185430,
+  "max_started_at": "2026-09-07T05:28:22Z",
+  "max_finished_at": "2026-09-07T05:39:33Z",
+  "starts_inside_known_gap": 0,
+  "day_utc": "2026-09-05",
+  "day_unique_rows": 381,
+  "day_levels": {
+    "raion": 361,
+    "hromada": 16,
+    "oblast": 4
+  },
+  "exact_common_rows_vs_saved": 381,
+  "live_only": 0,
+  "saved_only": 0
+}

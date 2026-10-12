@@ -1,0 +1,44 @@
+{
+  "url": "https://alerts.com.ua/api/states",
+  "fetched_at": "2026-10-12T15:18:28.254423Z",
+  "status": 200,
+  "bytes": 3395,
+  "headers": {
+    "date": "Mon, 12 Oct 2026 15:18:28 GMT",
+    "last-modified": "Mon, 12 Oct 2026 15:18:23 GMT",
+    "cache-control": "max-age=14400"
+  },
+  "keys": [
+    "states",
+    "last_update"
+  ],
+  "metadata": {
+    "last_update": "2026-10-12T15:18:27.035+00:00"
+  },
+  "row_count": 25,
+  "active_rows": [
+    {
+      "id": 11,
+      "name": "Луганська область",
+      "name_en": "Luhansk oblast",
+      "alert": true,
+      "changed": "2023-10-29T18:22:37.357Z"
+    }
+  ],
+  "sample_rows": [
+    {
+      "id": 1,
+      "name": "Вінницька область",
+      "name_en": "Vinnytsia oblast",
+      "alert": false,
+      "changed": "2025-11-02T22:07:39.738Z"
+    },
+    {
+      "id": 2,
+      "name": "Волинська область",
+      "name_en": "Volyn oblast",
+      "alert": false,
+      "changed": "2025-12-23T07:09:02.018Z"
+    }
+  ]
+}

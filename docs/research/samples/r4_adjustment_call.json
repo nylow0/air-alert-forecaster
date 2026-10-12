@@ -1,0 +1,94 @@
+{
+  "checked_at": "2026-10-12T15:30:13.485952Z",
+  "model_requested": "gpt-6.1-sol",
+  "reasoning_effort": "high",
+  "command_argv": [
+    "[private home path removed]",
+    "exec",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--ephemeral",
+    "--skip-git-repo-check",
+    "--sandbox",
+    "read-only",
+    "--json",
+    "--color",
+    "never",
+    "--cd",
+    "[private home path removed]",
+    "--model",
+    "gpt-6.1-sol",
+    "--output-schema",
+    ".\\docs\\research\\samples\\r4_adjustment_schema.json",
+    "-c",
+    "model_reasoning_effort=high",
+    "-c",
+    "approval_policy=never",
+    "-c",
+    "web_search=disabled",
+    "-c",
+    "mcp_servers={}",
+    "-c",
+    "features.shell_tool=false",
+    "-c",
+    "features.unified_exec=false",
+    "-c",
+    "features.apps=false",
+    "-c",
+    "features.plugins=false",
+    "-c",
+    "features.multi_agent=false",
+    "-c",
+    "features.view_image=false",
+    "-c",
+    "features.image_generation=false",
+    "-c",
+    "features.skill_search=false",
+    "-c",
+    "features.skip_host_skill_discovery=true",
+    "-c",
+    "shell_environment_policy.inherit=none",
+    "-"
+  ],
+  "working_directory": "[private home path removed]",
+  "seconds": 25.358,
+  "exit_code": 0,
+  "timed_out": false,
+  "prompt_utf8_bytes": 4312,
+  "events": [
+    {
+      "type": "thread.started",
+      "thread_id": "01a130bb-fb50-7881-8344-c6ccf2af1604"
+    },
+    {
+      "type": "item.completed",
+      "item": {
+        "id": "item_0",
+        "type": "error",
+        "message": "Under-development features enabled: skip_host_skill_discovery. Under-development features are incomplete and may behave unpredictably. To suppress this warning, set `suppress_unstable_features_warning = true` in [private home path removed]"
+      }
+    },
+    {
+      "type": "turn.started"
+    },
+    {
+      "type": "item.completed",
+      "item": {
+        "id": "item_1",
+        "type": "agent_message",
+        "text": "{\"adjustments\":[{\"raion_id\":\"zhytomyrska/korostenskyi\",\"horizon_hours\":1,\"logit_shift\":0.18,\"source_keys\":[\"kpszsu/85593\"],\"reason\":\"One official destination report, published 10m29s before forecast time and observed beforehand. Modest heuristic uplift with age decay; current alert state is unknown.\"},{\"raion_id\":\"zhytomyrska/korostenskyi\",\"horizon_hours\":3,\"logit_shift\":0.1,\"source_keys\":[\"kpszsu/85593\"],\"reason\":\"Same single observation and allowed target mapping; smaller heuristic uplift for the transient signal over three hours.\"},{\"raion_id\":\"zhytomyrska/korostenskyi\",\"horizon_hours\":12,\"logit_shift\":0.02,\"source_keys\":[\"kpszsu/85593\"],\"reason\":\"Same single observation; only a small residual heuristic uplift over twelve hours.\"},{\"raion_id\":\"vinnytska/haisynskyi\",\"horizon_hours\":1,\"logit_shift\":0.24,\"source_keys\":[\"kpszsu/85594\"],\"reason\":\"One official destination report, published 5m32s before forecast time and observed beforehand. Modest heuristic uplift with age decay, restricted to the allowed target; current alert state is unknown.\"},{\"raion_id\":\"vinnytska/haisynskyi\",\"horizon_hours\":3,\"logit_shift\":0.14,\"source_keys\":[\"kpszsu/85594\"],\"reason\":\"Same single observation and allowed target mapping; smaller heuristic uplift for the transient signal over three hours.\"},{\"raion_id\":\"vinnytska/haisynskyi\",\"horizon_hours\":12,\"logit_shift\":0.03,\"source_keys\":[\"kpszsu/85594\"],\"reason\":\"Same single observation; only a small residual heuristic uplift over twelve hours.\"},{\"raion_id\":\"zaporizka/zaporizkyi\",\"horizon_hours\":1,\"logit_shift\":0.25,\"source_keys\":[\"kpszsu/85595\"],\"reason\":\"One official destination report, published 4m43s before forecast time and observed beforehand. Modest heuristic uplift with age decay; current alert state is unknown.\"},{\"raion_id\":\"zaporizka/zaporizkyi\",\"horizon_hours\":3,\"logit_shift\":0.15,\"source_keys\":[\"kpszsu/85595\"],\"reason\":\"Same single observation and allowed target mapping; smaller heuristic uplift for the transient signal over three hours.\"},{\"raion_id\":\"zaporizka/zaporizkyi\",\"horizon_hours\":12,\"logit_shift\":0.03,\"source_keys\":[\"kpszsu/85595\"],\"reason\":\"Same single observation; only a small residual heuristic uplift over twelve hours.\"},{\"raion_id\":\"kyiv-city/kyiv-city\",\"horizon_hours\":1,\"logit_shift\":0,\"source_keys\":[],\"reason\":\"No supported Kyiv city destination report or allowed target mapping. Base remains unchanged; zero does not imply safety.\"},{\"raion_id\":\"kyiv-city/kyiv-city\",\"horizon_hours\":3,\"logit_shift\":0,\"source_keys\":[],\"reason\":\"No supported Kyiv city destination report or allowed target mapping. Base remains unchanged; zero does not imply safety.\"},{\"raion_id\":\"kyiv-city/kyiv-city\",\"horizon_hours\":12,\"logit_shift\":0,\"source_keys\":[],\"reason\":\"No supported Kyiv city destination report or allowed target mapping. Base remains unchanged; zero does not imply safety.\"}]}"
+      }
+    },
+    {
+      "type": "turn.completed",
+      "usage": {
+        "input_tokens": 13127,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 980,
+        "reasoning_output_tokens": 227
+      }
+    }
+  ],
+  "stderr_summary": ""
+}

@@ -1,0 +1,76 @@
+{
+  "url": "https://api.alerts.in.ua/v3/alerts/day/1657.json",
+  "fetched_at": "2026-10-12T15:23:37.956723Z",
+  "status": 200,
+  "bytes": 65113,
+  "headers": {
+    "date": "Mon, 12 Oct 2026 15:23:38 GMT",
+    "last-modified": "Wed, 30 Sep 2026 18:46:39 GMT",
+    "cache-control": "max-age=120"
+  },
+  "keys": [
+    "alerts",
+    "pt",
+    "ta",
+    "fa",
+    "an",
+    "meta",
+    "disclaimer",
+    "_thi"
+  ],
+  "metadata": {
+    "meta": {
+      "last_updated_at": 1790793999000,
+      "type": "compact"
+    },
+    "disclaimer": "This API is private and may change anytime. Contact https://alerts.in.ua/api-request for public API access."
+  },
+  "row_count": 518,
+  "sample_rows": [
+    {
+      "u": 58603757,
+      "s": 9090739,
+      "i": 8757,
+      "ni": 130,
+      "t": "o",
+      "src": 0,
+      "luid": 16
+    },
+    {
+      "u": 58598572,
+      "s": 30710920,
+      "i": 28288,
+      "ni": 172,
+      "t": "o",
+      "nt": "Згідно інформації з Офіційних карт тривог",
+      "src": 4,
+      "luid": 29
+    },
+    {
+      "u": 76197499,
+      "s": 76197497,
+      "at": 1,
+      "i": 76016,
+      "n": "Вовчанська",
+      "t": "h",
+      "src": 0,
+      "loi": 2,
+      "lri": 159,
+      "lruid": 122,
+      "luid": 1313
+    },
+    {
+      "u": 76197504,
+      "s": 76197501,
+      "at": 2,
+      "i": 76017,
+      "n": "Вовчанська",
+      "t": "h",
+      "src": 0,
+      "loi": 2,
+      "lri": 159,
+      "lruid": 122,
+      "luid": 1313
+    }
+  ]
+}
