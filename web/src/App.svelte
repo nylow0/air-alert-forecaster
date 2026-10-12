@@ -7,7 +7,7 @@
   import { api } from './lib/api'
   import { Resource } from './lib/resource.svelte'
   import { horizons, hourMs, localTime, type Horizon } from './lib/format'
-  import { gapBands, gapState } from './lib/gaps'
+  import { gapBands, gapNotice, gapState } from './lib/gaps'
   import type { ForecastResponse, HistoryResponse, Meta, RaionFeature, RaionFeatureCollection, Report } from './lib/types'
 
   const initial = new URLSearchParams(window.location.search)
@@ -33,7 +33,7 @@
   const gaps = $derived(meta.data?.data_gaps ?? [])
   const bands = $derived(gapBands(gaps, start, end))
   const requestedAt = $derived(!meta.data ? '' : mode === 'latest' ? meta.data.latest_at : new Date(timeMs || end - 14 * hourMs).toISOString().replace('.000Z', 'Z'))
-  const sourceState = $derived(gapState(Date.parse(requestedAt), gaps))
+  const sourceNotice = $derived(gapNotice(gapState(Date.parse(requestedAt), gaps, horizon), horizon))
   const selectedFeature = $derived(noDataFeature ?? geo.data?.features.find(f => f.properties.raion_id === selectedId && selectedId !== null) ?? null)
   const selectedRow = $derived(forecast.data?.rows.find(row => row.raion_id === selectedId))
   const ready = $derived(meta.data && geo.data && forecast.data)
@@ -140,9 +140,9 @@
               <div class="scrubber-labels"><span>{localTime(start).split(',')[0]}</span><span>{localTime(end).split(',')[0]}</span></div>
               {#if bands.length}<span class="scrubber-gap-key" id="gap-key"><i class="gap-key"></i>Shaded: source outage</span>{/if}
             </div>
-            {#if sourceState}<p class="source-notice" role="note">{sourceState === 'outage' ? 'Source outage: no alert data for these hours. Forecasts here are not scored.' : 'History recovering after outage. Forecasts here are not scored.'}</p>{/if}
+            {#if sourceNotice}<p class="source-notice" role="note">{sourceNotice}</p>{/if}
           </section>
-        {:else}<section class="latest-notice"><div><time datetime={meta.data.latest_at}>{localTime(meta.data.latest_at)}</time><small>Kyiv time / latest dataset snapshot</small></div><p>This is a snapshot forecast. Alerts still running when the CSV was exported may be absent.</p></section>{#if sourceState}<p class="source-notice latest-source-notice" role="note">{sourceState === 'outage' ? 'Source outage: no alert data for these hours. Forecasts here are not scored.' : 'History recovering after outage. Forecasts here are not scored.'}</p>{/if}{/if}
+        {:else}<section class="latest-notice"><div><time datetime={meta.data.latest_at}>{localTime(meta.data.latest_at)}</time><small>Kyiv time / latest dataset snapshot</small></div><p>This is a snapshot forecast. Alerts still running when the CSV was exported may be absent.</p></section>{#if sourceNotice}<p class="source-notice latest-source-notice" role="note">{sourceNotice}</p>{/if}{/if}
       {/if}
       {#if forecast.error}<div class="error-state" role="alert"><p>{forecast.error}</p><button onclick={() => forecastRetry++}>Retry forecast</button></div>{/if}
       <div class="dashboard" aria-busy={forecast.loading || geo.loading}>

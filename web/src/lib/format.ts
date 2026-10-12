@@ -31,6 +31,13 @@ export function actual(row: ForecastRow, h: Horizon): boolean | null {
 export function number(value: number | null, digits = 3): string {
   return value === null ? '—' : value.toFixed(digits)
 }
+/** Keep extreme calibrated probabilities from reading as certainty; paint uses raw values. */
+export function probabilityText(value: number | null, digits = 2): string {
+  if (value === null) return '—'
+  if (value < 0.01) return '<0.01'
+  if (value > 0.99) return '>0.99'
+  return value.toFixed(digits)
+}
 export function oblastName(id: string): string {
   return id.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
 }

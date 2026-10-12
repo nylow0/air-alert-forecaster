@@ -1,6 +1,6 @@
 <script lang="ts">
   import { geoArea, geoMercator, geoPath } from 'd3-geo'
-  import { actual, number, oblastName, probability, probabilityColor, type Horizon } from './format'
+  import { actual, oblastName, probability, probabilityColor, probabilityText, type Horizon } from './format'
   import type { ForecastRow, RaionFeature, RaionFeatureCollection } from './types'
 
   let { geo, rows, horizon, observationsUnknown, mode, selected, onselect }: {
@@ -51,12 +51,13 @@
       {@const row = id ? byId.get(id) : undefined}
       {@const isSelected = id !== null && id === selected}
       {@const onset = row && mode === 'replay' && actual(row, horizon) === true}
-      <path d={shape.d} data-raion-id={id} class="raion-path" class:selected={isSelected}
+      {#if isSelected}<path d={shape.d} class="selection-ring" fill="none" stroke-width="4" vector-effect="non-scaling-stroke" aria-hidden="true" />{/if}
+      <path d={shape.d} data-raion-id={id} class="raion-path" class:selected={isSelected} class:actual-onset={onset}
         fill={row ? probabilityColor(probability(row, horizon)) : '#111'}
-        stroke={isSelected || onset ? '#f0efec' : row ? '#000' : '#2c2c2a'}
-        stroke-width={isSelected ? 2 : onset ? 1.5 : 0.5} vector-effect="non-scaling-stroke"
+        stroke={onset ? '#f0efec' : row ? '#000' : '#2c2c2a'}
+        stroke-width={onset ? 1.5 : 0.5} vector-effect="non-scaling-stroke"
         role="button" tabindex="0" aria-pressed={isSelected}
-        aria-label={`${shape.feature.properties.name}, ${oblastName(shape.feature.properties.oblast_id)}. ${row ? `${number(probability(row, horizon), 2)} probability within ${horizon} hours${observationsUnknown ? '. Alert status unknown during source outage' : row.active ? '. Alert active' : ''}${onset ? '. Alert actually started' : ''}` : 'No data'}`}
+        aria-label={`${shape.feature.properties.name}, ${oblastName(shape.feature.properties.oblast_id)}. ${row ? `${probabilityText(probability(row, horizon))} probability within ${horizon} hours${observationsUnknown ? '. Alert status unknown during source outage' : row.active ? '. Alert active' : ''}${onset ? '. Alert actually started' : ''}` : 'No data'}`}
         onmouseenter={() => hovered = shape.index} onmouseleave={() => hovered = null}
         onfocus={() => focused = shape.index} onblur={() => focused = null}
         onclick={() => onselect(shape.feature)} onkeydown={event => select(event, shape.feature)} />
@@ -72,7 +73,7 @@
     <div class="map-tooltip" role="status"
       style:left={`clamp(8px, calc(${hoveredShape.centroid[0] / width * 100}% - 80px), max(8px, calc(100% - 238px)))`}
       style:top={`clamp(8px, calc(${hoveredShape.centroid[1] / height * 100}% - 95px), max(8px, calc(100% - 110px)))`}>
-      <strong>{hoveredRow ? number(probability(hoveredRow, horizon), 2) : 'No data'}</strong>
+      <strong>{hoveredRow ? probabilityText(probability(hoveredRow, horizon)) : 'No data'}</strong>
       {#if hoveredRow}<span>P within {horizon} h</span>{/if}
       <b>{hoveredShape.feature.properties.name}</b>
       <span>{oblastName(hoveredShape.feature.properties.oblast_id)}</span>
@@ -87,6 +88,7 @@
   </div>
   <div class="status-legend">
     {#if mode === 'replay'}<span><i class="outline-key"></i>Alert actually started within {horizon} h</span>{/if}
+    <span><i class="selection-key"></i>Selected raion</span>
     {#if observationsUnknown}<span>Alert status unknown during source outage</span>{:else}<span><i class="dot-key"></i>Alert active now</span>{/if}
     <span><i class="empty-key"></i>No data, including excluded regions</span>
   </div>

@@ -4,7 +4,7 @@
 :root {
   font-family: 'Onest Variable', sans-serif; color: #f0efec; background: #000; color-scheme: dark;
   font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased;
-  --ink: #f0efec; --secondary: #c3c2b7; --muted: #898781; --surface: #0b0b0c; --border: rgba(255,255,255,0.08);
+  --ink: #f0efec; --secondary: #c3c2b7; --muted: #898781; --surface: #0b0b0c; --border: rgba(255,255,255,0.08); --selection: #bda4ff;
 }
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; min-height: 100svh; }
@@ -63,7 +63,9 @@ input[type='range'] { display: block; width: 100%; min-height: 44px; cursor: poi
 .map-canvas { position: relative; width: 100%; aspect-ratio: 50 / 33; }
 .ukraine-map { position: absolute; inset: 0; display: block; width: 100%; height: 100%; overflow: visible; }
 .raion-path { cursor: pointer; outline: none; }
-.raion-path:focus-visible, .raion-path:hover { stroke: var(--ink); stroke-width: 2px; }
+.raion-path:focus-visible { outline: 2px solid var(--muted); outline-offset: 3px; }
+.raion-path:not(.selected):not(.actual-onset):hover { stroke: var(--muted); stroke-width: 1px; }
+.selection-ring { stroke: var(--selection); pointer-events: none; }
 .active-dot { pointer-events: none; }
 .map-tooltip { position: absolute; z-index: 2; width: 230px; max-width: calc(100% - 16px); background: #101010; padding: 12px 14px; border: 1px solid #44443e; border-radius: 6px; pointer-events: none; box-shadow: 0 6px 20px #0008; }
 .map-tooltip strong { font-size: 27px; line-height: 1.1; margin-right: 8px; }
@@ -76,7 +78,8 @@ input[type='range'] { display: block; width: 100%; min-height: 44px; cursor: poi
 .legend-ticks { display: flex; justify-content: space-between; margin-top: 6px; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .status-legend { display: grid; gap: 10px; font-size: 11px; color: var(--secondary); }
 .status-legend span, .chart-key span, .active-status { display: flex; align-items: center; gap: 8px; }
-.outline-key, .empty-key { display: inline-block; width: 12px; height: 12px; flex-shrink: 0; border: 1.5px solid var(--ink); border-radius: 2px; }
+.outline-key, .selection-key, .empty-key { display: inline-block; width: 12px; height: 12px; flex-shrink: 0; border: 1.5px solid var(--ink); border-radius: 2px; }
+.selection-key { border: 2px solid var(--selection); }
 .empty-key { border: 1px solid #2c2c2a; background: #111; }
 .dot-key { display: inline-block; width: 7px; height: 7px; flex-shrink: 0; background: #d03b3b; border-radius: 50%; }
 .served-models { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 14px 0; font-size: 11px; line-height: 1.5; color: var(--muted); border-top: 1px solid var(--border); }

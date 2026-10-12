@@ -1,4 +1,147 @@
-# A3 frontend phase 2 implementation report
+# A3 frontend phase 3 audit fixes
+
+AUD-02, AUD-04, AUD-05 and extreme probability formatting are implemented and inspected against real data. Check and build pass. Mock e2e passes all 24 executions; live e2e passes 18 and fails six executions at the unchanged D1 assertion that expects the old probability wording. Both requested screenshots were opened. All servers started for this phase have been stopped.
+
+## Delivered
+
+- `web/src/lib/gaps.ts`, `web/src/App.svelte`: the selected horizon now controls the unscored notice. The label-window condition is exactly `t < gap.end && t + H >= gap.start`, alongside the half-open outage and configured recovery intervals. Notices distinguish a window reaching into an outage, an hour inside the outage, and an hour inside recovery. The history readout uses the same notice.
+- `web/src/lib/MapView.svelte`, `web/src/app.css`: a violet selection ring, `#bda4ff`, paints behind the selected polygon. Its base stroke still shows actual onset in white when that selected raion also has an onset. The new legend key identifies selection. Hover and keyboard focus use muted grey, so white polygon outlines stay reserved for actual onset. The fixed SVG coordinate space and CSS sizing remain intact.
+- `web/src/lib/format.ts`, `web/src/lib/{MapView,RaionPanel,RaionList,HistoryChart,ReliabilityChart}.svelte`: one formatter displays probabilities below 0.01 as `<0.01` and above 0.99 as `>0.99`, including exact 0 and 1. Panel figures, tooltips, list cells, history readout/table, predicted reliability-bin values, and probability ARIA text use it. Fills, sorting, plotted coordinates, axis endpoints, observed frequencies, and score metrics keep their numeric values.
+- `web/src/lib/ModelReport.svelte`: one short note says scores precede the serving adjustment and that the map raises longer-horizon probabilities to the highest shorter-horizon value when needed. It contains no hardcoded model or score numbers.
+- `web/IMPLEMENTATION.md`: this phase 3 report. The prior phase 2 evidence is retained below as historical context.
+
+## Verified
+
+Commands ran from `.\web` unless stated otherwise.
+
+`bun run check`, exit 0:
+
+```text
+$ svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json
+Loading svelte-check in workspace: .\web
+Getting Svelte diagnostics...
+
+svelte-check found 0 errors and 0 warnings
+```
+
+`bun run build`, exit 0:
+
+```text
+$ vite build
+vite v8.3.4 building client environment for production...
+transforming...
+✓ 329 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                              0.40 kB │ gzip:  0.27 kB
+dist/assets/onest-cyrillic-ext-wght-normal-DOFToQv1.woff2   10.54 kB
+dist/assets/onest-vietnamese-wght-normal-BBxOatbv.woff2     12.40 kB
+dist/assets/onest-cyrillic-wght-normal-DayYxulF.woff2       15.86 kB
+dist/assets/onest-symbols-wght-normal-DxQzqQfC.woff2        18.16 kB
+dist/assets/onest-math-wght-normal-Bl4ZGkZl.woff2           25.48 kB
+dist/assets/onest-latin-ext-wght-normal-QAhDxQuo.woff2      28.45 kB
+dist/assets/onest-latin-wght-normal-Dun_Rd-l.woff2          33.76 kB
+dist/assets/index-D0m7pHzf.css                              26.43 kB │ gzip:  7.35 kB
+dist/assets/index-BuT9w5pv.js                              136.86 kB │ gzip: 50.07 kB
+
+✓ built in 347ms
+```
+
+Mock `bunx playwright test`, with `E2E_TARGET` unset, exit 0:
+
+```text
+Running 24 tests using 2 workers
+  24 passed (17.2s)
+```
+
+Started `uv run airalert serve --port 8000` from the repository root. It reported application startup complete and served real HTTP 200 responses. Then ran `$env:E2E_TARGET='live'; bunx playwright test`, exit 1:
+
+```text
+Running 24 tests using 2 workers
+  6 failed
+  18 passed (21.2s)
+```
+
+All six failures are the same formatting mismatch in `web/tests/dashboard.spec.ts:102`, whose expected text at line 103 uses `row[probabilityKeys[horizon]].toFixed(2)`:
+
+```text
+expect(received).toContain(expected) // indexOf
+
+Expected substring: "0.00 probability within 3 hours"
+Received string:    "Chernivetskyi raion, Chernivetska. <0.01 probability within 3 hours"
+```
+
+| D1 workflow | Test line | Call reaching the old assertion | Viewports | API hour |
+|---|---:|---:|---|---|
+| Scrubbing to another hour changes time, URL, and forecast colours | 213 | 220 | Desktop and mobile | 2026-08-01T02:00:00Z |
+| Step buttons move one hour in either direction and stop at replay bounds | 223 | 227 | Desktop and mobile | 2026-08-01T02:00:00Z |
+| Latest uses the snapshot and hides the replay timeline and outcomes | 373 | 389 | Desktop and mobile | 2026-09-07T05:00:00Z |
+
+The failing raion is `chernivetska/chernivetskyi` in every case. D1's tests and config were not edited. Reports, traces, error context and failure screenshots are in `web/test-results/report/{mock,live}/` and `web/test-results/artifacts/{mock,live}/`. Browser error guards stayed enabled; no console-error, uncaught-exception, or ResizeObserver assertion failed. There were no retries or skips.
+
+Focused real-data browser checks used the T3 collaborative browser against the live Vite server on 5188:
+
+- Compared the actual frontend gap helper with Python `backtest.data_gap_mask` for 24 cases, eight boundaries at each of the three horizons. Result: `{"cases":24,"mismatches":[]}`. This includes one millisecond before and exactly at the first excluded label-window hour, outage start, outage end, and recovery end.
+- At `2026-08-29T03:00Z`, switching to 1 h removes the notice; switching to 3 h shows it, including the equality boundary `t + H = gap.start`. At 12 h the notice also shows. Kryvorizkyi's actual outcomes stay `Yes / Unknown / Unknown`, and its known active status remains visible.
+- At `2026-08-30T12:00Z`, the notice identifies an hour inside the outage. Three outcomes are `Unknown`, actual-onset paths and active dots both count zero, and the selected polygon has a violet ring with a black base stroke. At `2026-09-02T14:00Z`, the notice changes to recovery.
+- At `2026-08-01T02:00Z`, real Dnistrovskyi has `p_1 = 0`. Panel, tooltip, history table/readout, polygon ARIA and history ARIA show `<0.01`. Real Iziumskyi has `p_12 = 1`; the same views show `>0.99`. Mobile figure text fits its columns. A full comparison of the list's 119 rows and all three displayed probabilities found zero mismatches and both extreme wordings.
+- Selected Boryspilskyi has `actual_onset_3 = false`, a black base stroke and a violet ring. Adjacent Cherkaskyi has `actual_onset_3 = true` and a white base stroke. Selecting Cherkaskyi retains both the violet outer ring and white onset stroke. The ring is hidden from accessibility and cannot intercept clicks.
+- The new report note appears once against the real report. The checked map, extreme-probability panel, list, and report views have no horizontal page overflow at 390 px; the required desktop pre-outage view also has none.
+
+### Screenshots opened and described
+
+- [Pre-outage hour, 12 h horizon]([private home path removed] `2026-08-29T03:00Z`, CSS viewport 1440×900. The notice reads "The 12 h forecast window reaches into the source outage. This forecast is not scored." The map retains its amber probabilities and known active dots. Selected Kryvorizkyi has a violet ring, with the panel showing unknown 3 h and 12 h outcomes. The T3 export is 1280×800, so the lower map is outside this viewport capture.
+- [Selection next to actual onset at 390 px]([private home path removed] `2026-08-01T01:00Z`, H=3, CSS viewport 390×1100. Selected Boryspilskyi is violet, alongside white actual-onset outlines including adjacent Cherkaskyi. Both outline keys are visible under the complete map. The black mobile layout stays within the viewport. T3 exports this image at double density, 780×2200.
+
+These are local T3 screenshot artifacts, opened with the image viewer. They are linked here for the lead to inspect.
+
+### Ownership and shutdown
+
+The diff check `git -c core.autocrlf=false diff --check -- web` exited 0 with no output. The protected-path query returned no paths for types, fixtures, tests, or Playwright config. No backend, model, contract, dependency-manifest, or Git-state changes were made.
+
+Sent Ctrl+C to the live Vite and FastAPI sessions, and closed this phase's browser tab. FastAPI reported:
+
+```text
+Shutting down
+Waiting for application shutdown.
+Application shutdown complete.
+Finished server [process identifier removed]
+```
+
+Both sessions exited 1 after the deliberate interruption; Vite also printed `error: script "dev" exited with code 58`. Playwright stopped its own 5187 servers. The listener check returned:
+
+```text
+StartedServerListeners Existing5173
+---------------------- ------------
+                     0            1
+```
+
+The first count checks 8000, 5187 and 5188. The pre-existing `127.0.0.1:5173` [process identifier removed] remained untouched.
+
+## Decisions/assumptions
+
+- Outage has notice priority over recovery, and recovery over a label window touching a later outage. Every state excludes the forecast under the same policy. Observation status becomes unknown only during the outage itself.
+- Recovery still comes from the existing Python constant through Vite's build-time adapter. No duplicated policy constant or new API field was introduced.
+- Threshold wording applies to all probabilities below 0.01 or above 0.99. Exactly 0.01 and 0.99 retain their normal decimal text. Axis endpoints and bin bounds describe a scale, so they stay numeric.
+- The accepted audit fix supersedes the lead-owned design note's old white selection encoding. White remains the actual-onset encoding; selection uses its own violet hue.
+
+## Open issues
+
+D1 needs to update the shared probability-text expectation at `web/tests/dashboard.spec.ts:102–103` before live e2e can pass all 24 executions. The six failures above are expected from change 4, and the lead explicitly reserved this test change for D1. Other old `toFixed(2)` expectations remain at lines 262, 270, 283, 294 and 313; they passed with the suite's current samples but will also need the new probability wording when sampling extreme values.
+
+## Contract change requests
+
+None required for phase 3. The prior nonblocking suggestion to expose recovery hours through Meta remains a lead decision; this phase uses the existing build-time constant adapter.
+
+## Dependencies added
+
+None.
+
+---
+
+# Historical phase 2 implementation report
+
+The report below predates the phase 3 audit fixes. Its successful live suite describes the previous formatting, not the current six expected D1 assertion failures.
 
 The dashboard is verified against the live FastAPI backend with real forecasts and scores at 1440×900 and 390×844. All five requested fixes are integrated. Check and build pass, the mock e2e suite passes repeatedly, and the final live suite passes all 24 executions. All servers started for this task have been stopped.
 

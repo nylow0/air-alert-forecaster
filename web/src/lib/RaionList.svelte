@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { number, oblastName, probability, type Horizon } from './format'
+  import { oblastName, probability, probabilityText, type Horizon } from './format'
   import type { ForecastRow, RaionFeature, RaionFeatureCollection } from './types'
   let { geo, rows, horizon, observationsUnknown, selected, onselect }: {
     geo: RaionFeatureCollection; rows: ForecastRow[]; horizon: Horizon
@@ -23,7 +23,7 @@
             onclick={() => onselect(feature ?? { type: 'Feature', properties: { raion_id: row.raion_id, oblast_id: row.raion_id.split('/')[0], name: row.raion_id }, geometry: { type: 'Polygon', coordinates: [] } })}>
             {feature?.properties.name ?? row.raion_id}<small>{oblastName(feature?.properties.oblast_id ?? row.raion_id.split('/')[0])}</small>
           </button></th>
-          <td class:chosen={horizon === 1}>{number(row.p_1, 2)}</td><td class:chosen={horizon === 3}>{number(row.p_3, 2)}</td><td class:chosen={horizon === 12}>{number(row.p_12, 2)}</td>
+          <td class:chosen={horizon === 1}>{probabilityText(row.p_1)}</td><td class:chosen={horizon === 3}>{probabilityText(row.p_3)}</td><td class:chosen={horizon === 12}>{probabilityText(row.p_12)}</td>
           <td>{#if observationsUnknown}<span class="muted">Unknown</span>{:else if row.active}<span class="active-status"><i class="dot-key"></i>Active</span>{:else}<span class="muted">Quiet</span>{/if}</td>
         </tr>
       {/each}

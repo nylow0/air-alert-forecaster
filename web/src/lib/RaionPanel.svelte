@@ -1,6 +1,6 @@
 <script lang="ts">
   import HistoryChart from './HistoryChart.svelte'
-  import { actual, clock, horizons, localTime, number, oblastName, probability, type Horizon } from './format'
+  import { actual, clock, horizons, localTime, oblastName, probability, probabilityText, type Horizon } from './format'
   import { gapState } from './gaps'
   import type { ForecastRow, HistoryResponse, RaionFeature, Range } from './types'
   let { feature, row, at, mode, horizon, gaps, history, loading, error, retry }: {
@@ -21,7 +21,7 @@
     <div class="panel-heading"><p class="muted">Selected raion</p><h2>{feature.properties.name}</h2><p>{oblastName(feature.properties.oblast_id)}</p></div>
     {#if row}
       <p class="probability-label">Probability an alert starts within</p>
-      <div class="probability-figures">{#each horizons as h}<div class:current={h === horizon}><span>{h} h</span><strong>{number(probability(row, h), 2)}</strong></div>{/each}</div>
+      <div class="probability-figures">{#each horizons as h}<div class:current={h === horizon}><span>{h} h</span><strong>{probabilityText(probability(row, h))}</strong></div>{/each}</div>
       <div class="alert-status">
         {#if sourceState === 'outage'}<p>Unknown alert status during source outage.</p>
         {:else if row.active}

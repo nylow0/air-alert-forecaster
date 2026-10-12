@@ -1,6 +1,6 @@
 <script lang="ts">
   import { scaleLinear } from 'd3-scale'
-  import { number } from './format'
+  import { number, probabilityText } from './format'
   import type { OnsetScore } from './types'
   let { scores, horizon }: { scores: OnsetScore[]; horizon: number } = $props()
   const x = scaleLinear().domain([0, 1]).range([40, 272])
@@ -43,5 +43,5 @@
   <div class="chart-key">{#each series as s}<span><i class="line-key" style:background={s.color}></i>{s.model}</span>{/each}</div>
   <details class="chart-data"><summary>Reliability bin data</summary>
     <!-- svelte-ignore a11y_no_noninteractive_tabindex (Keyboard users need to focus the scroll region to scroll this table.) -->
-    <div class="table-scroll" tabindex="0" role="region" aria-label={`Reliability bins within ${horizon} hours`}><table><thead><tr><th>Model</th><th>Bin</th><th>Predicted</th><th>Observed</th><th>Count</th></tr></thead><tbody>{#each scores as s}{#each s.reliability as bin}<tr><th scope="row">{s.model}</th><td>{bin.lo}–{bin.hi}</td><td>{number(bin.mean_pred)}</td><td>{number(bin.frac_pos)}</td><td>{bin.count}</td></tr>{/each}{/each}</tbody></table></div></details>
+    <div class="table-scroll" tabindex="0" role="region" aria-label={`Reliability bins within ${horizon} hours`}><table><thead><tr><th>Model</th><th>Bin</th><th>Predicted</th><th>Observed</th><th>Count</th></tr></thead><tbody>{#each scores as s}{#each s.reliability as bin}<tr><th scope="row">{s.model}</th><td>{bin.lo}–{bin.hi}</td><td>{probabilityText(bin.mean_pred, 3)}</td><td>{number(bin.frac_pos)}</td><td>{bin.count}</td></tr>{/each}{/each}</tbody></table></div></details>
 </figure>

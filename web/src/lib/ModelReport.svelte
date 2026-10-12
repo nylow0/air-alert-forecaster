@@ -16,6 +16,7 @@
 
 <article class="model-report">
   <div class="report-heading"><h2>Model report</h2><p>How the forecasts compare, and which models are served.</p>{#if report.generated_at}<small>Generated {localTime(report.generated_at)} Kyiv</small>{/if}</div>
+  <p class="report-notes" role="note">Onset scores use each model's per-horizon probabilities before the serving adjustment. The map shows adjusted values, with each longer-horizon probability raised if needed to match the highest shorter-horizon value.</p>
   {#if notes.length}<div class="report-notes" role="note">{#each notes as note}<p>{note}</p>{/each}</div>{/if}
   {#if report.selection}<section class="selection-section"><h3>Selected models</h3><div class="selected-models"><p>Alert onset <strong>{report.selection.onset ?? 'Not selected'}</strong></p><p>Duration <strong>{report.selection.duration ?? 'Not selected'}</strong></p></div>{#if report.selection.note}<p>{report.selection.note}</p>{/if}</section>{/if}
   {#if !report.onset.length && !report.duration.length}<p class="empty-state">No evaluation scores have been published yet.</p>{/if}
