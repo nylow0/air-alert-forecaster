@@ -6,7 +6,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from airalert.config import FIXTURES_DIR, HORIZONS, TEST_END_OFFSET_H
+from airalert.config import DATA_GAPS, FIXTURES_DIR, HORIZONS, TEST_END_OFFSET_H
 from airalert.schemas import ForecastResponse, HistoryResponse, Meta, Range, Report
 
 
@@ -51,6 +51,7 @@ def test_forecast_and_map_consistency() -> None:
     assert meta.latest_at == meta.snapshot
     assert meta.replay == meta.splits["test"]
     assert meta.replay.end == meta.snapshot - timedelta(hours=TEST_END_OFFSET_H)
+    assert [(gap.start, gap.end) for gap in meta.data_gaps] == list(DATA_GAPS)
     all_ids: list[set[str]] = []
     for mode in ("replay", "latest"):
         response = ForecastResponse.model_validate_json(

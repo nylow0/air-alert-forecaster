@@ -47,6 +47,8 @@ class Meta(ContractModel):
     latest_at: UTCDatetime
     onset_model: str
     duration_model: str | None
+    # Source outages (config.DATA_GAPS); the replay shows them but they are never scored.
+    data_gaps: list[Range]
 
 
 class ForecastRow(ContractModel):

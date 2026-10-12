@@ -17,6 +17,8 @@ export type Meta = {
   latest_at: string
   onset_model: string
   duration_model: string | null
+  /** Source outages: the replay shows these hours, but they are never scored. */
+  data_gaps: Range[]
 }
 
 export type ForecastRow = {

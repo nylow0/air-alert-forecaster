@@ -1,7 +1,7 @@
 {
   "snapshot": "2026-09-07T05:00:00Z",
   "csv_sha256": "b396f87696243069eec0219880e87dcd642b20beb0a7bae0d0e1f61e1ed20ec4",
-  "regime_switch": null,
+  "regime_switch": "2025-08-14",
   "horizons": [
     1,
     3,
@@ -28,5 +28,11 @@
   },
   "latest_at": "2026-09-07T05:00:00Z",
   "onset_model": "M1",
-  "duration_model": "D1"
+  "duration_model": "D1",
+  "data_gaps": [
+    {
+      "start": "2026-08-29T06:00:00Z",
+      "end": "2026-09-02T14:00:00Z"
+    }
+  ]
 }

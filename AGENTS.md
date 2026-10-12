@@ -29,6 +29,11 @@ A forecast made at time `t` may only use data from **strictly before `t`**. For 
 - The CSV **ends on 2026-09-07**, not on the plan date. `snapshot` = `2026-09-07T05:00:00Z`. Test = `[2026-08-01T00:00Z, 2026-09-06T17:00Z]` (about 37 days). Always read the snapshot from `snapshot.json`, never from today's date.
 - 299,275 rows. Timestamps look like `YYYY-MM-DD HH:MM:SS+00:00`. Levels: 130k oblast, 132k raion, 37k hromada. A hromada's parent raion is in the ordinary `raion` column.
 - Universe: **119 units** (118 raions plus `kyiv-city/kyiv-city`). Kyiv appears as oblast `Kyiv City` with an empty raion. Luhansk (`luhanska`) has only oblast-level rows. Crimea and Sevastopol have no rows at all.
+- **Regime switch = 2025-08-14** (A1: the first day the trailing 14-day raion-level share stays above 50%). It's in `snapshot.json`, and it supersedes the plan's "~December 2025". So the raion-regime training window is `[2025-08-14, 2026-06-01)`.
+- **Data gap:** there are no alert events anywhere from 2026-08-29 05:55Z to 2026-09-02 13:48Z, a source outage inside the test period. `config.DATA_GAPS` holds it hour-aligned as `[2026-08-29T06:00Z, 2026-09-02T14:00Z)`. **Policy:** exclude a forecast row from training, calibration and scoring when `(t, t+H]` intersects a gap, or when `t` is in `[gap.start, gap.end + 24h)` (its lookback features are corrupted). Exclude episodes that overlap a gap from duration training and scoring. The replay still shows those hours, and `Meta.data_gaps` lets the UI mark them. The mask function lives in `backtest.py` and every model uses it.
+- **Exact duplicates:** 113,845 of the 299,275 source rows are exact duplicates, and `records.parquet` keeps them. Anything that **counts** records or starts must drop exact duplicate `(raion_id, level, started_at, finished_at)` rows first. Doing so is as-of safe.
+- One zero-length episode exists (`kharkivska/bohodukhivskyi`, 2025-11-17). Duration code must clip the duration to at least 1 minute before taking the log.
+- Descriptive onset base rates (A1, full history): 1 h ≈ 9%, 3 h ≈ 23%, 12 h ≈ 53–56%.
 - `finished_at` is never empty: the dataset lists an alert only after it ends. So alerts still running at the snapshot are invisible in the `latest` hour. Note this as a limitation; it doesn't break the as-of rule.
 
 ## Conventions
