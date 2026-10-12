@@ -941,7 +941,7 @@ def refit_production(now: datetime | pd.Timestamp) -> None:
     """
     now = _utc_time(now)
     snapshot = load_snapshot()
-    cutoff = min(now, snapshot.snapshot)
+    cutoff = min(now.floor("h") - pd.Timedelta(microseconds=1), snapshot.snapshot)
     calibration_start = cutoff - pd.Timedelta(days=CALIBRATION_DAYS)
     records, episodes, raions = load_records(), load_episodes(), load_raions()
     eligible = _eligible_window(

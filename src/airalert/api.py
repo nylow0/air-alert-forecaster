@@ -90,7 +90,7 @@ def _load(paths: Paths) -> _Loaded:
         raise ValueError("Raion geography must be a GeoJSON FeatureCollection")
     geojson = display_geography(geojson, paths.crosswalk)
     replay = Range(
-        start=config.V2_VAL_START if v2 else config.TEST_START,
+        start=forecasts.t.min().to_pydatetime() if v2 else config.TEST_START,
         end=(forecasts.t.max() if v2 else forecast_snapshot - pd.Timedelta(
             hours=config.TEST_END_OFFSET_H)).to_pydatetime(),
     )

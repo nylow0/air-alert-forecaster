@@ -258,7 +258,9 @@ def run(paths: Paths | None = None) -> None:
     """Publish exact ForecastRow columns and persist served choices in Parquet metadata."""
     began = perf_counter()
     paths = Paths() if paths is None else paths
-    if (paths.preds / "v2" / "onset_selected.parquet").exists():
+    if ((paths.preds / "v2" / "onset_selected.parquet").exists()
+            or (paths.issued.is_relative_to(paths.preds)
+                and any(paths.issued.glob("*.parquet")))):
         run_v2(paths)
         return
     metadata = json.loads(paths.snapshot.read_text(encoding="utf-8"))
@@ -335,11 +337,14 @@ def _publish_v2(rows: pd.DataFrame, paths: Paths, metadata: dict[str, object]) -
 
 def append_issued(paths: Paths) -> dict[str, object]:
     """Extend replay with first-issued hours, never overwrite their probabilities."""
+    if not paths.forecasts.exists():
+        return run_issued(paths)
     table = pq.read_table(paths.forecasts)
     metadata = json.loads(table.schema.metadata[SERVED_MODELS_KEY])
     if metadata.get("version") != "v2":
         return {"issued_hours": 0}
     rows = table.to_pandas()
+    saved = json.loads(paths.snapshot.read_text(encoding="utf-8"))
     frames = [pd.read_parquet(path, columns=["t", *ForecastRow.model_fields])
               for path in sorted(paths.issued.glob("*.parquet"))]
     if frames:
@@ -349,7 +354,7 @@ def append_issued(paths: Paths) -> dict[str, object]:
         # Issued truth matures only against reconciled outcomes, never live polls.
         from airalert.labels import build_labels
 
-        snapshot = pd.Timestamp(json.loads(paths.snapshot.read_text())["snapshot"])
+        snapshot = pd.Timestamp(saved["snapshot"])
         labels = build_labels(pd.read_parquet(paths.episodes), pd.DatetimeIndex(issued.t.unique()),
                               snapshot, raions=pd.read_csv(paths.raions))
         labels = labels.set_index(["t", "raion_id"])
@@ -358,9 +363,30 @@ def append_issued(paths: Paths) -> dict[str, object]:
             values = labels[f"y_{horizon}"].reindex(keys)
             mask = keys.isin(labels.index)
             rows.loc[mask, f"actual_onset_{horizon}"] = pd.array(values[mask], dtype="boolean")
-    metadata["latest"] = rows.t.max().isoformat()
+    metadata.update({"snapshot": saved["snapshot"], "csv_sha256": saved["csv_sha256"],
+                     "latest": rows.t.max().isoformat()})
     _publish_v2(rows, paths, metadata)
     return {"issued_hours": len(frames), "rows": len(rows), "latest": metadata["latest"]}
+
+
+def run_issued(paths: Paths) -> dict[str, object]:
+    """Cold-start replay contains actual issued hours, with no backward model application."""
+    frames = [pd.read_parquet(path, columns=["t", *ForecastRow.model_fields])
+              for path in sorted(paths.issued.glob("*.parquet"))]
+    if not frames:
+        raise FileNotFoundError("No issued forecasts; run uv run airalert setup")
+    rows = pd.concat(frames, ignore_index=True)
+    snapshot = json.loads(paths.snapshot.read_text(encoding="utf-8"))
+    selection = json.loads(config.V2_SELECTION_PATH.read_text(encoding="utf-8"))
+    # Split metadata describes the frozen evaluation; replay describes stored issuance.
+    evaluation_end = (pd.Timestamp(selection["snapshot"]) - pd.Timedelta(
+        hours=config.V2_TEST_END_OFFSET_H)).isoformat()
+    metadata = {"version": "v2", "onset": "selected", "duration": "D2",
+                "snapshot": snapshot["snapshot"], "csv_sha256": snapshot["csv_sha256"],
+                "evaluation_end": evaluation_end, "replay_source": "issued",
+                "latest": rows.t.max().isoformat()}
+    _publish_v2(rows, paths, metadata)
+    return {"historical": "issued only", **append_issued(paths)}
 
 
 def run_v2(paths: Paths) -> dict[str, object]:
@@ -368,6 +394,13 @@ def run_v2(paths: Paths) -> dict[str, object]:
     from airalert.models.duration import predict_replay
 
     prediction_path = paths.preds / "v2" / "onset_selected.parquet"
+    if not prediction_path.exists():
+        if paths.forecasts.exists():
+            tags = pq.read_schema(paths.forecasts).metadata or {}
+            old = json.loads(tags.get(SERVED_MODELS_KEY, b"{}"))
+            if old.get("version") == "v2":
+                return {"historical": "reused", **append_issued(paths)}
+        return run_issued(paths)
     snapshot = json.loads(paths.snapshot.read_text(encoding="utf-8"))
     signature = hashlib.sha256(json.dumps([
         snapshot, [(str(path.name), path.stat().st_size, path.stat().st_mtime_ns)

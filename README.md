@@ -10,52 +10,19 @@ Live display covers 139 map polygons; forecasts cover the fixed 119-unit univers
 
 Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and [Bun](https://bun.sh/docs/installation). uv manages Python 3.12 and the locked Python dependencies. Run each command from the repository root unless a block says otherwise. Downloads require internet access.
 
-### Build the data once
-
-The dates below reproduce the accepted source overlap and cutover in [the ingest report](docs/ingest.md). The archive gate must pass for the downloaded CSV before backfill can publish data. If the CSV changes, review and revalidate the overlap rather than treating old agreement as current.
-
 ```powershell
 uv sync
-uv run airalert fetch
-uv run airalert episodes
-bunx mapshaper@0.7.83 -v
-uv run airalert geo
-uv run python -m airalert.ingest validate --days 2026-08-20 2026-08-21 2026-08-22 2026-08-23 2026-08-24 2026-08-25 2026-08-26 2026-08-27 2026-09-03 2026-09-04 2026-09-05 2026-09-06
-uv run python -m airalert.ingest backfill --cutover 2026-08-29T06:00:00+00:00
-uv run airalert backfill
-uv run airalert features
-```
-
-The `bunx` call caches the pinned mapshaper used by `geo`. The ingest module exposes validation and initial cutover selection; the main `airalert backfill` command exposes neither option. The module call initializes the ledger and reconciles through yesterday. The following `airalert backfill` resumes that ledger and is also the manual catch-up command.
-
-The adopted cutover repairs the old CSV outage. With an empty ledger and no configured gaps, plain `airalert backfill` instead starts on the CSV's last day. Set the reviewed cutover on initialization. Existing ledgers retain their cutover.
-
-`airalert features` builds the main feature tables. V2 evaluation builds its separate tables through `airalert.features.build_v2()`, called by the onset module below. Committed `data/geo/static_features.csv` supplies static geography; rebuilding it uses `uv run python -m airalert.geo_features`. See [geography provenance](docs/geo-features.md).
-
-### Prepare models and serving artifacts
-
-**Fresh-clone release blocker:** the current checkout includes `reports/v2/test2_claim.json`, which makes `train_v2()` reject retraining. Evaluation models, predictions and serving Parquet are git-ignored. Production refit needs those evaluation models, and API startup needs serving Parquet. A plain clone therefore cannot finish model setup with the existing entrypoints. It needs a release artifact bundle or a bootstrap command that preserves the frozen evaluation. Neither is supplied here. See [operations](docs/operations.md).
-
-These are the implemented v2 evaluation entrypoints, documented in [onset](docs/report-v2.md#verified) and [duration](docs/duration-v2.md#verified). They rebuild evaluation artifacts and write validation results; they are not a workaround for the frozen claim:
-
-```powershell
-uv run python -m airalert.models.onset
-uv run python -m airalert.models.duration
-```
-
-There is no `airalert train --v2` or `airalert train --model D2`. The main `train` command is the older pipeline. Do not remove test2 markers or rescore the published evaluation to start the app.
-
-On a prepared checkout with the evaluation artifacts and predictions present, initialize the production duration model, refit the locked onset choices, issue a current-hour forecast, and build serving Parquet:
-
-```powershell
-uv run python -m airalert.models.duration --production
-uv run python -m airalert.production refit
-uv run python -m airalert.production forecast
-uv run airalert precompute
+uv run airalert setup
 uv run airalert serve
 ```
 
-Production refit keeps the chosen model settings and uses eligible matured outcomes. It does not reopen test2 selection. `precompute` uses v2 predictions when present. The API binds to `http://127.0.0.1:8000`; `serve --port 8000` is also supported. Keep one server process running.
+Setup fetches the CSV, validates the twelve reviewed overlap days, adopts the committed August 29 cutover, and reconciles complete Kyiv days through yesterday. It uses the committed geography, so Python setup needs neither Bun nor mapshaper. The source gate must pass for the downloaded CSV; failures stop setup and leave a resumable checkpoint.
+
+Production onset fits rebuild the per-horizon configuration in [selection.json](reports/v2/selection.json), including its fixed rounds, training window, geography and chronological calibration. Duration uses the same D2 refit as nightly maintenance, with earlier interval fitting and a separate calibration tail. Setup needs no evaluation artifacts, never selects models or scores test2, and writes nothing under `reports/v2/`.
+
+Each step prints its time. Repeating `uv run airalert setup` skips completed steps when their inputs and outputs still agree. `uv run airalert setup --force` repeats the steps; source caches, the accepted ledger and immutable issued hours are preserved. Stop the backend before setup or manual maintenance. Progress is saved in git-ignored `data/live/setup.json`.
+
+On a fresh clone, replay begins at the first actually issued production hour. `/api/meta.replay` gives the stored range; missed hours return 404. Historical validation/test2 scores remain available on the report page, but setup does not invent historical predictions with later-fitted models. Prepared checkouts with frozen evaluation predictions and duration artifacts retain their earlier replay. The [operations guide](docs/operations.md) describes that prepared-checkout behavior.
 
 ### Start the dashboard
 
@@ -70,6 +37,27 @@ bun run dev
 Open the Local URL printed by Vite, normally `http://localhost:5173`. Vite proxies `/api` to the backend. Stop the servers with Ctrl+C.
 
 For a dashboard preview without data or models, run `bun run dev:mock` from `web/` after installing dependencies. It uses synthetic fixtures and labels them as mock data. The [frontend implementation report](web/IMPLEMENTATION.md) records browser checks.
+
+### Advanced manual steps
+
+These are the stages behind setup. Prefer `setup` for normal use, because it checks checkpoints and dependencies. The validation dates and cutover are the reviewed policy in [ingest.py](src/airalert/ingest.py) and [the ingest report](docs/ingest.md). Existing ledgers retain their cutover; a different cutover requires review.
+
+```powershell
+uv run airalert fetch
+uv run airalert episodes
+uv run python -m airalert.ingest validate --days 2026-08-20 2026-08-21 2026-08-22 2026-08-23 2026-08-24 2026-08-25 2026-08-26 2026-08-27 2026-09-03 2026-09-04 2026-09-05 2026-09-06
+uv run python -m airalert.ingest backfill --cutover 2026-08-29T06:00:00+00:00
+uv run airalert backfill
+uv run python -c "from airalert.features import build_v2; build_v2()"
+uv run python -m airalert.production refit
+uv run python -m airalert.models.duration --production
+uv run python -m airalert.production forecast
+uv run airalert precompute
+```
+
+`airalert features` and the main `train` command belong to the older pipeline. The v2 onset/duration evaluation module entrypoints are intentionally blocked after the frozen test2 claim; they are not bootstrap commands. Never remove the claim or rescore evaluation to start the app.
+
+To rebuild geography separately, cache `bunx mapshaper@0.7.83 -v`, then run `uv run airalert geo`. Static geography uses `uv run python -m airalert.geo_features`. Neither command is needed for setup. See [geography provenance](docs/geo-features.md).
 
 ## What the server does automatically
 

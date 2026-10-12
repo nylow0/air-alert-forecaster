@@ -24,3 +24,5 @@ settings.local.json
 data/live/
 data/news/
 docs/current-state.md
+# Runtime state: rewritten by the server every night
+reports/v2/track_record.json

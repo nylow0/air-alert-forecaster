@@ -543,9 +543,14 @@ def fit_chronological(
     kind: str, training: pd.DataFrame, horizon: int, boundary: pd.Timestamp,
     *, window: str, feature_names: list[str], categories: dict[str, list[str]],
     regime: pd.Timestamp, k: float = 0.0, rounds: int = 0, artifact_dir: Path | None = None,
+    calibration_tail: pd.Timedelta | None = None,
 ) -> tuple[HorizonModel, IsotonicRegression, dict[str, object]]:
     """Calibrate forward predictions of a prefix model, then refit all matured rows."""
-    cutoff = boundary - pd.Timedelta(weeks=config.V2_CALIBRATION_WEEKS)
+    tail_length = (pd.Timedelta(weeks=config.V2_CALIBRATION_WEEKS)
+                   if calibration_tail is None else calibration_tail)
+    if tail_length <= pd.Timedelta(0):
+        raise ValueError("Chronological calibration needs a positive tail length")
+    cutoff = boundary - tail_length
     prefix = fit_horizon(kind, training, horizon, cutoff, window=window,
                          feature_names=feature_names, categories=categories, regime=regime,
                          k=k, rounds=rounds)
@@ -561,7 +566,8 @@ def fit_chronological(
                               k=k, rounds=prefix.rounds)
     details.update({"prefix_model_data_through": cutoff.isoformat(),
                     "refit_data_through": boundary.isoformat(), "rounds": prefix.rounds,
-                    "calibration_predictions": "six-week forward prefix-model predictions"})
+                    "calibration_predictions": "forward prefix-model predictions",
+                    "calibration_tail_seconds": tail_length.total_seconds()})
     return final_model, calibration, details
 
 

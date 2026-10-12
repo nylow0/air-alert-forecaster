@@ -20,6 +20,7 @@ def main() -> int:
         ("serve", "api", "serve", "C2"),
         ("backfill", "ingest", "catch_up", "I1"),
         ("live-once", "ingest", "live_state", "I1"),
+        ("setup", "setup", "run", "X2"),
     )
     for command, module, function, owner in stages:
         subparser = commands.add_parser(command)
@@ -30,6 +31,8 @@ def main() -> int:
             )
         elif command == "serve":
             subparser.add_argument("--port", type=int, default=8000)
+        elif command == "setup":
+            subparser.add_argument("--force", action="store_true", help="Redo bootstrap steps")
     train = commands.add_parser("train")
     train.add_argument("--model", choices=("B0", "B1", "M1", "D0", "D1"), required=True)
     args = parser.parse_args()
@@ -47,7 +50,14 @@ def main() -> int:
     elif args.command == "backtest":
         call_args = (args.final,)
     elif args.command == "serve":
+        from airalert.setup import serving_ready
+
+        if not serving_ready():
+            print("App data is missing. Run uv run airalert setup first.", file=sys.stderr)
+            return 1
         call_args = (args.port,)
+    elif args.command == "setup":
+        call_args = (args.force,)
     elif args.command in {"backfill", "live-once"}:
         # Both ingest entry points take the current aware UTC time.
         call_args = (datetime.now(UTC),)
@@ -64,7 +74,17 @@ def main() -> int:
     if target is None:
         print(f"{args.command}: not implemented yet (owner {args.owner})", file=sys.stderr)
         return 1
-    target(*call_args)
+    if args.command == "setup":
+        try:
+            target(*call_args)
+        except Exception as error:
+            from airalert.scheduler import error_message
+
+            print(f"setup: {error_message(error)}; rerun uv run airalert setup to resume.",
+                  file=sys.stderr)
+            return 1
+    else:
+        target(*call_args)
     return 0
 
 

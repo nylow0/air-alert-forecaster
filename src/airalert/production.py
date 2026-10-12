@@ -28,6 +28,11 @@ from airalert.schemas import ForecastRow, ProductionModel
 
 _LOCK = threading.RLock()
 
+# Preserve the evaluated B0 reference settings without shipping evaluation artifacts.
+# These are the accepted v2 training-only choices, not a new tuning pass.
+B0_REFERENCE = {1: ("raionregime", 24.0), 3: ("raionregime", 1.0),
+                12: ("raionregime", 24.0)}
+
 
 def _utc(value: datetime) -> pd.Timestamp:
     clock = pd.Timestamp(value)
@@ -74,33 +79,45 @@ def refit(now: datetime) -> ProductionModel:
             training[f"y_{horizon}"] = labels[f"y_{horizon}"]
         generation = config.V2_PRODUCTION_DIR / f"generation-{uuid.uuid4().hex}"
         generation.mkdir(parents=True, exist_ok=False)
-        b0_metadata = json.loads((config.V2_ARTIFACTS_DIR / "B0" / "metadata.json").read_text(
-            encoding="utf-8"))
+        categories = {name: sorted(context.raions[name].unique())
+                      for name in ("raion_id", "oblast_id")}
         # The chronological cutoff is the last fully observed instant, not wall-clock today.
         def refit_horizon(horizon: int) -> dict[str, object]:
             choice = selection["horizons"][str(horizon)]
-            evaluation_model = joblib.load(config.V2_ARTIFACTS_DIR / choice["identity"]
-                                          / f"model_{horizon}h.joblib")
-            if not isinstance(evaluation_model, onset.HorizonModel):
-                raise TypeError("Invalid v2 onset artifact")
+            identity = choice["identity"]
+            kind = identity.split("-", 1)[0].split("+", 1)[0]
+            if kind not in {"B0", "B1", "M1"}:
+                raise ValueError(f"Unsupported locked onset configuration: {identity}")
+            features = [name for name in training if name.startswith("f_")
+                        and ("+geo" in identity or not name.startswith("f_geo_"))]
+            if "+geo" in identity and not any(name.startswith("f_geo_") for name in features):
+                raise ValueError("Locked onset configuration requires committed geography features")
+            calibration = choice["validation_calibration"]
+            tail = pd.Timestamp(calibration["apply_from"]) - pd.Timestamp(
+                calibration["prefix_model_data_through"])
+            rounds = int(calibration["rounds"])
+            if tail <= pd.Timedelta(0) or (kind == "M1" and rounds <= 0):
+                raise ValueError("Locked calibration tail and M1 round count must be positive")
             model, calibrator, provenance = onset.fit_chronological(
-                evaluation_model.kind, training, horizon, through,
-                window=evaluation_model.window, feature_names=evaluation_model.features,
-                categories=evaluation_model.categories, regime=saved.regime_switch,
-                k=evaluation_model.k, rounds=evaluation_model.rounds, artifact_dir=generation,
+                kind, training, horizon, through,
+                window=choice["window"], feature_names=features,
+                categories=categories, regime=saved.regime_switch,
+                k=float(choice["k"]), rounds=rounds, artifact_dir=generation,
+                calibration_tail=tail,
             )
             joblib.dump(model, generation / f"model_{horizon}h.joblib")
             # Save even if the chosen configuration serves raw probabilities.
             joblib.dump(calibrator, generation / f"calibrator_{horizon}h.joblib")
-            b0 = b0_metadata[str(horizon)]
+            b0_window, b0_k = B0_REFERENCE[horizon]
             reference = onset.fit_horizon(
-                "B0", training, horizon, through, window=b0["window"], feature_names=[],
-                categories=evaluation_model.categories, regime=saved.regime_switch, k=b0["k"],
+                "B0", training, horizon, through, window=b0_window, feature_names=[],
+                categories=categories, regime=saved.regime_switch, k=b0_k,
             )
             joblib.dump(reference, generation / f"b0_{horizon}h.joblib")
             print(f"Production H={horizon}: {perf_counter() - began:.1f}s elapsed", flush=True)
             return {"candidate": choice["candidate"],
-                    "calibrated": choice["calibrated"], **provenance}
+                    "calibrated": choice["calibrated"], "reference_window": b0_window,
+                    "reference_k": b0_k, **provenance}
 
         # Three disjoint horizon fits share read-only feature rows. Each LightGBM
         # fit retains the four-thread evaluation settings and its chosen rounds.

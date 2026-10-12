@@ -39,6 +39,17 @@ from airalert.sources import Event, Severity, aiu_api, aiu_web, mapping, siren, 
 from airalert.sources.locations import Location, Locations
 from airalert.sources.storage import atomic_json, cache_response
 
+# Lead-reviewed round-3 overlap and outage repair, documented in docs/ingest.md.
+# Local bootstrap policy is committed; validation results and ledgers are not.
+REVIEWED_CUTOVER = datetime(2026, 8, 29, 6, tzinfo=UTC)
+REVIEWED_VALIDATION_DAYS = tuple(
+    date.fromisoformat(value) for value in (
+        "2026-08-20", "2026-08-21", "2026-08-22", "2026-08-23",
+        "2026-08-24", "2026-08-25", "2026-08-26", "2026-08-27",
+        "2026-09-03", "2026-09-04", "2026-09-05", "2026-09-06",
+    )
+)
+
 
 class Layer(TypedDict):
     active: bool
@@ -587,22 +598,30 @@ def reconcile_days(
     return ledger
 
 
-def catch_up(now: datetime, *, root: Path | None = None) -> dict[str, object]:
+def catch_up(
+    now: datetime, *, root: Path | None = None, cutover: datetime | None = None,
+) -> dict[str, object]:
     """Resume every complete Kyiv day in order; the ledger only advances after publish."""
     if now.tzinfo is None:
         raise ValueError("catch_up requires an offset-aware time")
     root = root or _live_dir()
     _require_validation(root)
     ledger = _read_json(root / "ledger.json")
+    if cutover is not None:
+        if cutover.tzinfo is None:
+            raise ValueError("cutover requires an offset-aware time")
+        if ledger.get("cutover") and pd.Timestamp(str(ledger["cutover"])) != pd.Timestamp(cutover):
+            raise ValueError("Existing ledger has a different cutover; preserve it for review")
     if "watermark" not in ledger:
         # Repair the configured outage first; otherwise overlap the last partial
         # CSV calendar day. The gate must pass before even initializing the ledger.
-        if DATA_GAPS:
-            cutover = min(start for start, _ in DATA_GAPS)
-        else:
-            source = load_source()
-            last = max(source.started_at.max(), source.finished_at.max())
-            cutover = aiu_web.day_bounds(last.tz_convert(KYIV_TZ).date())[0]
+        if cutover is None:
+            if DATA_GAPS:
+                cutover = min(start for start, _ in DATA_GAPS)
+            else:
+                source = load_source()
+                last = max(source.started_at.max(), source.finished_at.max())
+                cutover = aiu_web.day_bounds(last.tz_convert(KYIV_TZ).date())[0]
         first = cutover.astimezone(ZoneInfo(KYIV_TZ)).date()
         ledger = {"cutover": _iso(cutover), "watermark": (first - timedelta(days=1)).isoformat(),
                   "days": [], "gaps": []}
@@ -611,6 +630,7 @@ def catch_up(now: datetime, *, root: Path | None = None) -> dict[str, object]:
     yesterday = now.astimezone(ZoneInfo(KYIV_TZ)).date() - timedelta(days=1)
     while day <= yesterday:
         ledger = reconcile_days([day], root=root, now=now)
+        print(f"Archive reconciled through {day.isoformat()}", flush=True)
         day += timedelta(days=1)
     return ledger
 
@@ -810,16 +830,9 @@ def main() -> None:
     elif args.command == "backfill":
         root = _live_dir()
         _require_validation(root)
-        if args.cutover and not (root / "ledger.json").exists():
-            if args.cutover.tzinfo is None:
-                parser.error("cutover requires an offset")
-            first_day = args.cutover.astimezone(ZoneInfo(KYIV_TZ)).date()
-            atomic_json(root / "ledger.json", {
-                "cutover": _iso(args.cutover),
-                "watermark": (first_day - timedelta(days=1)).isoformat(),
-                "days": [], "gaps": [],
-            })
-        print(json.dumps(catch_up(args.now or datetime.now(UTC))))
+        if args.cutover and args.cutover.tzinfo is None:
+            parser.error("cutover requires an offset")
+        print(json.dumps(catch_up(args.now or datetime.now(UTC), cutover=args.cutover)))
     else:
         state = live_state(datetime.now(UTC))
         polygons = state["polygons"]
