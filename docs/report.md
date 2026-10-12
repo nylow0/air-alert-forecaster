@@ -51,7 +51,7 @@ Two further controls protect evaluation:
 - The shared embargo excludes training or validation rows when `t+H` crosses the next split start. A label ending exactly at that boundary remains eligible. Inner-training and calibration-fold boundaries apply the same principle.
 - The shared gap mask removes outage label windows and corrupted onset lookbacks before fitting, calibration or scoring. Prediction files retain those hours for replay. Duration scoring also excludes censored episodes, split-crossing ends, and gap overlaps.
 
-Duration has a separate boundary convention. Its code includes records starting exactly at episode onset `s`, including the new alert's source level and simultaneous starts. [Duration notes](duration.md#decisionsassumptions) and [duration tests](../tests/test_duration.py) use an inclusive start-prefix reconstruction. This assumes the onset event is observed and differs from the global strictly-before wording in AGENTS.md. The report states the implemented convention explicitly; that contract wording needs the lead's clarification.
+Duration predictions are made at episode onset `s`, when the alert is issued. [AGENTS.md](../AGENTS.md#hard-rule-the-as-of-contract) explicitly permits records with `started_at <= s`, including the starting record's source level and simultaneous starts, with ends after `s` masked. This is the design in [plan §03, Target (d)](plan.md); the strict `< t` rule governs hourly onset features. [Duration notes](duration.md#decisionsassumptions) and [duration tests](../tests/test_duration.py) use this inclusive start-prefix reconstruction.
 
 Selection froze before the single final scoring run recorded in [onset evidence](onset.md#test-evaluated-once). The JSON timestamps corroborate that ordering: [`selection.json`](../reports/metrics/selection.json) is dated **2026-10-12T09:46:44.475218Z**, before [`scores_test.json`](../reports/metrics/scores_test.json) at **2026-10-12T09:48:02.029497Z**. The onset handoff records unchanged model, prediction and selection hashes across final scoring and precompute. This report reads the scores without rerunning evaluation.
 
@@ -105,11 +105,19 @@ B1 and M1 compare full-history training with training from the saved raion-regim
 
 For M1, early stopping uses an **inner train holdout beginning 2026-04-06**, eight weeks before validation. An inner embargo prevents labels crossing that boundary. The classifier then refits eligible training rows at the chosen iteration count. Validation does not fit classifier parameters or select iterations. Hyperparameters were fixed without a parameter search. [Onset protocol](onset.md#features-and-protocol) gives the settings.
 
-Onset isotonic calibration uses June/July cross-fitting on validation: fit on one month, apply to the other. June fit rows whose label windows cross July 1 are excluded; those seam rows keep raw probabilities in the validation output. Test/latest use a calibrator fitted on all eligible validation rows. B1 applies calibration only if cross-fitted validation Brier improves by at least 1% relative to raw Brier; the selected B1 stays raw at all horizons. M1 applies calibration and also reports its raw alternative.
+Onset isotonic calibration uses June/July cross-fitting on validation. M1's calibrated June probabilities use a fit on July outcomes, and its calibrated July probabilities use a fit on June outcomes. The lead deliberately chose this protocol so validation rows never calibrate themselves. July outcomes still influence June probabilities, so **validation scores are a model-comparison diagnostic, not chronological as-of forecasts**, as [AUD-01](audit.md#findings) confirms. June fit rows whose label windows cross July 1 are excluded; those seam rows keep raw probabilities in the validation output.
+
+Test/latest use a separate calibrator fitted on all eligible validation rows. That calibration period comes entirely before test, so the headline test results are chronologically valid under the saved record-time reconstruction. Historical publication availability remains unverified. The lead retained the validation protocol after the audit because changing it after test scoring would re-open model selection after seeing the test set.
+
+B1 applies calibration only if cross-fitted validation Brier improves by at least 1% relative to raw Brier; the selected B1 stays raw at all horizons. M1 applies calibration and also reports its raw alternative.
 
 Duration uses onset context, local calendar/regime, current national/oblast activity, recent starts, and causal summaries of previously ended episodes. Recent episode history is rebuilt from record prefixes, so future merge extensions cannot change a past feature. D1 compares full-history and regime-only training and two tree sizes. **D1 uses validation for early stopping and candidate selection**, so its validation scores are tuning results. It selects regime-only training. It has no isotonic calibration. [Duration method](duration.md#decisionsassumptions) documents this protocol.
 
 Onset selection favors the model with the most per-horizon validation Brier wins, using 3-hour Brier to break ties. M1 wins at 1 and 3 hours; M1-full wins at 12 hours. This rule chooses one onset model for the dashboard, even though full-history M1 has lower mean validation Brier across horizons. The lead chose D1 for duration after its validation comparison with D0. Both selections remain frozen in [`selection.json`](../reports/metrics/selection.json).
+
+### Reproducibility notes
+
+Saved M1 artifacts retain only the all-validation isotonic calibrators used for test and latest. The June/July fold calibrators are not saved. The [independent audit's AUD-03 finding](audit.md#findings) records exact reproduction of validation predictions by refitting those folds from saved-model raw outputs and validation labels. Validation replay therefore requires those labels and a fold refit alongside the saved model.
 
 ## Results
 
@@ -117,7 +125,7 @@ The headline is **M1's 13.843% test BSS versus B0 at 3 hours**. Its Brier is 0.1
 
 Brier and log-loss measure probability error, so lower is better. BSS is `1 - Brier(model)/Brier(B0)` on identical eligible rows; positive values beat B0. The tables give BSS as a fraction. PR-AUC here is average precision, as implemented in [`metrics.py`](../src/airalert/metrics.py). Higher PR-AUC is better. Duration pinball losses and mean absolute error of the P50 prediction are in minutes; the latter is not the median of absolute errors.
 
-Every results table below is the unedited Markdown output of `uv run python scripts/report_tables.py`, which validates and reads [`reports/metrics.json`](../reports/metrics.json). These scores use the original per-horizon model probabilities. Precompute later enforces `P(1h) <= P(3h) <= P(12h)` for serving; the tables do not rescore that transformation.
+Every results table below is the unedited Markdown output of `uv run python scripts/report_tables.py`, which validates and reads [`reports/metrics.json`](../reports/metrics.json). Scores evaluate each model's per-horizon output before serving enforces `p_1 <= p_3 <= p_12`. The [independent audit's served-score comparison](audit.md#served-score-distinction) measured M1's served 3-hour test Brier as **0.142363**, against the scored **0.142332**. The aggregate difference is negligible, although individual probabilities can change more. The frozen tables retain the scored values.
 
 <!-- report_tables:start -->
 ### Validation onset
@@ -216,9 +224,17 @@ Replay is the primary demonstration because the input is an ended-alert archive 
 
 The current UI reads `/api/meta.data_gaps` to shade outage bands on the scrubber and history chart. Inside the outage, it warns that observations are unknown, suppresses normal actual-onset outlines/status, and presents unavailable outcomes as unknown. Recovery hours keep an explicit unscored-history notice. These descriptions follow [the implementation handoff](../web/IMPLEMENTATION.md) and the current [dashboard](../web/src/App.svelte) and [gap display logic](../web/src/lib/gaps.ts).
 
-The updated [frontend integration handoff](../web/IMPLEMENTATION.md) records a passing live suite with 24 executions across 1440-pixel desktop and 390-pixel mobile viewports. It also records live outage checks with unknown outcomes/status, absent actual-onset outlines, and a recovery notice. The earlier [verifier handoff](../web/tests/README.md) records mock findings and gives the live-suite commands. These are the respective owners' verification evidence; a fresh-clone rebuild was not performed for this writing task.
+The updated [frontend integration handoff](../web/IMPLEMENTATION.md) records a passing live suite with 24 executions across 1440-pixel desktop and 390-pixel mobile viewports. It also records live outage checks with unknown outcomes/status, absent actual-onset outlines, and a recovery notice. The earlier [verifier handoff](../web/tests/README.md) records mock findings and gives the live-suite commands. The independent audit below adds fresh-clone verification; this writing task did not rerun those browser suites.
 
 Duration quantiles remain tied to onset. When P50 has passed and the alert remains active, the panel says that the predicted median end has passed. Negative remaining times mean an onset-time estimate has already passed, not that the alert has ended.
+
+## Independent audit
+
+The [independent audit](audit.md#summary-verdict) judged the frozen retrospective test replay **ready with caveats**. A fresh-clone README rebuild reproduced all **40 score rows exactly**, with the same CSV SHA-256 recorded above. Its **30-pair** saved-model and served-prediction reconstruction had **zero difference**. These probes establish record-prefix invariance for a frozen model; they do not make validation calibration chronological.
+
+Both browser suites passed, with **24/24 live** and **24/24 mock** executions at desktop and mobile sizes. The [audit](audit.md#browser-verification) records the commands, screenshots and workflow checks.
+
+The lead reports that UI findings AUD-04 and AUD-05 were **addressed in a follow-up UI change** by A3. They concern horizon-dependent outage disclosure and the selection outline's ambiguity with actual onset. This writing task did not independently verify that follow-up.
 
 ## Limitations
 
@@ -228,9 +244,9 @@ Duration quantiles remain tied to onset. When P50 has passed and the alert remai
 - **Source outage.** The onset mask removes the outage and recovery; replay still includes affected hours. Duration removes overlapping episodes but retains later episodes whose recent history may be incomplete.
 - **One short onset test period.** Roughly four scored weeks provide a narrow sample of attack patterns. Raion-hours and horizons are dependent, and no aggregate uncertainty interval accompanies the skill estimates.
 - **Retrospective regime date.** The cutoff uses evidence that the majority persists to the final observed day. It is fixed metadata in replay, rather than a demonstrated live regime detector.
-- **Duration boundary and uncertainty.** The implemented inclusive onset-time prefix needs clarification against the global strictly-before contract. Intervals under-cover, and duration forecasts do not condition on elapsed time or survival past P50.
+- **Duration boundary and uncertainty.** By design, duration predictions at onset `s` may include records with `started_at <= s`, as permitted in AGENTS.md and plan §03, with later ends masked. Intervals under-cover, and duration forecasts do not condition on elapsed time or survival past P50.
 - **Geography proxy.** Centroid coordinates stand in for spatial exposure and distance to the front. They contain no changing front-line geometry.
-- **Serving transformation.** The dashboard enforces ordered horizon probabilities after scoring; its adjusted forecasts have not been separately evaluated in the frozen tables.
+- **Validation calibration chronology.** M1's cross-fitted June probabilities use July outcomes. Its validation scores are model-comparison diagnostics, not chronological as-of forecasts. Test calibration uses all validation before test, so the headline test results remain chronologically valid under record-time reconstruction. The protocol stayed frozen after the audit to avoid re-opening model selection after seeing test outcomes.
 - **Validation reuse.** Validation chooses windows, shrinkage and model selection, supplies onset calibration, and stops/tunes D1. Those validation scores are not an untouched estimate of generalization.
 
 ## Future work

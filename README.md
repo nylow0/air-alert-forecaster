@@ -2,7 +2,7 @@
 
 Hourly probabilities that an air raid alert starts within 1, 3 or 12 hours in each Ukrainian raion, plus P10/P50/P90 alert duration at onset. A Python pipeline computes forecasts in advance; a black Svelte dashboard replays the test period and shows the latest dataset snapshot.
 
-The hard as-of rule is that a forecast at time `t` may use only data from strictly before `t`. Hourly features use raw records, dropping starts `>= t` and masking ends `> t`; merged episodes supply targets. The [report](docs/report.md#the-as-of-rule) explains the merge-gap trap, the duration model's onset-time convention, and the source's publication limitation.
+Hourly onset features use raw records, dropping starts `>= t` and masking ends `> t`; merged episodes supply targets. Duration is predicted at episode onset `s` and may include records with `started_at <= s`, with later ends masked, as specified in [AGENTS.md](AGENTS.md#hard-rule-the-as-of-contract). The [report](docs/report.md#the-as-of-rule) explains the merge-gap trap and the source's publication limitation. Validation calibration has a separate chronology caveat described below.
 
 ## From a fresh clone
 
@@ -75,6 +75,8 @@ The saved copy is named `official_data_en_2026-10-12.csv`, but its observation s
 
 The snapshot and regime date come from `snapshot.json`, not today's clock. The scoring policy excludes the source outage and a 168-hour onset-feature recovery. Frozen metrics and selection are committed under `reports/`. See the [full report](docs/report.md) for their provenance and limitations.
 
+Only the all-validation M1 calibrators used for test/latest are saved; validation-fold calibrators are not. The [independent audit](docs/audit.md#findings) reproduced validation predictions exactly by refitting the folds from saved-model raw outputs and validation labels.
+
 ## Results
 
 These headlines come from [the frozen metrics](reports/metrics.json):
@@ -85,6 +87,10 @@ These headlines come from [the frozen metrics](reports/metrics.json):
 - D1's test P10-P90 duration interval covers **75.98%**, below its nominal 80%.
 
 The selected M1 loses slightly to B0 at 12 hours on validation. Full-history M1 wins test Brier at every horizon, but switching after seeing test would be test-set tuning. All models, including losses, appear in the [results tables](docs/report.md#results).
+
+M1's validation calibration uses July outcomes for June probabilities and June outcomes for July probabilities. Validation scores are model-comparison diagnostics, not chronological as-of forecasts. Test calibration uses all validation before test, so the headline test results remain chronologically valid under record-time reconstruction. The protocol stayed frozen after the audit to avoid re-opening selection after seeing test outcomes.
+
+The headlines score per-horizon outputs before serving orders the probabilities. The [report's results](docs/report.md#results) give the audit's served-score comparison, and its [independent audit section](docs/report.md#independent-audit) summarizes rebuild and browser evidence.
 
 ## Tests and UI development
 
@@ -110,7 +116,7 @@ bunx playwright test
 $env:E2E_TARGET = 'mock'
 ```
 
-Playwright starts its own Vite server on port 5187; leave that port free. Desktop and mobile projects check rendered interactions and API values. See [e2e instructions](web/tests/README.md) for prerequisites and artifacts. That verifier handoff records earlier mock findings; the [frontend integration evidence](web/IMPLEMENTATION.md) records the later live run and their resolution.
+Playwright starts its own Vite server on port 5187; leave that port free. Desktop and mobile projects check rendered interactions and API values. See [e2e instructions](web/tests/README.md) for prerequisites and artifacts. The [independent audit](docs/audit.md#browser-verification) records fresh-clone live and mock results; A3's subsequent UI follow-up is noted in the [report](docs/report.md#independent-audit).
 
 For UI work without a backend, from `web/`:
 
