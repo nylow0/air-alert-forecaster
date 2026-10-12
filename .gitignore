@@ -10,3 +10,17 @@ web/playwright-report/
 .ruff_cache/
 .pytest_cache/
 .lead/
+# Credentials and machine-local state (never commit)
+.env
+.env.*
+!.env.example
+*.session
+secrets/
+credentials*
+auth.json
+*.pem
+*.key
+settings.local.json
+data/live/
+data/news/
+docs/current-state.md

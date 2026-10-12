@@ -1,0 +1,2 @@
+#!/bin/sh
+exec uv run --no-project python "$(git rev-parse --show-toplevel)/scripts/pre_commit_secret_guard.py"

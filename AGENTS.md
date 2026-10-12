@@ -125,3 +125,39 @@ Each subcommand imports its target lazily, so a module that isn't built yet does
 ## Frontend notes
 
 Full `#000` background and a dark UI only. Onest variable font (`@fontsource-variable/onest`, which covers Cyrillic). Draw the map as SVG with `d3-geo`, using a projection fitted to Ukraine, with no tiles. Use a single-hue sequential scale for probability and a white outline for raions where an alert really started. The layout must work from 1440 px down to 390 px. Every number on the report page comes from `/api/report`. Read `[private home path removed]` and `docs/design-notes.md` (if it exists) before building UI.
+
+# v2: live data, news agent (architect decisions, 2026-10-12)
+
+The v1 results (`reports/`, `docs/report.md`) are **frozen history**. v2 extends the data to "now", adds a live map and an optional news agent. Where v2 rules conflict with v1 sections above, v2 wins.
+
+## Sources (from `docs/research/live-sources.md`)
+- **Live (every 60 s):** `siren.pp.ua/api/v3/alerts` (UkraineAlarm mirror: no token, red/yellow `activeAlertLevels`, 50 req/min). Optional supported alerts.in.ua API if the env var `ALERTS_IN_UA_TOKEN` is set (read from the process env or a git-ignored `.env`; never logged, never sent to the browser).
+- **Backfill and nightly reconcile:** the alerts.in.ua web day-archive `api.alerts.in.ua/v3/alerts/day/{war_day}.json`, Kyiv-calendar days. It must be validated against the CSV on overlapping days before use. Be polite: ≥ 2 s between requests, a descriptive User-Agent, and cache raw responses.
+- The CSV (`official_data_en_*.csv`) stays the source up to its cutover. Telegram is **never** a label source.
+- Provenance is kept on every row (`source`). Mirrors are deduplicated by origin event.
+
+## Data contracts v2
+- `data/processed/records.parquet` gains `severity` (`red`/`yellow`/`unknown`; CSV rows = `unknown`) and `source` (`csv`/`aiu_web`/`siren`/`aiu_api`). It stays **air-raid only**. Other hazard types (artillery, urban fights, …) go to `data/processed/hazards.parquet`. A severity escalation inside an alert is a transition, not a new record start.
+- `data/live/` (git-ignored, under `data/`): `raw/` (gzip poll and archive responses), `state.json` (the current live state), `ledger.json` (the reconciled Kyiv-day watermark and coverage gaps).
+- **Display units:** all 139 map polygons, keyed by crosswalk `shape_id`. The forecast universe stays 119 `raion_id`s. Crimea, Luhansk and Sevastopol polygons show live status (inherited oblast-level, marked `inherited`), with no forecast. The Chornobyl zone inherits only Kyivska **oblast-wide** alerts, and is otherwise `unknown`.
+- `config.DATA_GAPS` becomes data-driven: the outage is removed only if the archive fill validates; otherwise it stays.
+- The as-of rule is unchanged. Live features at `t` use only records observed before `t`.
+
+## Schedules (one process: `uv run airalert serve`)
+- Every 60 s: poll live → `state.json` and the raw archive. A failed poll keeps the last state and marks it `stale`; it never clears alerts.
+- At 00:00 Europe/Kyiv (an IANA-aware scheduler): reconcile every missing complete Kyiv day through yesterday (the ledger watermark), rebuild records, episodes and features, refit production models, recompute forecasts, and score yesterday's forecasts (the rolling live track record). On startup: the same catch-up runs if the watermark is behind.
+- Every hour on the hour: a "now" forecast from current data.
+
+## Ownership v2 (supersedes the v1 table where they overlap)
+| Path | Owner |
+|---|---|
+| `src/airalert/sources/`, `src/airalert/ingest.py`, `src/airalert/data.py`, `tests/test_ingest.py`, `docs/ingest.md`, `data/live/` | I1 |
+| `src/airalert/live.py`, `src/airalert/scheduler.py`, `src/airalert/api.py`, `src/airalert/precompute.py`, `tests/test_live.py`, `tests/test_api.py` | S1 |
+| `src/airalert/models/`, `src/airalert/backtest.py`, `src/airalert/metrics.py`, `src/airalert/features.py`, `src/airalert/labels.py`, `src/airalert/production.py`, `reports/v2/`, `docs/report-v2.md` | M2 |
+| `src/airalert/news/`, `tests/test_news.py`, `docs/news.md`, `data/news/` | N1 |
+| `web/` (as before) | F1 |
+| `AGENTS.md`, `src/airalert/{config,ids,schemas,cli}.py`, `web/src/lib/types.ts`, `.gitignore`, `scripts/pre_commit_secret_guard.py` | lead |
+Each backend feature exposes a FastAPI `APIRouter` from its own module; `api.py` (S1) includes them.
+
+## Secrets and privacy (hard rule)
+Never write tokens, the ChatGPT/Codex auth, the owner's email, `[private home path removed]` paths, or local PIDs into a tracked file. LLM calls go through the local Codex CLI (`codex exec`), whose credentials live in `[private home path removed]` and are never read, copied or logged by this app. Local settings: `data/settings.local.json` (git-ignored).
