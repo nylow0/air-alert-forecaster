@@ -182,7 +182,9 @@ def test_pipeline_records_failed_step_and_retries(scheduler: Scheduler) -> None:
     asyncio.run(scenario())
 
 
-def test_writers_do_not_overlap_and_readers_keep_snapshot(scheduler: Scheduler) -> None:
+def test_polling_and_refitting_are_independent_and_readers_keep_snapshot(
+    scheduler: Scheduler,
+) -> None:
     async def scenario() -> None:
         entered, release, reconciled = threading.Event(), threading.Event(), threading.Event()
 
@@ -197,7 +199,8 @@ def test_writers_do_not_overlap_and_readers_keep_snapshot(scheduler: Scheduler) 
         assert await worker_call(entered.wait, 2)
         pipeline = asyncio.create_task(scheduler.run_pipeline())
         await asyncio.sleep(0)
-        assert not reconciled.is_set() and scheduler.lock.locked()
+        assert await worker_call(reconciled.wait, 2)
+        assert scheduler.poll_lock.locked()
         assert scheduler.latest == base_forecast()
         assert scheduler.live.get(scheduler.clock()).stale
         release.set()
@@ -274,10 +277,10 @@ def test_shutdown_waits_for_thread_before_unlocking(scheduler: Scheduler) -> Non
         assert await worker_call(entered.wait, 2)
         task.cancel()
         await asyncio.sleep(0)
-        assert scheduler.lock.locked() and not task.done()
+        assert scheduler.poll_lock.locked() and not task.done()
         release.set()
         with pytest.raises(asyncio.CancelledError):
             await task
-        assert not scheduler.lock.locked()
+        assert not scheduler.poll_lock.locked()
 
     asyncio.run(scenario())

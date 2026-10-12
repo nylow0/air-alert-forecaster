@@ -9,6 +9,7 @@ from collections.abc import Awaitable, Callable
 from contextlib import suppress
 from datetime import UTC, date, datetime, time, timedelta
 from pathlib import Path
+from time import perf_counter
 from typing import Protocol
 from zoneinfo import ZoneInfo
 
@@ -74,16 +75,25 @@ class Scheduler:
         clock: Callable[[], datetime] = utc_now,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         jitter: Callable[[], float] = lambda: random.uniform(-3, 3),
+        refit_duration: Callable[[datetime], object] | None = None,
+        rebuild: Callable[[], object] | None = None,
+        append: Callable[[], object] | None = None,
+        duration_ready: Callable[[], bool] = lambda: True,
     ) -> None:
         self.live, self.root = live, root
         self.fallback, self.reload, self.coverage = fallback, reload, coverage
         self.poll, self.catch_up, self.features = poll, catch_up, features
         self.production = production
+        self.refit_duration, self.rebuild, self.append = refit_duration, rebuild, append
+        self.duration_ready = duration_ready
         self.data_through = data_through
         self.clock, self.sleep, self.jitter = clock, sleep, jitter
         self.lock = asyncio.Lock()
-        self.latest = fallback()
-        self.model = self._fallback_model()
+        self.poll_lock = asyncio.Lock()
+        cached = fallback()
+        hour = self.clock().astimezone(UTC).replace(minute=0, second=0, microsecond=0)
+        self.latest = cached if production is None or cached.at == hour else None
+        self.model = production.status() if production is not None else self._fallback_model()
         self.ledger = self._read("ledger.json")
         self.nightly = self._read("nightly.json")
         self._tasks: list[asyncio.Task[None]] = []
@@ -110,10 +120,12 @@ class Scheduler:
 
     def base_forecast(self) -> ForecastResponse | None:
         hour = self.clock().astimezone(UTC).replace(minute=0, second=0, microsecond=0)
-        return self.latest if self.latest.at == hour else None
+        return self.latest if self.latest is not None and self.latest.at == hour else None
 
     async def poll_once(self) -> None:
-        async with self.lock:
+        # Polls publish independent state/observation files. A long model fit must
+        # not prevent the next receipt or turn healthy live data stale.
+        async with self.poll_lock:
             try:
                 raw = await worker_call(self.poll, self.clock())
                 self.live.publish(raw)
@@ -144,6 +156,9 @@ class Scheduler:
         }:
             raise ValueError("Production forecast must cover the forecast universe")
         self.latest, self.model = forecast, model
+        if self.append is not None:
+            await worker_call(self.append)
+            await worker_call(self.reload)
         logger.info("hourly forecast at=%s rows=%s model=%s", when.isoformat(),
                     len(forecast.rows), model.onset)
 
@@ -165,7 +180,8 @@ class Scheduler:
     async def run_pipeline(self, reason: str = "nightly") -> None:
         async with self.lock:
             now = self.clock()
-            steps = ["catch_up", "features", "refit", "score_recent", "reload", "forecasts"]
+            steps = ["catch_up", "features", "refit", "duration_refit", "score_recent",
+                     "rebuild", "reload", "forecasts"]
             self.nightly = {
                 "reason": reason, "started": now.isoformat(), "finished": None, "ok": None,
                 "steps": {name: {"status": "pending"} for name in steps},
@@ -176,27 +192,42 @@ class Scheduler:
                 self._persist()
                 for current in steps:
                     entry = self.nightly["steps"][current]
-                    if current in {"refit", "score_recent"} and self.production is None:
+                    if ((current in {"refit", "score_recent"} and self.production is None)
+                        or (current == "duration_refit" and self.refit_duration is None)
+                        or (current == "rebuild" and self.rebuild is None)):
                         entry.update({"status": "skipped", "message": "Production unavailable"})
                         self._persist()
                         continue
                     entry.update({"status": "running", "started": self.clock().isoformat()})
+                    began = perf_counter()
+                    result = None
                     self._persist()
                     logger.info("pipeline %s step=%s started", reason, current)
                     if current == "catch_up":
-                        await worker_call(self.catch_up, now)
+                        result = await worker_call(self.catch_up, now)
+                        self.ledger = self._read("ledger.json")
                     elif current == "features":
                         await worker_call(self.features)
                     elif current == "refit":
-                        await worker_call(self.production.refit, now)
+                        self.model = self.model.model_copy(update={"onset": "fitting"})
+                        result = await worker_call(self.production.refit, now)
+                    elif current == "duration_refit":
+                        await worker_call(self.refit_duration, now)
                     elif current == "score_recent":
-                        await worker_call(self.production.score_recent, now)
+                        result = await worker_call(self.production.score_recent, now)
+                    elif current == "rebuild":
+                        result = await worker_call(self.rebuild)
                     elif current == "reload":
                         await worker_call(self.reload)
                     else:
                         # A long refit may finish in a later hour than the pipeline began.
                         await self._refresh(self.clock())
-                    entry.update({"status": "ok", "finished": self.clock().isoformat()})
+                    entry.update({"status": "ok", "finished": self.clock().isoformat(),
+                                  "seconds": round(perf_counter() - began, 3),
+                                  "result": (result.model_dump(mode="json")
+                                             if isinstance(result, ProductionModel)
+                                             else result if isinstance(result, (dict, str, int))
+                                             else "completed")})
                     self._persist()
                     logger.info("pipeline %s step=%s ok", reason, current)
                 self.nightly["ok"] = True
@@ -215,6 +246,7 @@ class Scheduler:
                 self.nightly["steps"][current].update({
                     "status": "error", "error_class": type(error).__name__,
                     "error_message": message, "finished": self.clock().isoformat(),
+                    "seconds": round(perf_counter() - began, 3),
                 })
                 for entry in self.nightly["steps"].values():
                     if entry["status"] == "pending":
@@ -223,6 +255,8 @@ class Scheduler:
                                reason, current, type(error).__name__, message)
             finally:
                 self.ledger = self._read("ledger.json")
+                if self.production is not None:
+                    self.model = self.production.status()
                 self.nightly["finished"] = self.clock().isoformat()
                 try:
                     self._persist()
@@ -265,9 +299,20 @@ class Scheduler:
             asyncio.create_task(self._hourly_loop(), name="airalert-hourly"),
             asyncio.create_task(self._nightly_loop(), name="airalert-nightly"),
         ]
-        if self.needs_catch_up(self.clock()):
-            self._tasks.append(asyncio.create_task(self.run_pipeline("startup"),
-                                                  name="airalert-catch-up"))
+        missing = self.production is not None and (
+            self.model.trained_at is None or not self.duration_ready())
+        incomplete = bool(self.nightly) and self.nightly.get("ok") is not True
+        if self.needs_catch_up(self.clock()) or missing or incomplete:
+            if missing:
+                self.model = self.model.model_copy(update={"onset": "fitting"})
+            self.request_pipeline("startup")
+
+    def request_pipeline(self, reason: str = "manual") -> bool:
+        """Queue one local maintenance run without blocking the request or duplicating work."""
+        if any(task.get_name() == "airalert-catch-up" and not task.done() for task in self._tasks):
+            return False
+        self._tasks.append(asyncio.create_task(self.run_pipeline(reason), name="airalert-catch-up"))
+        return True
 
     async def stop(self) -> None:
         for task in self._tasks:

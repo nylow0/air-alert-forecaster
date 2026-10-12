@@ -898,6 +898,40 @@ def evaluate_v2(*, final: bool = False, reuse_models: bool = False) -> Report:
     return report
 
 
+def predict_replay(
+    active: pd.DataFrame, records: pd.DataFrame, raions: pd.DataFrame,
+) -> pd.DataFrame:
+    """Batch replay ends using frozen D2 weights and each split's earlier calibration."""
+    result = active[["raion_id", "active_since", "t"]].reset_index(drop=True)
+    models, _, metadata = _load_bundle(ARTIFACTS_DIR / "D2")
+    keys = result.rename(columns={"active_since": "start", "t": "checkpoint"})
+    features = build_landmark_features(
+        records, keys, raions, pd.Timestamp(metadata["regime_switch"])
+    )
+    raw = _predict_boosters(models, features)
+    predictions = raw.copy()
+    for split, mask in (("val", result.t.lt(config.V2_TEST_START)),
+                        ("test", result.t.ge(config.V2_TEST_START))):
+        if not mask.any():
+            continue
+        evaluation = json.loads((ARTIFACTS_DIR / "D2" / f"evaluation_{split}.json").read_text(
+            encoding="utf-8"))
+        calibrations = {key: ConformalDuration(**value)
+                        for key, value in evaluation["landmark_calibrations"].items()}
+        if any(pd.Timestamp(value.last_target_end) >= result.loc[mask, "t"].min()
+               for value in calibrations.values()):
+            raise ValueError("Replay calibration must precede every forecast")
+        predictions[mask] = _apply_landmark_calibration(
+            raw[mask], features.loc[mask, "elapsed_min"].to_numpy(), calibrations
+        )
+    if not np.isfinite(predictions).all():
+        raise ValueError("Replay remaining durations must be finite")
+    for index, quantile in enumerate((10, 50, 90)):
+        result[f"end_p{quantile}"] = (result.t + pd.to_timedelta(
+            predictions[:, index], unit="min")).astype("datetime64[us, UTC]")
+    return result
+
+
 def refit_production(now: datetime | pd.Timestamp) -> None:
     """Fit a full-data median and disjoint holdout-calibrated interval models.
 
@@ -943,29 +977,21 @@ def refit_production(now: datetime | pd.Timestamp) -> None:
 
 
 def _production_records(now: pd.Timestamp) -> pd.DataFrame:
-    """Add only the latest successful live snapshot observed strictly before now.
+    """Share onset's live coverage, retaining receipt clocks for original-start context."""
+    from airalert.production import as_of_records, load_observations
 
-    Old open poll records must not accumulate into permanently active coverage.
-    Onset-time context excludes snapshots observed later than the episode start.
-    """
-    records = load_records()
-    paths = sorted((config.DATA_DIR / "live" / "observations").glob("*.parquet"), reverse=True)
-    for path in paths:
-        observed = pd.read_parquet(path)
-        if not len(observed):
-            # A genuinely empty snapshot must clear the previous live context.
-            timestamp = pd.to_datetime(path.stem, format="%Y%m%dT%H%M%S%fZ", utc=True)
-            if timestamp < now:
-                break
-            continue
-        if not pd.to_datetime(observed.observed_at, utc=True).lt(now).all():
-            continue
-        if "hazard_type" in observed:
-            observed = observed.loc[observed.hazard_type.eq("air_raid")]
-        observed = observed.loc[observed.raion_id.isin(load_raions().raion_id)]
-        records = pd.concat([records, observed], ignore_index=True)
-        break
-    return records
+    observed = load_observations(now)
+    records = as_of_records(load_records(), observed, now)
+    if observed.empty:
+        return records
+    keys = ["raion_id", "source", "level", "started_at"]
+    available = observed.loc[observed.raion_id.notna() & observed.hazard_type.eq("air_raid")]
+    if available.empty:
+        return records
+    receipts = available.groupby(keys, as_index=False).observed_at.min()
+    # Archive records have no receipt clock. Live records cannot enter onset
+    # context merely because their provider reports an earlier original start.
+    return records.merge(receipts, on=keys, how="left", validate="many_to_one")
 
 
 def predict_remaining(

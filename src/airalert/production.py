@@ -107,7 +107,8 @@ def refit(now: datetime) -> ProductionModel:
         with ThreadPoolExecutor(max_workers=config.V2_REFIT_WORKERS) as workers:
             jobs = {h: workers.submit(refit_horizon, h) for h in config.HORIZONS}
             details = {str(h): job.result() for h, job in jobs.items()}
-        duration_id = _duration_id()
+        # S1 publishes forecasts only after the following D2 production refit.
+        duration_id = "D2"
         result = ProductionModel(onset="selected", duration=duration_id,
                                  trained_at=datetime.now(UTC), data_through=through.to_pydatetime())
         metadata = {"status": result.model_dump(mode="json"), "horizons": details,

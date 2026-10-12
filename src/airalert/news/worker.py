@@ -3,6 +3,7 @@
 import asyncio
 import contextlib
 import json
+import logging
 import random
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
@@ -27,6 +28,7 @@ from airalert.news.store import Store
 from airalert.schemas import ForecastResponse, NewsFeed, NewsStatus
 
 BaseProvider = Callable[[], ForecastResponse | None]
+logger = logging.getLogger("airalert.news")
 
 
 class Worker:
@@ -173,6 +175,7 @@ class Worker:
         model = getattr(settings.models, f"{stage}_model")
         effort = getattr(settings.models, f"{stage}_effort")
         run = self.store.run_start(stage, model, effort, self.clock(), messages)
+        logger.info("news model stage=%s started", stage)
         self._last_run = run
         try:
             result = await asyncio.to_thread(self.runner.complete, prompt, schema, model, effort)
@@ -181,6 +184,7 @@ class Worker:
                 run, finished, "completed", result.input_tokens, result.output_tokens
             )
             self.store.run_output(run, result.output)
+            logger.info("news model stage=%s completed seconds=%.3f", stage, result.seconds)
             self.last_measurements[stage] = {
                 "seconds": round(result.seconds, 3),
                 "input_tokens": result.input_tokens,
@@ -212,6 +216,7 @@ class Worker:
             )
             if not settings.news_enabled:
                 self.status = self.status.model_copy(update={"state": "off", "message": None})
+                logger.info("news state=off telegram_polls=0 model_calls=0")
                 return
             breaker = self.store.control("breaker")
             if breaker:
@@ -272,6 +277,8 @@ class Worker:
                     else None,
                 }
             )
+            logger.info("news poll completed enabled_channels=%s failed_sources=%s",
+                        len(enabled), failed_sources)
             if self.settings.load() != settings:
                 return
             try:
@@ -382,6 +389,8 @@ class Worker:
                     if type(exc) is ValueError or isinstance(exc, CodexError)
                     else type(exc).__name__
                 )
+                logger.warning("news inference/validation failed category=%s",
+                               str(exc) if type(exc) is ValueError else type(exc).__name__)
                 self._failures += 1
                 self._retry_at = self.clock() + timedelta(
                     seconds=min(1800, 120 * 2**self._failures)

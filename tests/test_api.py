@@ -50,6 +50,7 @@ def offline_server(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.fixture
 def inputs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Paths, pd.Timestamp]:
     """Two raions, a merge gap, an exact-hour start, a censored alert, and an outage."""
+    monkeypatch.setattr(config, "DATA_GAPS", config.V1_DATA_GAPS)
     clock = pd.Timestamp(config.DATA_GAPS[0][0]).floor("D").as_unit("us")
     monkeypatch.setattr(config, "TRAIN_START", (clock - pd.Timedelta(days=1)).to_pydatetime())
     monkeypatch.setattr(config, "VAL_START", clock.to_pydatetime())

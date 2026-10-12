@@ -119,6 +119,9 @@ def prompt(messages: list[Message], geography: Geography) -> str:
         "incidents. Use target_mentions only for explicit Ukrainian threatened destinations, not "
         "origins or speculative transit. Use exact place spelling from text and the supplied alias "
         "allowlist; ambiguous or unknown targets abstain with an empty list. "
+        "Each target must be copied from allowed_target_mentions of one of its cited messages. "
+        "If that list is empty, return target_mentions=[]; never convert an inflected place "
+        "to a different spelling or infer a nearby city or oblast. "
         "Each cited version needs "
         "its own short literal evidence quote from that message. Sources must be exact source_key "
         "values. Type all_clear and status cleared retract a reported threat. "
@@ -132,10 +135,17 @@ def prompt(messages: list[Message], geography: Geography) -> str:
                 "observed_at": m.observed_at.isoformat(),
                 "edited": m.edited,
                 "untrusted_text": m.text,
+                "allowed_target_mentions": sorted(
+                    alias for alias, targets in geography.aliases.items()
+                    if targets and geography.mention_in_text(alias, m.text)
+                ),
             }
             for m in messages
         ],
-        "allowed_target_mentions": sorted(geography.aliases),
+        "allowed_target_mentions": sorted({
+            alias for alias, targets in geography.aliases.items()
+            if targets and any(geography.mention_in_text(alias, m.text) for m in messages)
+        }),
         "allowed_external_origins": ORIGIN_ALIASES,
         "allowed_directions": HEADING_ALIASES,
     }

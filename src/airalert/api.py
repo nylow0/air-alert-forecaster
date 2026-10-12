@@ -21,7 +21,14 @@ from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request
 
 from airalert import config
 from airalert.live import LiveCache, display_geography
-from airalert.precompute import SERVED_MODELS_KEY, Paths, response_from_frame, validate_forecasts
+from airalert.precompute import (
+    SERVED_MODELS_KEY,
+    Paths,
+    append_issued,
+    response_from_frame,
+    run_v2,
+    validate_forecasts,
+)
 from airalert.scheduler import Scheduler, utc_now, worker_call
 from airalert.schemas import (
     EpisodeSpan,
@@ -72,7 +79,9 @@ def _load(paths: Paths) -> _Loaded:
         raise ValueError("Forecast CSV hash disagrees with snapshot.json")
     forecasts = table.to_pandas()
     raions = pd.read_csv(paths.raions, dtype="str")
-    validate_forecasts(forecasts, raions, forecast_snapshot)
+    v2 = models.get("version") == "v2"
+    validate_forecasts(forecasts, raions, forecast_snapshot,
+                       expected_times=pd.DatetimeIndex(forecasts.t.unique()) if v2 else None)
     episodes = pd.read_parquet(paths.episodes)
     for column in ("start", "end"):
         episodes[column] = pd.to_datetime(episodes[column], utc=True).astype("datetime64[us, UTC]")
@@ -81,17 +90,22 @@ def _load(paths: Paths) -> _Loaded:
         raise ValueError("Raion geography must be a GeoJSON FeatureCollection")
     geojson = display_geography(geojson, paths.crosswalk)
     replay = Range(
-        start=config.TEST_START,
-        end=(forecast_snapshot - pd.Timedelta(hours=config.TEST_END_OFFSET_H)).to_pydatetime(),
+        start=config.V2_VAL_START if v2 else config.TEST_START,
+        end=(forecasts.t.max() if v2 else forecast_snapshot - pd.Timedelta(
+            hours=config.TEST_END_OFFSET_H)).to_pydatetime(),
     )
     meta = Meta(
         snapshot=snapshot.to_pydatetime(), csv_sha256=snapshot_data["csv_sha256"],
         regime_switch=snapshot_data["regime_switch"], horizons=list(config.HORIZONS),
-        raion_count=len(raions), latest_at=forecast_snapshot.to_pydatetime(), replay=replay,
+        raion_count=len(raions), latest_at=(forecasts.t.max() if v2 else forecast_snapshot)
+        .to_pydatetime(), replay=replay,
         splits={
-            "train": Range(start=config.TRAIN_START, end=config.VAL_START),
-            "val": Range(start=config.VAL_START, end=config.TEST_START),
-            "test": replay,
+            "train": Range(start=config.TRAIN_START,
+                           end=config.V2_VAL_START if v2 else config.VAL_START),
+            "val": Range(start=config.V2_VAL_START if v2 else config.VAL_START,
+                         end=config.V2_TEST_START if v2 else config.TEST_START),
+            "test": Range(start=config.V2_TEST_START, end=models["evaluation_end"])
+            if v2 else replay,
         },
         onset_model=models["onset"], duration_model=models["duration"],
         data_gaps=(
@@ -166,6 +180,7 @@ def create_app(
         if scheduler_enabled is None else scheduler_enabled
     )
     production = _optional_module("airalert.production")
+    production_backend = production if callable(getattr(production, "forecast", None)) else None
     news_router = _optional_module("airalert.news.router")
     news_worker = _optional_module("airalert.news.worker") if news_router else None
     router = getattr(news_router, "router", None)
@@ -197,9 +212,14 @@ def create_app(
         return catch_up(now, root=paths.live)
 
     def features() -> object:
-        from airalert.features import build
+        from airalert.features import build_v2
 
-        return build()
+        return build_v2()
+
+    def duration_refit(now: datetime) -> object:
+        from airalert.models.duration import refit_production
+
+        return refit_production(now)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -207,9 +227,13 @@ def create_app(
         app.state.live = LiveCache(app.state.loaded.geojson, paths.live / "state.json")
         scheduler = Scheduler(
             live=app.state.live, root=paths.live, fallback=fallback, reload=reload_data,
-            coverage=lambda: app.state.loaded.meta.data_gaps, production=production,
+            coverage=lambda: app.state.loaded.meta.data_gaps, production=production_backend,
             data_through=lambda: app.state.loaded.meta.snapshot,
             poll=poll, catch_up=catch_up, features=features, clock=clock,
+            refit_duration=duration_refit if production_backend else None,
+            rebuild=lambda: run_v2(paths), append=lambda: append_issued(paths),
+            duration_ready=lambda: (
+                config.V2_PRODUCTION_DIR / "duration" / "current.json").exists(),
         )
         app.state.scheduler = scheduler
         app.state.news_message = "News module is unavailable; news agent is off"
@@ -263,7 +287,9 @@ def create_app(
                     evaluate_model="gpt-6.1-sol", evaluate_effort="high",
                 ),
             ),
-            base_at=request.app.state.scheduler.latest.at, events=[], adjustments=[],
+            base_at=(request.app.state.scheduler.latest.at
+                     if request.app.state.scheduler.latest is not None else None),
+            events=[], adjustments=[],
         )
 
     if news_worker is not None:
@@ -279,10 +305,13 @@ def create_app(
     @app.get("/api/meta")
     async def meta(request: Request) -> Meta:
         loaded: _Loaded = request.app.state.loaded
-        latest = request.app.state.scheduler.latest
+        scheduler = request.app.state.scheduler
+        latest = scheduler.latest
         return loaded.meta.model_copy(update={
-            "latest_at": latest.at, "onset_model": latest.onset_model,
-            "duration_model": latest.duration_model,
+            "latest_at": clock().astimezone(UTC).replace(minute=0, second=0, microsecond=0)
+            if production_backend else latest.at,
+            "onset_model": latest.onset_model if latest else scheduler.model.onset,
+            "duration_model": latest.duration_model if latest else scheduler.model.duration,
         })
 
     @app.get("/api/raions")
@@ -295,11 +324,15 @@ def create_app(
         loaded: _Loaded = request.app.state.loaded
         latest = request.app.state.scheduler.latest
         if at is None:
+            if latest is None or (production_backend and
+                                 latest.at != clock().replace(minute=0, second=0, microsecond=0)):
+                raise HTTPException(503, "Current-hour forecast is fitting or refreshing",
+                                    headers={"Retry-After": "2"})
             return latest
         when = _aware(at, "at")
         if when.minute or when.second or when.microsecond:
             raise HTTPException(422, "at must be exactly on an hour")
-        if when == latest.at:
+        if latest is not None and when == latest.at:
             return latest
         frame = loaded.times.get(pd.Timestamp(when))
         if frame is None:
@@ -308,7 +341,7 @@ def create_app(
             )
         return response_from_frame(
             frame, when, loaded.meta.onset_model, loaded.meta.duration_model,
-            latest=when == loaded.meta.latest_at,
+            latest=False,
         )
 
     @app.get("/api/raion/{raion_id:path}/history")
@@ -322,13 +355,14 @@ def create_app(
         if end <= start or end - start > timedelta(days=31):
             raise HTTPException(422, "History requires from < to and a range of at most 31 days")
         latest = request.app.state.scheduler.latest
-        if start < config.VAL_START or end > latest.at:
+        latest_at = clock() if production_backend else latest.at
+        if start < loaded.meta.splits["val"].start or end > latest_at:
             raise HTTPException(422, "History must be within validation start and the latest hour")
         frame = loaded.histories.get(raion_id)
         if frame is None:
             raise HTTPException(404, f"Unknown raion: {raion_id}")
         subset = frame.loc[frame.t.ge(start) & frame.t.le(end), ["t", "p_1", "p_3", "p_12"]]
-        if start <= latest.at <= end and not subset.t.eq(latest.at).any():
+        if latest is not None and start <= latest.at <= end and not subset.t.eq(latest.at).any():
             row = next((row for row in latest.rows if row.raion_id == raion_id), None)
             if row is not None:
                 subset = pd.concat([subset, pd.DataFrame([{
@@ -351,10 +385,34 @@ def create_app(
         )
 
     @app.get("/api/report")
-    def report() -> Report:
-        if not paths.metrics.is_file():
+    def report(version: str = "v2") -> Report:
+        if version not in {"v1", "v2"}:
+            raise HTTPException(422, "version must be v1 or v2")
+        path = paths.v1_metrics if version == "v1" else paths.metrics
+        if not path.is_file():
             raise HTTPException(404, "Model report is not available yet; run airalert backtest")
-        return Report.model_validate_json(paths.metrics.read_text(encoding="utf-8"))
+        result = Report.model_validate_json(path.read_text(encoding="utf-8"))
+        if version == "v2":
+            duration_path = path.parent / "duration_scores.json"
+            if duration_path.is_file():
+                fragment = Report.model_validate_json(duration_path.read_text(encoding="utf-8"))
+                result.duration = fragment.duration
+                result.notes = list(dict.fromkeys([*result.notes, *fragment.notes]))
+            track_path = path.parent / "track_record.json"
+            if track_path.is_file():
+                track = json.loads(track_path.read_text(encoding="utf-8"))
+                for days, scores in track["windows"].items():
+                    values = "; ".join(
+                        f"{score['horizon']}h n={score['n']} "
+                        f"Brier={score['brier']} BSS={score['bss']}"
+                        for score in scores)
+                    result.notes.append(f"Rolling live track record, {days} days: {values}. "
+                                        "Only timely first-issued forecasts with mature outcomes.")
+        return result
+
+    @app.post("/api/system/reconcile", dependencies=[Depends(_local_mutation)], status_code=202)
+    async def reconcile(request: Request) -> dict[str, bool]:
+        return {"queued": request.app.state.scheduler.request_pipeline()}
 
     return app
 
@@ -362,4 +420,7 @@ def create_app(
 def serve(port: int = 8000, *, scheduler_enabled: bool | None = None) -> None:
     """Run local workers by default; AIRALERT_DISABLE_SCHEDULER=1 disables data jobs."""
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
+    paths = Paths()
+    if (paths.preds / "v2" / "onset_selected.parquet").exists():
+        run_v2(paths)
     uvicorn.run(create_app(scheduler_enabled=scheduler_enabled), host="127.0.0.1", port=port)

@@ -1,5 +1,6 @@
 """Join model outputs into hourly API rows without using future alert coverage."""
 
+import hashlib
 import json
 from dataclasses import dataclass
 from datetime import datetime
@@ -31,9 +32,11 @@ class Paths:
     selection: Path = config.SELECTION_PATH
     forecasts: Path = config.FORECASTS_PATH
     geojson: Path = config.RAIONS_GEOJSON_PATH
-    metrics: Path = config.METRICS_PATH
+    metrics: Path = config.V2_METRICS_PATH
+    v1_metrics: Path = config.METRICS_PATH
     crosswalk: Path = config.CROSSWALK_PATH
     live: Path = config.DATA_DIR / "live"
+    issued: Path = config.V2_FORECASTS_DIR
 
 
 @dataclass(frozen=True)
@@ -204,6 +207,7 @@ def _actual_onsets(rows: pd.DataFrame, episodes: pd.DataFrame, paths: Paths) -> 
 
 def validate_forecasts(
     rows: pd.DataFrame, raions: pd.DataFrame, snapshot: pd.Timestamp,
+    *, expected_times: pd.DatetimeIndex | None = None,
 ) -> None:
     """Check complete hourly coverage and the UI invariants before publishing/serving."""
     expected_columns = {"t", *ForecastRow.model_fields}
@@ -213,7 +217,7 @@ def validate_forecasts(
         raise ValueError("Raion universe must contain unique non-null IDs")
     if rows.duplicated(["t", "raion_id"]).any():
         raise ValueError("Duplicate forecast time/raion")
-    times = forecast_times(snapshot)
+    times = forecast_times(snapshot) if expected_times is None else expected_times
     if set(rows.raion_id) != set(raions.raion_id) or rows.t.nunique() != len(times):
         raise ValueError("Forecasts do not cover the complete time/raion universe")
     if not rows.t.isin(times).all() or not rows.groupby("t").size().eq(len(raions)).all():
@@ -254,6 +258,9 @@ def run(paths: Paths | None = None) -> None:
     """Publish exact ForecastRow columns and persist served choices in Parquet metadata."""
     began = perf_counter()
     paths = Paths() if paths is None else paths
+    if (paths.preds / "v2" / "onset_selected.parquet").exists():
+        run_v2(paths)
+        return
     metadata = json.loads(paths.snapshot.read_text(encoding="utf-8"))
     snapshot = pd.Timestamp(metadata["snapshot"]).as_unit("us")
     if snapshot.tzinfo is None or snapshot != snapshot.floor("h"):
@@ -310,3 +317,105 @@ def run(paths: Paths | None = None) -> None:
     print(f"Range: {rows.t.min().isoformat()} -> {rows.t.max().isoformat()}")
     print(f"Served models: onset={models.onset}; duration={models.duration or 'none'}")
     print(f"Wrote {paths.forecasts}; total {elapsed:.2f}s")
+
+
+def _publish_v2(rows: pd.DataFrame, paths: Paths, metadata: dict[str, object]) -> None:
+    """Replace a complete serving cache; immutable model/evaluation inputs stay untouched."""
+    rows = rows[["t", *ForecastRow.model_fields]].sort_values(["t", "raion_id"], ignore_index=True)
+    validate_forecasts(rows, pd.read_csv(paths.raions), pd.Timestamp(metadata["snapshot"]),
+                       expected_times=pd.DatetimeIndex(rows.t.unique()))
+    table = pa.Table.from_pandas(rows, preserve_index=False)
+    tags = dict(table.schema.metadata or {})
+    tags[SERVED_MODELS_KEY] = json.dumps(metadata).encode()
+    paths.forecasts.parent.mkdir(parents=True, exist_ok=True)
+    staging = paths.forecasts.with_suffix(".parquet.tmp")
+    pq.write_table(table.replace_schema_metadata(tags), staging)
+    staging.replace(paths.forecasts)
+
+
+def append_issued(paths: Paths) -> dict[str, object]:
+    """Extend replay with first-issued hours, never overwrite their probabilities."""
+    table = pq.read_table(paths.forecasts)
+    metadata = json.loads(table.schema.metadata[SERVED_MODELS_KEY])
+    if metadata.get("version") != "v2":
+        return {"issued_hours": 0}
+    rows = table.to_pandas()
+    frames = [pd.read_parquet(path, columns=["t", *ForecastRow.model_fields])
+              for path in sorted(paths.issued.glob("*.parquet"))]
+    if frames:
+        issued = pd.concat(frames, ignore_index=True)
+        rows = pd.concat([rows, issued], ignore_index=True).drop_duplicates(
+            ["t", "raion_id"], keep="last")
+        # Issued truth matures only against reconciled outcomes, never live polls.
+        from airalert.labels import build_labels
+
+        snapshot = pd.Timestamp(json.loads(paths.snapshot.read_text())["snapshot"])
+        labels = build_labels(pd.read_parquet(paths.episodes), pd.DatetimeIndex(issued.t.unique()),
+                              snapshot, raions=pd.read_csv(paths.raions))
+        labels = labels.set_index(["t", "raion_id"])
+        keys = pd.MultiIndex.from_frame(rows[["t", "raion_id"]])
+        for horizon in config.HORIZONS:
+            values = labels[f"y_{horizon}"].reindex(keys)
+            mask = keys.isin(labels.index)
+            rows.loc[mask, f"actual_onset_{horizon}"] = pd.array(values[mask], dtype="boolean")
+    metadata["latest"] = rows.t.max().isoformat()
+    _publish_v2(rows, paths, metadata)
+    return {"issued_hours": len(frames), "rows": len(rows), "latest": metadata["latest"]}
+
+
+def run_v2(paths: Paths) -> dict[str, object]:
+    """Build historical v2 replay once per input generation, then append issued hours."""
+    from airalert.models.duration import predict_replay
+
+    prediction_path = paths.preds / "v2" / "onset_selected.parquet"
+    snapshot = json.loads(paths.snapshot.read_text(encoding="utf-8"))
+    signature = hashlib.sha256(json.dumps([
+        snapshot, [(str(path.name), path.stat().st_size, path.stat().st_mtime_ns)
+                   for path in (prediction_path, paths.records, paths.episodes,
+                                paths.features / "v2" / "val.parquet",
+                                paths.features / "v2" / "test2.parquet")]
+    ], sort_keys=True).encode()).hexdigest()
+    if paths.forecasts.exists():
+        tags = pq.read_schema(paths.forecasts).metadata or {}
+        old = json.loads(tags.get(SERVED_MODELS_KEY, b"{}"))
+        if old.get("input_signature") == signature:
+            return {"historical": "reused", **append_issued(paths)}
+    rows = pd.read_parquet(prediction_path)
+    rows = rows.loc[rows.split.isin(["val", "test", "test2"])].sort_values(
+        ["t", "raion_id"], ignore_index=True)
+    rows["t"] = _utc(rows.t)
+    expected = pd.date_range(config.V2_VAL_START, rows.t.max(), freq="h").as_unit("us")
+    records, raions = pd.read_parquet(paths.records), pd.read_csv(paths.raions)
+    probabilities = rows[[f"p_{h}" for h in config.HORIZONS]].to_numpy()
+    rows[[f"p_{h}" for h in config.HORIZONS]] = np.maximum.accumulate(probabilities, axis=1)
+    rows[["active", "active_since"]] = active_state(records, rows)
+    for column in ("end_p10", "end_p50", "end_p90"):
+        rows[column] = pd.Series(pd.NaT, index=rows.index, dtype="datetime64[us, UTC]")
+    active = rows.loc[rows.active]
+    if not active.empty:
+        ends = predict_replay(active, records, raions)
+        for quantile in (10, 50, 90):
+            rows.loc[active.index, f"end_p{quantile}"] = ends[f"end_p{quantile}"].to_numpy()
+    for split, filename in (("val", "val"), ("test", "test2"), ("test2", "test2")):
+        mask = rows.split.eq(split)
+        if not mask.any():
+            continue
+        labels = pd.read_parquet(paths.features / "v2" / f"{filename}.parquet",
+                                 columns=["t", "raion_id", *(f"y_{h}" for h in config.HORIZONS)])
+        joined = rows.loc[mask, ["t", "raion_id"]].merge(labels, how="left",
+                          on=["t", "raion_id"], validate="one_to_one", indicator=True)
+        if joined._merge.ne("both").any():
+            raise ValueError("V2 labels must cover every replay key")
+        for horizon in config.HORIZONS:
+            rows.loc[mask, f"actual_onset_{horizon}"] = pd.array(joined[f"y_{horizon}"],
+                                                               dtype="boolean")
+    rows = rows[["t", *ForecastRow.model_fields]]
+    validate_forecasts(rows, raions, pd.Timestamp(snapshot["snapshot"]), expected_times=expected)
+    metadata = {"version": "v2", "onset": "selected", "duration": "D2",
+                "snapshot": snapshot["snapshot"], "csv_sha256": snapshot["csv_sha256"],
+                "evaluation_end": rows.t.max().isoformat(), "input_signature": signature,
+                "latest": rows.t.max().isoformat()}
+    _publish_v2(rows, paths, metadata)
+    result = {"historical": "rebuilt", **append_issued(paths)}
+    print(f"V2 replay: {result}", flush=True)
+    return result
