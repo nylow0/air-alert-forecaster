@@ -1,8 +1,9 @@
 <script lang="ts">
   import { number, oblastName, probability, type Horizon } from './format'
   import type { ForecastRow, RaionFeature, RaionFeatureCollection } from './types'
-  let { geo, rows, horizon, selected, onselect }: {
+  let { geo, rows, horizon, observationsUnknown, selected, onselect }: {
     geo: RaionFeatureCollection; rows: ForecastRow[]; horizon: Horizon
+    observationsUnknown: boolean
     selected: string | null; onselect: (feature: RaionFeature) => void
   } = $props()
   const features = $derived(new Map(geo.features.filter(f => f.properties.raion_id).map(f => [f.properties.raion_id, f])))
@@ -23,7 +24,7 @@
             {feature?.properties.name ?? row.raion_id}<small>{oblastName(feature?.properties.oblast_id ?? row.raion_id.split('/')[0])}</small>
           </button></th>
           <td class:chosen={horizon === 1}>{number(row.p_1, 2)}</td><td class:chosen={horizon === 3}>{number(row.p_3, 2)}</td><td class:chosen={horizon === 12}>{number(row.p_12, 2)}</td>
-          <td>{#if row.active}<span class="active-status"><i class="dot-key"></i>Active</span>{:else}<span class="muted">Quiet</span>{/if}</td>
+          <td>{#if observationsUnknown}<span class="muted">Unknown</span>{:else if row.active}<span class="active-status"><i class="dot-key"></i>Active</span>{:else}<span class="muted">Quiet</span>{/if}</td>
         </tr>
       {/each}
     </tbody>

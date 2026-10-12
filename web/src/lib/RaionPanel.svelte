@@ -1,12 +1,15 @@
 <script lang="ts">
   import HistoryChart from './HistoryChart.svelte'
   import { actual, clock, horizons, localTime, number, oblastName, probability, type Horizon } from './format'
-  import type { ForecastRow, HistoryResponse, RaionFeature } from './types'
-  let { feature, row, at, mode, horizon, history, loading, error, retry }: {
+  import { gapState } from './gaps'
+  import type { ForecastRow, HistoryResponse, RaionFeature, Range } from './types'
+  let { feature, row, at, mode, horizon, gaps, history, loading, error, retry }: {
     feature: RaionFeature | null; row: ForecastRow | undefined; at: string
     mode: 'replay' | 'latest'; horizon: Horizon; history: HistoryResponse | null
+    gaps: Range[]
     loading: boolean; error: string | null; retry: () => void
   } = $props()
+  const sourceState = $derived(gapState(Date.parse(at), gaps))
   const remaining = $derived.by(() => {
     if (!row?.end_p10 || !row.end_p50 || !row.end_p90) return null
     return [row.end_p10, row.end_p50, row.end_p90].map(t => Math.round((Date.parse(t) - Date.parse(at)) / 60_000))
@@ -20,7 +23,8 @@
       <p class="probability-label">Probability an alert starts within</p>
       <div class="probability-figures">{#each horizons as h}<div class:current={h === horizon}><span>{h} h</span><strong>{number(probability(row, h), 2)}</strong></div>{/each}</div>
       <div class="alert-status">
-        {#if row.active}
+        {#if sourceState === 'outage'}<p>Unknown alert status during source outage.</p>
+        {:else if row.active}
           <p><i class="dot-key"></i>Alert active {row.active_since ? `since ${clock(row.active_since)}` : 'at this hour'}</p>
           {#if row.active_since}<small>{localTime(row.active_since)} Kyiv</small>{/if}
           {#if remaining}
@@ -36,7 +40,7 @@
       <section class="history-section" aria-busy={loading}>
         <div class="section-heading"><h3>Seven-day history</h3>{#if loading}<span class="muted">Updating…</span>{/if}</div>
         {#if error}<div class="error-state" role="alert"><p>{error}</p><button onclick={retry}>Retry history</button></div>{/if}
-        <div class:dimmed={loading}>{#if history && history.raion_id === row.raion_id}<HistoryChart data={history} {horizon} />{:else if loading}<p class="empty-state">Loading seven-day history…</p>{:else if !error}<p class="empty-state">No history is available.</p>{/if}</div>
+        <div class:dimmed={loading}>{#if history && history.raion_id === row.raion_id}<HistoryChart data={history} {horizon} {gaps} />{:else if loading}<p class="empty-state">Loading seven-day history…</p>{:else if !error}<p class="empty-state">No history is available.</p>{/if}</div>
       </section>
     {:else}<p class="empty-state">No forecast data is available for this raion. Excluded regions and unmatched polygons have no forecast.</p>{/if}
   {:else}

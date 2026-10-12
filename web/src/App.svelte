@@ -7,6 +7,7 @@
   import { api } from './lib/api'
   import { Resource } from './lib/resource.svelte'
   import { horizons, hourMs, localTime, type Horizon } from './lib/format'
+  import { gapBands, gapState } from './lib/gaps'
   import type { ForecastResponse, HistoryResponse, Meta, RaionFeature, RaionFeatureCollection, Report } from './lib/types'
 
   const initial = new URLSearchParams(window.location.search)
@@ -26,13 +27,17 @@
   let forecastRetry = $state(0)
   let historyRetry = $state(0)
   let reportRetry = $state(0)
-  const mock = import.meta.env.DEV && import.meta.env.VITE_MOCK_API === '1'
+  const mock = __MOCK_API__
   const start = $derived(meta.data ? Date.parse(meta.data.replay.start) : 0)
   const end = $derived(meta.data ? Date.parse(meta.data.replay.end) : 0)
+  const gaps = $derived(meta.data?.data_gaps ?? [])
+  const bands = $derived(gapBands(gaps, start, end))
   const requestedAt = $derived(!meta.data ? '' : mode === 'latest' ? meta.data.latest_at : new Date(timeMs || end - 14 * hourMs).toISOString().replace('.000Z', 'Z'))
+  const sourceState = $derived(gapState(Date.parse(requestedAt), gaps))
   const selectedFeature = $derived(noDataFeature ?? geo.data?.features.find(f => f.properties.raion_id === selectedId && selectedId !== null) ?? null)
   const selectedRow = $derived(forecast.data?.rows.find(row => row.raion_id === selectedId))
   const ready = $derived(meta.data && geo.data && forecast.data)
+  const observationsUnknown = $derived(forecast.data ? gapState(Date.parse(forecast.data.at), gaps) === 'outage' : false)
 
   function parseHorizon(value: string | null): Horizon {
     const h = Number(value)
@@ -118,19 +123,37 @@
     {#if tab === 'map'}
       <div class="controls"><div class="control-group"><span>Mode</span><div class="segmented" aria-label="Forecast mode">{#each ['replay', 'latest'] as m}<button class:current={mode === m} aria-pressed={mode === m} onclick={() => { mode = m === 'latest' ? 'latest' : 'replay'; playing = false }}>{m === 'replay' ? 'Replay' : 'Latest'}</button>{/each}</div></div><div class="control-group"><span>Alert starts within</span><div class="segmented" aria-label="Forecast horizon">{#each horizons as h}<button class:current={horizon === h} aria-pressed={horizon === h} onclick={() => horizon = h}>{h} h</button>{/each}</div></div><div class="view-control segmented" aria-label="Map or list view"><button class:current={view === 'map'} aria-pressed={view === 'map'} onclick={() => view = 'map'}>Map</button><button class:current={view === 'list'} aria-pressed={view === 'list'} onclick={() => view = 'list'}>List</button></div></div>
       {#if meta.data}
-        {#if mode === 'replay'}<section class="replay-controls" aria-label="Replay timeline"><div class="transport"><button aria-label="Step back one hour" title="Step back one hour" disabled={timeMs <= start} onclick={() => { playing = false; step(-1) }}><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 4v12M15 4l-8 6 8 6z" /></svg></button><button class="play-button" aria-label={playing ? 'Pause replay' : 'Play replay'} aria-pressed={playing} onclick={() => { if (timeMs >= end) timeMs = start; playing = !playing }}><svg viewBox="0 0 20 20" aria-hidden="true">{#if playing}<path d="M6 4v12M14 4v12" />{:else}<path d="M6 3l11 7-11 7z" />{/if}</svg></button><button aria-label="Step forward one hour" title="Step forward one hour" disabled={timeMs >= end} onclick={() => { playing = false; step(1) }}><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M15 4v12M5 4l8 6-8 6z" /></svg></button></div><div class="time-readout"><time datetime={requestedAt}>{localTime(requestedAt)}</time><small>Kyiv time / test period</small></div><div class="scrubber"><label class="sr-only" for="replay-time">Replay hour</label><input id="replay-time" type="range" min={start} max={end} step={hourMs} value={timeMs} aria-valuetext={localTime(timeMs)} oninput={event => { playing = false; timeMs = Number(event.currentTarget.value) }} /><div class="scrubber-labels"><span>{localTime(start).split(',')[0]}</span><span>{localTime(end).split(',')[0]}</span></div></div></section>
-        {:else}<section class="latest-notice"><div><time datetime={meta.data.latest_at}>{localTime(meta.data.latest_at)}</time><small>Kyiv time / latest dataset snapshot</small></div><p>This is a snapshot forecast. Alerts still running when the CSV was exported may be absent.</p></section>{/if}
+        {#if mode === 'replay'}
+          <section class="replay-controls" aria-label="Replay timeline">
+            <div class="transport">
+              <button aria-label="Step back one hour" title="Step back one hour" disabled={timeMs <= start} onclick={() => { playing = false; step(-1) }}><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 4v12M15 4l-8 6 8 6z" /></svg></button>
+              <button class="play-button" aria-label={playing ? 'Pause replay' : 'Play replay'} aria-pressed={playing} onclick={() => { if (timeMs >= end) timeMs = start; playing = !playing }}><svg viewBox="0 0 20 20" aria-hidden="true">{#if playing}<path d="M6 4v12M14 4v12" />{:else}<path d="M6 3l11 7-11 7z" />{/if}</svg></button>
+              <button aria-label="Step forward one hour" title="Step forward one hour" disabled={timeMs >= end} onclick={() => { playing = false; step(1) }}><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M15 4v12M5 4l8 6-8 6z" /></svg></button>
+            </div>
+            <div class="time-readout"><time datetime={requestedAt}>{localTime(requestedAt)}</time><small>Kyiv time / test period</small></div>
+            <div class="scrubber">
+              <label class="sr-only" for="replay-time">Replay hour</label>
+              <div class="scrubber-track">
+                <input id="replay-time" type="range" min={start} max={end} step={hourMs} value={timeMs} aria-valuetext={localTime(timeMs)} aria-describedby={bands.length ? 'gap-key' : undefined} oninput={event => { playing = false; timeMs = Number(event.currentTarget.value) }} />
+                <div class="scrubber-gaps" aria-hidden="true">{#each bands as band}<span class="gap-band" style:left={`${band.left}%`} style:width={`${band.width}%`}></span>{/each}</div>
+              </div>
+              <div class="scrubber-labels"><span>{localTime(start).split(',')[0]}</span><span>{localTime(end).split(',')[0]}</span></div>
+              {#if bands.length}<span class="scrubber-gap-key" id="gap-key"><i class="gap-key"></i>Shaded: source outage</span>{/if}
+            </div>
+            {#if sourceState}<p class="source-notice" role="note">{sourceState === 'outage' ? 'Source outage: no alert data for these hours. Forecasts here are not scored.' : 'History recovering after outage. Forecasts here are not scored.'}</p>{/if}
+          </section>
+        {:else}<section class="latest-notice"><div><time datetime={meta.data.latest_at}>{localTime(meta.data.latest_at)}</time><small>Kyiv time / latest dataset snapshot</small></div><p>This is a snapshot forecast. Alerts still running when the CSV was exported may be absent.</p></section>{#if sourceState}<p class="source-notice latest-source-notice" role="note">{sourceState === 'outage' ? 'Source outage: no alert data for these hours. Forecasts here are not scored.' : 'History recovering after outage. Forecasts here are not scored.'}</p>{/if}{/if}
       {/if}
       {#if forecast.error}<div class="error-state" role="alert"><p>{forecast.error}</p><button onclick={() => forecastRetry++}>Retry forecast</button></div>{/if}
       <div class="dashboard" aria-busy={forecast.loading || geo.loading}>
         <section class="geography" aria-label="Forecasts by raion"><div class="map-heading"><h2>{view === 'map' ? 'Alert onset across Ukraine' : 'Raion forecasts'}</h2><span class="muted">{forecast.loading ? 'Updating…' : forecast.data ? `${forecast.data.rows.length} raions` : 'Loading…'}</span></div>
           <div class:dimmed={forecast.loading || geo.loading}>
-            {#if ready && geo.data && forecast.data}{#if view === 'map'}<MapView geo={geo.data} rows={forecast.data.rows} {horizon} mode={forecast.data.mode} selected={selectedId} onselect={select} />{:else}<RaionList geo={geo.data} rows={forecast.data.rows} {horizon} selected={selectedId} onselect={select} />{/if}{#if forecast.data.rows.length === 0}<p class="empty-state">No forecasts are available for this hour. Choose another time.</p>{/if}
+            {#if ready && geo.data && forecast.data}{#if view === 'map'}<MapView geo={geo.data} rows={forecast.data.rows} {horizon} {observationsUnknown} mode={forecast.data.mode} selected={selectedId} onselect={select} />{:else}<RaionList geo={geo.data} rows={forecast.data.rows} {horizon} {observationsUnknown} selected={selectedId} onselect={select} />{/if}{#if forecast.data.rows.length === 0}<p class="empty-state">No forecasts are available for this hour. Choose another time.</p>{/if}
             {:else if meta.loading || geo.loading || forecast.loading}<div class="initial-loading">Loading the map and hourly forecasts…</div>{/if}
           </div>
           {#if forecast.data}<div class="served-models"><span>Onset {forecast.data.onset_model}</span><span>Duration {forecast.data.duration_model ?? 'unavailable'}</span><span>Probabilities describe alert starts, including when an alert is already active.</span></div>{/if}
         </section>
-        <div class:dimmed={forecast.loading}><RaionPanel feature={selectedFeature} row={selectedRow} at={forecast.data?.at ?? requestedAt} mode={forecast.data?.mode ?? mode} {horizon} history={history.data} loading={history.loading} error={history.error} retry={() => historyRetry++} /></div>
+        <div class:dimmed={forecast.loading}><RaionPanel feature={selectedFeature} row={selectedRow} at={forecast.data?.at ?? requestedAt} mode={forecast.data?.mode ?? mode} {horizon} {gaps} history={history.data} loading={history.loading} error={history.error} retry={() => historyRetry++} /></div>
       </div>
     {:else}
       {#if report.error}<div class="error-state" role="alert"><p>{report.error}</p><button onclick={() => reportRetry++}>Retry report</button></div>{/if}

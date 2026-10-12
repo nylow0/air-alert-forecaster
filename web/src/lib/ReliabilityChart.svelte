@@ -6,6 +6,7 @@
   const x = scaleLinear().domain([0, 1]).range([40, 272])
   const y = scaleLinear().domain([0, 1]).range([240, 12])
   const fixedColors: Record<string, string> = { B0: '#3987e5', B1: '#d95926', M1: '#199e70' }
+  const chartWidth = $derived(Math.max(340, 300 + Math.max(0, ...scores.map(s => s.model.length)) * 7))
   function color(model: string): string {
     const base = model.split(/[+-]/)[0]
     if (fixedColors[base]) return fixedColors[base]
@@ -30,12 +31,12 @@
 </script>
 <figure class="reliability-figure">
   <figcaption><h4>Within {horizon} h</h4><p>Observed frequency against mean predicted probability</p></figcaption>
-  <svg viewBox="0 0 340 288" role="img" aria-label={`Reliability within ${horizon} hours for ${scores.map(s => s.model).join(', ')}. Numerical bins are available below.`}>
+  <svg viewBox={`0 0 ${chartWidth} 288`} role="img" aria-label={`Reliability within ${horizon} hours for ${scores.map(s => s.model).join(', ')}. Numerical bins are available below.`}>
     <title>Reliability diagram for {horizon} hours</title>
     {#each [0, 0.5, 1] as tick}<line class="gridline" x1={40} x2={272} y1={y(tick)} y2={y(tick)} /><text class="axis" x="32" y={y(tick) + 4} text-anchor="end">{tick}</text><text class="axis" x={x(tick)} y="259" text-anchor="middle">{tick}</text>{/each}
     <line x1={x(0)} x2={x(1)} y1={y(0)} y2={y(1)} stroke="#898781" stroke-width="1" />
-    {#each series as s}<path d={s.path} fill="none" stroke={s.color} stroke-width="2" />{#each s.bins as bin}<circle cx={x(bin.mean_pred)} cy={y(bin.frac_pos)} r="5" fill={s.color} />{/each}{/each}
-    {#each labels as s}<line x1={x(s.end!.mean_pred) + 5} y1={y(s.end!.frac_pos)} x2="281" y2={s.labelY - 4} stroke={s.color} stroke-width="0.7" /><text x="285" y={s.labelY} fill={s.color} class="series-label">{s.model}</text>{/each}
+    {#each series as s}<path d={s.path} fill="none" stroke={s.color} stroke-width="2" />{#each s.bins as bin}<circle cx={x(bin.mean_pred)} cy={y(bin.frac_pos)} r={5 * chartWidth / 340} fill={s.color} />{/each}{/each}
+    {#each labels as s}<line x1="278" y1={s.labelY - 4} x2="283" y2={s.labelY - 4} stroke={s.color} stroke-width="0.7" /><text x="287" y={s.labelY} fill={s.color} class="series-label">{s.model}</text>{/each}
     <text class="axis" x="156" y="282" text-anchor="middle">Mean predicted</text>
     <text class="axis" transform="translate(12,125) rotate(-90)" text-anchor="middle">Observed frequency</text>
   </svg>
