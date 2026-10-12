@@ -2,6 +2,7 @@
 
 import json
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from time import perf_counter
 
@@ -12,7 +13,7 @@ import pyarrow.parquet as pq
 
 from airalert import config
 from airalert.backtest import assign_split
-from airalert.schemas import ForecastRow, Report
+from airalert.schemas import ForecastResponse, ForecastRow, Report
 
 SERVED_MODELS_KEY = b"airalert.served_models"
 
@@ -31,12 +32,52 @@ class Paths:
     forecasts: Path = config.FORECASTS_PATH
     geojson: Path = config.RAIONS_GEOJSON_PATH
     metrics: Path = config.METRICS_PATH
+    crosswalk: Path = config.CROSSWALK_PATH
+    live: Path = config.DATA_DIR / "live"
 
 
 @dataclass(frozen=True)
 class ServedModels:
     onset: str
     duration: str | None
+
+
+def response_from_frame(
+    frame: pd.DataFrame, when: datetime, onset: str, duration: str | None, *, latest: bool,
+) -> ForecastResponse:
+    """Convert either a stored hour or production output; latest never carries truth labels."""
+    values = frame.copy()
+    if "t" in values:
+        times = pd.to_datetime(values.pop("t"), utc=True)
+        if not times.eq(pd.Timestamp(when)).all():
+            raise ValueError("Forecast rows must match the requested hour")
+    if set(values.columns) != set(ForecastRow.model_fields) or values.empty:
+        raise ValueError("Forecast requires nonempty rows with exactly the ForecastRow fields")
+    if values.raion_id.duplicated().any():
+        raise ValueError("Duplicate forecast raion")
+    if latest:
+        for horizon in config.HORIZONS:
+            values[f"actual_onset_{horizon}"] = None
+    values = values.astype(object).where(values.notna(), None)
+    rows = [ForecastRow.model_validate(row) for row in values.to_dict(orient="records")]
+    for row in rows:
+        if not 0 <= row.p_1 <= row.p_3 <= row.p_12 <= 1:
+            raise ValueError("Forecast probabilities must be ordered and in [0, 1]")
+        if row.active != (row.active_since is not None):
+            raise ValueError("Only active forecasts require active_since")
+        if row.active_since is not None and row.active_since >= when:
+            raise ValueError("Active starts must be strictly before the forecast time")
+        ends = [row.end_p10, row.end_p50, row.end_p90]
+        present = [end for end in ends if end is not None]
+        if present and (
+            len(present) != 3 or row.active_since is None
+            or not row.active_since <= present[0] <= present[1] <= present[2]
+        ):
+            raise ValueError("Duration quantiles require active coverage and ordered ends")
+    return ForecastResponse(
+        at=when, mode="latest" if latest else "replay", onset_model=onset,
+        duration_model=duration, rows=rows,
+    )
 
 
 def _utc(values: pd.Series) -> pd.Series:
