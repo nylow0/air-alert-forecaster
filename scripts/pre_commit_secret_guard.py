@@ -33,8 +33,9 @@ PATTERNS = [
     (
         "literal process identifier",
         re.compile(
-            rb"\bPIDs?[`\"']?\s*(?:(?:[:=#]|was|were|is|are)\s*)?"
-            rb"[`\"']?\d{2,}(?:\s*[,/]\s*[`\"']?\d{2,})*\b"
+            rb"\b(?:PIDs?|Process[_ ]?IDs?|process(?:\s+(?:IDs?|identifiers?))?)[`\"']?"
+            rb"\s*(?:(?:[:=#]|was|were|is|are)\s*)?(?:\[\s*)?"
+            rb"[`\"']?\d{2,}(?:\s*[,/]\s*[`\"']?\d{2,})*\b(?:\s*\])?"
             rb"|\b(?:Stop-Process|Get-Process)\s+-Id\s+\d{2,}\b",
             re.IGNORECASE,
         ),

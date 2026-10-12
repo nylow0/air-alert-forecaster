@@ -53,6 +53,8 @@ Open the [dashboard](http://localhost:5173).
 | Backend restart and poll cadence, lead-run | The restart loaded the integrated code around `19:45:55Z`. Fresh receipts were `19:45:55.051023Z`, `19:46:55.266762Z` and `19:47:57.324625Z`, about 60.2 and 62.1 seconds apart, with no stale state. |
 | Actual consistency CLI, lead-run at 19:47 | `uv run --no-sync python tests/test_integration.py consistency` checked 119 forecast rows, 33 active raions, zero mismatches and zero persistent local live records in duration inputs. The 19:00 forecast's eligible receipt was `18:59:05Z`, 54.97 seconds before cutoff. |
 | Visual review, lead-run | The lead inspected the live desktop/mobile screenshots from the real browser suite. Yellow layers appeared above red, and both layouts rendered correctly. |
+| Actual hourly rollover, lead-run | At `20:00:11Z`, `/api/meta.latest_at` was `2026-10-12T20:00:00Z`, 23:00 in Kyiv. The consistency CLI checked 119 rows, 79 active raions, zero mismatches and zero persistent local live records in duration inputs. Its pre-hour receipt was `19:59:56.257064Z`, 3.742936 seconds before cutoff. |
+| PNG-aware privacy guard, lead-run | The focused guard tests returned `2 passed in 1.30s`; the full Ruff check remained clean. A real commit attempt containing a synthetic home-path pattern was blocked by the installed guard. |
 
 Earlier real workflow evidence remains linked in the source reports. Y1
 completed a real poll with 139 polygons, tested a no-op catch-up through
@@ -68,11 +70,35 @@ real browser suite and its reviewed screenshots.
 
 ## Privacy publication status
 
-Public-history cleanup and its final privacy review are still pending. The
-scoped scan of the five final-integration files found zero email, home-path,
-numeric process-ID or credential-literal matches. This note uses repository
-paths and contains no credentials or personal identifiers. App authentication
-delegates to Codex; its credential cache was never read.
+The first local history rewrite at `5c9fb70` passed the lead's checks below.
+The independent audit then found numeric local process identifiers in five
+reachable historical blobs, using wording the earlier guard did not recognize.
+The lead is expanding that pattern and will repeat the all-ref rewrite, pruning
+and object audit. Privacy remediation is pending; the first pass is not the
+final publishing clearance.
+
+Parent-verified first-pass evidence is:
+
+- All 171 commits retain their parent relationships and timestamps. All 133
+  refs remain present, including app checkpoints.
+- At rewrite completion, the checked-out tree was byte-identical to the
+  pre-rewrite tree. Hashes for all eight checked frozen report, manifest and
+  lock artifacts were unchanged.
+- Reflogs were expired and unreachable objects pruned. `git fsck --full
+  --no-reflogs` exited 0.
+- The audit covered all 609 stored blobs, 171 commits and 471 trees. It found
+  zero recognized private-pattern matches, nonanonymous metadata entries or
+  ref/tree-name findings.
+- The repository-local neutral Git identity and supplied hook are installed.
+  No remote operation or push was performed.
+- The API and dashboard still responded after cleanup, including the actual
+  20:00 hourly forecast and consistency check above.
+
+The scoped scan of the final-integration files also found zero email,
+home-path, numeric process-ID or credential-literal matches. This note uses
+repository paths and contains no credentials or personal identifiers. Runtime
+data stayed outside the rewrite. Codex's credential cache was never read.
+See [privacy.md](privacy.md#history-remediation-status) for the publishing policy.
 
 ## Remaining limitations
 

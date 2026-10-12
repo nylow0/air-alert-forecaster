@@ -75,9 +75,18 @@ A rejection exits nonzero and prints pattern categories or the rejected identity
 
 The owner authorized removing private information from local Git history before publication. Current documentation now uses portable paths or redacted tool-safety examples. The staged guard also blocks future private commit emails. Its installed local hook matches the supplied hook.
 
-The prepared rewrite scans all local refs, every reachable blob, commit/tag messages, tree/ref names and author/committer/tagger metadata. It anonymizes contributor identities, preserves commit dates and parent links, retains every ref, and verifies the final tree against the intended sanitization. Genuine private matches in binary metadata stop the rewrite for review. The current dry-run covers 170 commits and 133 refs; the transformed content and metadata have zero remaining matches.
+The first local all-ref rewrite at `5c9fb70` passed the lead's checks below. The independent audit then found numeric local process identifiers in five reachable historical blobs, using wording the earlier guard did not recognize. The lead is expanding that pattern and will repeat the rewrite, unreachable-object pruning and complete audit. Privacy remediation is pending; the first pass is not the final publishing clearance.
 
-History execution and the final object audit are pending. The lead will verify the rewrite before expiring reflogs and pruning unreachable private objects. No remote operation is part of this remediation. Runtime data and Codex credentials remain outside this process.
+Parent-verified first-pass evidence:
+
+- All 171 commits retain their parent relationships and timestamps. All 133 refs were preserved, including app checkpoints.
+- At rewrite completion, the checked-out tree was byte-identical to its pre-rewrite state. Hashes for all eight checked frozen report, manifest and lock artifacts were unchanged.
+- Reflogs were expired and unreachable objects pruned. `git fsck --full --no-reflogs` exited 0.
+- The final object-store audit covered 609 blobs, 171 commits and 471 trees. It found zero recognized private-pattern matches, nonanonymous metadata entries or ref/tree-name findings.
+- The neutral repository-local identity and supplied pre-commit hook are installed. A real commit attempt containing a synthetic home-path pattern was blocked. The PNG-aware guard tests returned `2 passed in 1.30s`, and the full Ruff check passed.
+- No remote operation or push was performed. Runtime data and Codex credentials remained outside this process; the credential cache was never read.
+
+This audit covers the checked pattern categories and stored Git objects. The guard still checks each future commit, and downloaded content or runtime screenshots need separate review before publication. [Final integration evidence](final-verification.md#privacy-publication-status)
 
 ## Pre-publish checklist
 
@@ -131,7 +140,7 @@ The broken references found and corrected were:
 
 **Decisions/assumptions.** The independent v2 audit supplies the 524.08-second setup evidence. This documentation task checked commands and links without rerunning setup, model fitting, enabled-news login or the UI workflow. The v1 audit's measurements and shutdown meaning remain unchanged.
 
-**Open issues.** Historical copies of the removed machine details remain for the lead's history remediation. The shared worktree contained unrelated edits at entry; those were left to their owners. Y3 edited only its four owned documents.
+**Open issues.** Y3 left historical copies for the lead's remediation at its delivery. The first local rewrite passed the lead's checks, but the independent audit found an additional process-identifier pattern. The second rewrite and final audit are pending as recorded above. The shared worktree contained unrelated edits at entry; those were left to their owners. Y3 edited only its four owned documents.
 
 **Contract change requests.** None.
 

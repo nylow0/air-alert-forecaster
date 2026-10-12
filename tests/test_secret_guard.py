@@ -21,6 +21,10 @@ def test_private_categories_keep_public_examples() -> None:
         b"/home/" + b"fictional/project",
         b"~" + b"/.config",
         b"PID" + b" = 456789",
+        b"process" + b" 456789 remained",
+        b"Finished server process" + b" [456789]",
+        b"ProcessId" + b": 456789",
+        b"PIDs" + b" [456789, 567890]",
         b"person@" + b"gmail.com",
         b"sk-" + b"x" * 28,
     ]
@@ -28,7 +32,8 @@ def test_private_categories_keep_public_examples() -> None:
         assert guard.find_private_content(value)
     assert not guard.find_private_content(
         b"https://api.alerts.in.ua/api/v3; airalert@example.invalid; "
-        b"process.pid; PID = child.pid; os.getpid(); 2026-10-12; 168 h; "
+        b"process.pid; PID = child.pid; ProcessId = child.pid; os.getpid(); "
+        b"process exited with code 1; 2026-10-12; 168 h; "
         b"GIT_AUTHOR_EMAIL; ALERTS_IN_UA_TOKEN=; /api/raion/kyiv-city/history"
     )
     assert guard.check_identity(b"Contributor <airalert@example.invalid> 1 +0000")
