@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+data/*
+!data/geo/
+artifacts/
+web/node_modules/
+web/dist/
+web/test-results/
+web/playwright-report/
+.ruff_cache/
+.pytest_cache/
+.lead/

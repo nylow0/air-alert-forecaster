@@ -1,0 +1,54 @@
+"""Shared constants and absolute paths, rooted at this source checkout."""
+
+from datetime import UTC, datetime
+from pathlib import Path
+
+HORIZONS = (1, 3, 12)
+MERGE_GAP_MIN = 5
+TRAIN_START = datetime(2022, 4, 1, tzinfo=UTC)
+VAL_START = datetime(2026, 6, 1, tzinfo=UTC)
+TEST_START = datetime(2026, 8, 1, tzinfo=UTC)
+TEST_END_OFFSET_H = 12
+KYIV_TZ = "Europe/Kyiv"
+# Only Luhanska occurs in the saved CSV. The other names are explicit geography exclusions.
+EXCLUDED_OBLASTS = frozenset({"luhanska", "autonomous-republic-of-crimea", "sevastopol-city"})
+SPECIAL_STATUS_OBLASTS = frozenset({"kyiv-city", "sevastopol-city"})
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DATA_DIR = REPO_ROOT / "data"
+RAW_DIR = DATA_DIR / "raw"
+PROCESSED_DIR = DATA_DIR / "processed"
+GEO_DIR = DATA_DIR / "geo"
+TEXT_DIR = DATA_DIR / "text"
+ARTIFACTS_DIR = REPO_ROOT / "artifacts"
+REPORTS_DIR = REPO_ROOT / "reports"
+RECORDS_PATH = PROCESSED_DIR / "records.parquet"
+EPISODES_PATH = PROCESSED_DIR / "episodes.parquet"
+RAIONS_PATH = PROCESSED_DIR / "raions.csv"
+SNAPSHOT_PATH = PROCESSED_DIR / "snapshot.json"
+RAIONS_GEOJSON_PATH = GEO_DIR / "raions.geojson"
+ADJACENCY_PATH = GEO_DIR / "adjacency.json"
+CENTROIDS_PATH = GEO_DIR / "centroids.csv"
+CROSSWALK_PATH = GEO_DIR / "crosswalk.csv"
+FEATURES_DIR = PROCESSED_DIR / "features"
+TRAIN_FEATURES_PATH = FEATURES_DIR / "train.parquet"
+VAL_FEATURES_PATH = FEATURES_DIR / "val.parquet"
+TEST_FEATURES_PATH = FEATURES_DIR / "test.parquet"
+LATEST_FEATURES_PATH = FEATURES_DIR / "latest.parquet"
+PREDS_DIR = PROCESSED_DIR / "preds"
+ONSET_PREDS_PATH_TEMPLATE = PREDS_DIR / "onset_{model_id}.parquet"
+DURATION_PREDS_PATH_TEMPLATE = PREDS_DIR / "duration_{model_id}.parquet"
+FORECASTS_PATH = PROCESSED_DIR / "forecasts.parquet"
+METRICS_DIR = REPORTS_DIR / "metrics"
+METRICS_PATH = REPORTS_DIR / "metrics.json"
+SCORES_VAL_PATH = METRICS_DIR / "scores_val.json"
+SCORES_TEST_PATH = METRICS_DIR / "scores_test.json"
+SELECTION_PATH = METRICS_DIR / "selection.json"
+FIGURES_DIR = REPORTS_DIR / "figures"
+FIXTURES_DIR = REPO_ROOT / "web" / "src" / "lib" / "fixtures"
+
+OFFICIAL_CSV_URL = (
+    "https://raw.githubusercontent.com/Vadimkin/"
+    "ukrainian-air-raid-sirens-dataset/main/datasets/official_data_en.csv"
+)
+RAW_CSV_TEMPLATE = "official_data_en_{date}.csv"

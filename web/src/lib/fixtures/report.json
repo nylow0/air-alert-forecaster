@@ -1,0 +1,2397 @@
+{
+  "generated_at": "2026-09-07T05:00:00Z",
+  "onset": [
+    {
+      "model": "B0",
+      "horizon": 1,
+      "split": "val",
+      "row_set": "full",
+      "n": 1000,
+      "base_rate": 0.1,
+      "brier": 0.09026595,
+      "bss": 0,
+      "logloss": 0.32649341,
+      "pr_auc": 0.1,
+      "reliability": [
+        {
+          "lo": 0,
+          "hi": 0.1,
+          "mean_pred": 0.08107994,
+          "frac_pos": 0.1,
+          "count": 200
+        },
+        {
+          "lo": 0.1,
+          "hi": 0.2,
+          "mean_pred": 0.1118243,
+          "frac_pos": 0.1,
+          "count": 800
+        },
+        {
+          "lo": 0.2,
+          "hi": 0.3,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.3,
+          "hi": 0.4,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.9,
+          "hi": 1,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        }
+      ],
+      "by_oblast": {
+        "cherkaska": {
+          "n": 200,
+          "base_rate": 0.1,
+          "brier": 0.09,
+          "bss": 0
+        },
+        "kyiv-city": {
+          "n": 200,
+          "base_rate": 0.1,
+          "brier": 0.09044255,
+          "bss": 0
+        },
+        "kharkivska": {
+          "n": 200,
+          "base_rate": 0.1,
+          "brier": 0.09051676,
+          "bss": 0
+        },
+        "lvivska": {
+          "n": 200,
+          "base_rate": 0.1,
+          "brier": 0.09001245,
+          "bss": 0
+        },
+        "odeska": {
+          "n": 200,
+          "base_rate": 0.1,
+          "brier": 0.09035797,
+          "bss": 0
+        }
+      },
+      "by_state": {
+        "quiet": {
+          "n": 750,
+          "base_rate": 0.1,
+          "brier": 0.09026595,
+          "bss": 0
+        },
+        "active": {
+          "n": 250,
+          "base_rate": 0.1,
+          "brier": 0.09026595,
+          "bss": 0
+        }
+      }
+    },
+    {
+      "model": "B1",
+      "horizon": 1,
+      "split": "val",
+      "row_set": "full",
+      "n": 1000,
+      "base_rate": 0.1,
+      "brier": 0.07348112,
+      "bss": 0.18594858,
+      "logloss": 0.25336424,
+      "pr_auc": 0.64602057,
+      "reliability": [
+        {
+          "lo": 0,
+          "hi": 0.1,
+          "mean_pred": 0.04155442,
+          "frac_pos": 0.01525054,
+          "count": 459
+        },
+        {
+          "lo": 0.1,
+          "hi": 0.2,
+          "mean_pred": 0.14905416,
+          "frac_pos": 0.08152174,
+          "count": 368
+        },
+        {
+          "lo": 0.2,
+          "hi": 0.3,
+          "mean_pred": 0.22925628,
+          "frac_pos": 0.24137931,
+          "count": 145
+        },
+        {
+          "lo": 0.3,
+          "hi": 0.4,
+          "mean_pred": 0.33580942,
+          "frac_pos": 1,
+          "count": 28
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.9,
+          "hi": 1,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        }
+      ],
+      "by_oblast": {
+        "cherkaska": {
+          "n": 200,
+          "base_rate": 0.1,
+          "brier": 0.07495502,
+          "bss": 0.16716646
+        },
+        "kyiv-city": {
+          "n": 200,
+          "base_rate": 0.1,
+          "brier": 0.07278302,
+          "bss": 0.19525689
+        },
+        "kharkivska": {
+          "n": 200,
+          "base_rate": 0.1,
+          "brier": 0.07373622,
+          "bss": 0.18538601
+        },
+        "lvivska": {
+          "n": 200,
+          "base_rate": 0.1,
+          "brier": 0.07320991,
+          "bss": 0.18666909
+        },
+        "odeska": {
+          "n": 200,
+          "base_rate": 0.1,
+          "brier": 0.07272144,
+          "bss": 0.1951851
+        }
+      },
+      "by_state": {
+        "quiet": {
+          "n": 750,
+          "base_rate": 0.1,
+          "brier": 0.07343025,
+          "bss": 0.18651217
+        },
+        "active": {
+          "n": 250,
+          "base_rate": 0.1,
+          "brier": 0.07363374,
+          "bss": 0.18425784
+        }
+      }
+    },
+    {
+      "model": "M1",
+      "horizon": 1,
+      "split": "val",
+      "row_set": "full",
+      "n": 1000,
+      "base_rate": 0.1,
+      "brier": 0.07042631,
+      "bss": 0.21979094,
+      "logloss": 0.2452913,
+      "pr_auc": 0.64602057,
+      "reliability": [
+        {
+          "lo": 0,
+          "hi": 0.1,
+          "mean_pred": 0.03044304,
+          "frac_pos": 0.01525054,
+          "count": 459
+        },
+        {
+          "lo": 0.1,
+          "hi": 0.2,
+          "mean_pred": 0.15467724,
+          "frac_pos": 0.07116105,
+          "count": 267
+        },
+        {
+          "lo": 0.2,
+          "hi": 0.3,
+          "mean_pred": 0.24834895,
+          "frac_pos": 0.12244898,
+          "count": 196
+        },
+        {
+          "lo": 0.3,
+          "hi": 0.4,
+          "mean_pred": 0.33031843,
+          "frac_pos": 0.44,
+          "count": 50
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "mean_pred": 0.44500966,
+          "frac_pos": 1,
+          "count": 24
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "mean_pred": 0.505941,
+          "frac_pos": 1,
+          "count": 4
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.9,
+          "hi": 1,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        }
+      ],
+      "by_oblast": {
+        "cherkaska": {
+          "n": 200,
+          "base_rate": 0.1,
+          "brier": 0.07236131,
+          "bss": 0.19598548
+        },
+        "kyiv-city": {
+          "n": 200,
+          "base_rate": 0.1,
+          "brier": 0.06936593,
+          "bss": 0.23303875
+        },
+        "kharkivska": {
+          "n": 200,
+          "base_rate": 0.1,
+          "brier": 0.070849,
+          "bss": 0.21728314
+        },
+        "lvivska": {
+          "n": 200,
+          "base_rate": 0.1,
+          "brier": 0.07016226,
+          "bss": 0.22052708
+        },
+        "odeska": {
+          "n": 200,
+          "base_rate": 0.1,
+          "brier": 0.06939304,
+          "bss": 0.23202078
+        }
+      },
+      "by_state": {
+        "quiet": {
+          "n": 750,
+          "base_rate": 0.1,
+          "brier": 0.07036772,
+          "bss": 0.22043997
+        },
+        "active": {
+          "n": 250,
+          "base_rate": 0.1,
+          "brier": 0.07060206,
+          "bss": 0.21784385
+        }
+      }
+    },
+    {
+      "model": "B0",
+      "horizon": 3,
+      "split": "val",
+      "row_set": "full",
+      "n": 1000,
+      "base_rate": 0.25,
+      "brier": 0.18776595,
+      "bss": 0,
+      "logloss": 0.56303264,
+      "pr_auc": 0.25,
+      "reliability": [
+        {
+          "lo": 0,
+          "hi": 0.1,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.1,
+          "hi": 0.2,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.2,
+          "hi": 0.3,
+          "mean_pred": 0.25567543,
+          "frac_pos": 0.25,
+          "count": 1000
+        },
+        {
+          "lo": 0.3,
+          "hi": 0.4,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.9,
+          "hi": 1,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        }
+      ],
+      "by_oblast": {
+        "cherkaska": {
+          "n": 200,
+          "base_rate": 0.25,
+          "brier": 0.1875,
+          "bss": 0
+        },
+        "kyiv-city": {
+          "n": 200,
+          "base_rate": 0.25,
+          "brier": 0.18794255,
+          "bss": 0
+        },
+        "kharkivska": {
+          "n": 200,
+          "base_rate": 0.25,
+          "brier": 0.18801676,
+          "bss": 0
+        },
+        "lvivska": {
+          "n": 200,
+          "base_rate": 0.25,
+          "brier": 0.18751245,
+          "bss": 0
+        },
+        "odeska": {
+          "n": 200,
+          "base_rate": 0.25,
+          "brier": 0.18785797,
+          "bss": 0
+        }
+      },
+      "by_state": {
+        "quiet": {
+          "n": 750,
+          "base_rate": 0.25066667,
+          "brier": 0.18812695,
+          "bss": 0
+        },
+        "active": {
+          "n": 250,
+          "base_rate": 0.248,
+          "brier": 0.18668294,
+          "bss": 0
+        }
+      }
+    },
+    {
+      "model": "B1",
+      "horizon": 3,
+      "split": "val",
+      "row_set": "full",
+      "n": 1000,
+      "base_rate": 0.25,
+      "brier": 0.14902047,
+      "bss": 0.20634985,
+      "logloss": 0.46715725,
+      "pr_auc": 0.75728797,
+      "reliability": [
+        {
+          "lo": 0,
+          "hi": 0.1,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.1,
+          "hi": 0.2,
+          "mean_pred": 0.15681347,
+          "frac_pos": 0,
+          "count": 229
+        },
+        {
+          "lo": 0.2,
+          "hi": 0.3,
+          "mean_pred": 0.25040087,
+          "frac_pos": 0.13939394,
+          "count": 330
+        },
+        {
+          "lo": 0.3,
+          "hi": 0.4,
+          "mean_pred": 0.34242707,
+          "frac_pos": 0.28614458,
+          "count": 332
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "mean_pred": 0.44780812,
+          "frac_pos": 1,
+          "count": 94
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "mean_pred": 0.51404628,
+          "frac_pos": 1,
+          "count": 15
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.9,
+          "hi": 1,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        }
+      ],
+      "by_oblast": {
+        "cherkaska": {
+          "n": 200,
+          "base_rate": 0.25,
+          "brier": 0.14955283,
+          "bss": 0.20238488
+        },
+        "kyiv-city": {
+          "n": 200,
+          "base_rate": 0.25,
+          "brier": 0.14953503,
+          "bss": 0.20435775
+        },
+        "kharkivska": {
+          "n": 200,
+          "base_rate": 0.25,
+          "brier": 0.14908947,
+          "bss": 0.20704163
+        },
+        "lvivska": {
+          "n": 200,
+          "base_rate": 0.25,
+          "brier": 0.14853544,
+          "bss": 0.20786356
+        },
+        "odeska": {
+          "n": 200,
+          "base_rate": 0.25,
+          "brier": 0.14838958,
+          "bss": 0.21009697
+        }
+      },
+      "by_state": {
+        "quiet": {
+          "n": 750,
+          "base_rate": 0.25066667,
+          "brier": 0.14916813,
+          "bss": 0.2070879
+        },
+        "active": {
+          "n": 250,
+          "base_rate": 0.248,
+          "brier": 0.14857748,
+          "bss": 0.20411857
+        }
+      }
+    },
+    {
+      "model": "M1",
+      "horizon": 3,
+      "split": "val",
+      "row_set": "full",
+      "n": 1000,
+      "base_rate": 0.25,
+      "brier": 0.1375621,
+      "bss": 0.26737462,
+      "logloss": 0.43672957,
+      "pr_auc": 0.75728797,
+      "reliability": [
+        {
+          "lo": 0,
+          "hi": 0.1,
+          "mean_pred": 0.06526828,
+          "frac_pos": 0,
+          "count": 92
+        },
+        {
+          "lo": 0.1,
+          "hi": 0.2,
+          "mean_pred": 0.15359291,
+          "frac_pos": 0,
+          "count": 195
+        },
+        {
+          "lo": 0.2,
+          "hi": 0.3,
+          "mean_pred": 0.25290004,
+          "frac_pos": 0.16972477,
+          "count": 218
+        },
+        {
+          "lo": 0.3,
+          "hi": 0.4,
+          "mean_pred": 0.34805308,
+          "frac_pos": 0.25,
+          "count": 252
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "mean_pred": 0.43944841,
+          "frac_pos": 0.37162162,
+          "count": 148
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "mean_pred": 0.5434929,
+          "frac_pos": 1,
+          "count": 66
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "mean_pred": 0.63254299,
+          "frac_pos": 1,
+          "count": 29
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.9,
+          "hi": 1,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        }
+      ],
+      "by_oblast": {
+        "cherkaska": {
+          "n": 200,
+          "base_rate": 0.25,
+          "brier": 0.13824892,
+          "bss": 0.2626724
+        },
+        "kyiv-city": {
+          "n": 200,
+          "base_rate": 0.25,
+          "brier": 0.1382904,
+          "bss": 0.2641879
+        },
+        "kharkivska": {
+          "n": 200,
+          "base_rate": 0.25,
+          "brier": 0.13767982,
+          "bss": 0.26772582
+        },
+        "lvivska": {
+          "n": 200,
+          "base_rate": 0.25,
+          "brier": 0.13689128,
+          "bss": 0.26996166
+        },
+        "odeska": {
+          "n": 200,
+          "base_rate": 0.25,
+          "brier": 0.13670007,
+          "bss": 0.27232223
+        }
+      },
+      "by_state": {
+        "quiet": {
+          "n": 750,
+          "base_rate": 0.25066667,
+          "brier": 0.13765959,
+          "bss": 0.26826227
+        },
+        "active": {
+          "n": 250,
+          "base_rate": 0.248,
+          "brier": 0.13726963,
+          "bss": 0.26469104
+        }
+      }
+    },
+    {
+      "model": "B0",
+      "horizon": 12,
+      "split": "val",
+      "row_set": "full",
+      "n": 1000,
+      "base_rate": 0.5,
+      "brier": 0.25026595,
+      "bss": 0,
+      "logloss": 0.69367954,
+      "pr_auc": 0.5,
+      "reliability": [
+        {
+          "lo": 0,
+          "hi": 0.1,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.1,
+          "hi": 0.2,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.2,
+          "hi": 0.3,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.3,
+          "hi": 0.4,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "mean_pred": 0.48107994,
+          "frac_pos": 0.5,
+          "count": 200
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "mean_pred": 0.5118243,
+          "frac_pos": 0.5,
+          "count": 800
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.9,
+          "hi": 1,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        }
+      ],
+      "by_oblast": {
+        "cherkaska": {
+          "n": 200,
+          "base_rate": 0.5,
+          "brier": 0.25,
+          "bss": 0
+        },
+        "kyiv-city": {
+          "n": 200,
+          "base_rate": 0.5,
+          "brier": 0.25044255,
+          "bss": 0
+        },
+        "kharkivska": {
+          "n": 200,
+          "base_rate": 0.5,
+          "brier": 0.25051676,
+          "bss": 0
+        },
+        "lvivska": {
+          "n": 200,
+          "base_rate": 0.5,
+          "brier": 0.25001245,
+          "bss": 0
+        },
+        "odeska": {
+          "n": 200,
+          "base_rate": 0.5,
+          "brier": 0.25035797,
+          "bss": 0
+        }
+      },
+      "by_state": {
+        "quiet": {
+          "n": 750,
+          "base_rate": 0.5,
+          "brier": 0.25026595,
+          "bss": 0
+        },
+        "active": {
+          "n": 250,
+          "base_rate": 0.5,
+          "brier": 0.25026595,
+          "bss": 0
+        }
+      }
+    },
+    {
+      "model": "B1",
+      "horizon": 12,
+      "split": "val",
+      "row_set": "full",
+      "n": 1000,
+      "base_rate": 0.5,
+      "brier": 0.19930675,
+      "bss": 0.20362016,
+      "logloss": 0.58726822,
+      "pr_auc": 0.87923647,
+      "reliability": [
+        {
+          "lo": 0,
+          "hi": 0.1,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.1,
+          "hi": 0.2,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.2,
+          "hi": 0.3,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.3,
+          "hi": 0.4,
+          "mean_pred": 0.37744092,
+          "frac_pos": 0,
+          "count": 64
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "mean_pred": 0.455906,
+          "frac_pos": 0.12037037,
+          "count": 216
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "mean_pred": 0.55231679,
+          "frac_pos": 0.48314607,
+          "count": 356
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "mean_pred": 0.6454933,
+          "frac_pos": 0.75686275,
+          "count": 255
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "mean_pred": 0.73555538,
+          "frac_pos": 1,
+          "count": 109
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.9,
+          "hi": 1,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        }
+      ],
+      "by_oblast": {
+        "cherkaska": {
+          "n": 200,
+          "base_rate": 0.5,
+          "brier": 0.19926919,
+          "bss": 0.20292322
+        },
+        "kyiv-city": {
+          "n": 200,
+          "base_rate": 0.5,
+          "brier": 0.19894493,
+          "bss": 0.20562648
+        },
+        "kharkivska": {
+          "n": 200,
+          "base_rate": 0.5,
+          "brier": 0.19989251,
+          "bss": 0.20207931
+        },
+        "lvivska": {
+          "n": 200,
+          "base_rate": 0.5,
+          "brier": 0.19838896,
+          "bss": 0.20648367
+        },
+        "odeska": {
+          "n": 200,
+          "base_rate": 0.5,
+          "brier": 0.20003818,
+          "bss": 0.20099136
+        }
+      },
+      "by_state": {
+        "quiet": {
+          "n": 750,
+          "base_rate": 0.5,
+          "brier": 0.19923895,
+          "bss": 0.20389107
+        },
+        "active": {
+          "n": 250,
+          "base_rate": 0.5,
+          "brier": 0.19951016,
+          "bss": 0.2028074
+        }
+      }
+    },
+    {
+      "model": "M1",
+      "horizon": 12,
+      "split": "val",
+      "row_set": "full",
+      "n": 1000,
+      "base_rate": 0.5,
+      "brier": 0.18484944,
+      "bss": 0.26138797,
+      "logloss": 0.54959394,
+      "pr_auc": 0.87923647,
+      "reliability": [
+        {
+          "lo": 0,
+          "hi": 0.1,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.1,
+          "hi": 0.2,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.2,
+          "hi": 0.3,
+          "mean_pred": 0.28873816,
+          "frac_pos": 0,
+          "count": 18
+        },
+        {
+          "lo": 0.3,
+          "hi": 0.4,
+          "mean_pred": 0.35506205,
+          "frac_pos": 0,
+          "count": 102
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "mean_pred": 0.45333911,
+          "frac_pos": 0.1625,
+          "count": 160
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "mean_pred": 0.55495609,
+          "frac_pos": 0.43162393,
+          "count": 234
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "mean_pred": 0.64743762,
+          "frac_pos": 0.57017544,
+          "count": 228
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "mean_pred": 0.74907952,
+          "frac_pos": 0.89932886,
+          "count": 149
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "mean_pred": 0.8461027,
+          "frac_pos": 1,
+          "count": 96
+        },
+        {
+          "lo": 0.9,
+          "hi": 1,
+          "mean_pred": 0.90672656,
+          "frac_pos": 1,
+          "count": 13
+        }
+      ],
+      "by_oblast": {
+        "cherkaska": {
+          "n": 200,
+          "base_rate": 0.5,
+          "brier": 0.18471988,
+          "bss": 0.2611205
+        },
+        "kyiv-city": {
+          "n": 200,
+          "base_rate": 0.5,
+          "brier": 0.18435081,
+          "bss": 0.26389978
+        },
+        "kharkivska": {
+          "n": 200,
+          "base_rate": 0.5,
+          "brier": 0.18569257,
+          "bss": 0.25876192
+        },
+        "lvivska": {
+          "n": 200,
+          "base_rate": 0.5,
+          "brier": 0.18359225,
+          "bss": 0.26566758
+        },
+        "odeska": {
+          "n": 200,
+          "base_rate": 0.5,
+          "brier": 0.18589169,
+          "bss": 0.25749641
+        }
+      },
+      "by_state": {
+        "quiet": {
+          "n": 750,
+          "base_rate": 0.5,
+          "brier": 0.18478712,
+          "bss": 0.26163698
+        },
+        "active": {
+          "n": 250,
+          "base_rate": 0.5,
+          "brier": 0.1850364,
+          "bss": 0.26064092
+        }
+      }
+    },
+    {
+      "model": "B0",
+      "horizon": 1,
+      "split": "test",
+      "row_set": "full",
+      "n": 1000,
+      "base_rate": 0.115,
+      "brier": 0.10209568,
+      "bss": 0,
+      "logloss": 0.35869261,
+      "pr_auc": 0.115,
+      "reliability": [
+        {
+          "lo": 0,
+          "hi": 0.1,
+          "mean_pred": 0.08107994,
+          "frac_pos": 0.115,
+          "count": 200
+        },
+        {
+          "lo": 0.1,
+          "hi": 0.2,
+          "mean_pred": 0.1118243,
+          "frac_pos": 0.115,
+          "count": 800
+        },
+        {
+          "lo": 0.2,
+          "hi": 0.3,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.3,
+          "hi": 0.4,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.9,
+          "hi": 1,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        }
+      ],
+      "by_oblast": {
+        "cherkaska": {
+          "n": 200,
+          "base_rate": 0.115,
+          "brier": 0.102,
+          "bss": 0
+        },
+        "kyiv-city": {
+          "n": 200,
+          "base_rate": 0.115,
+          "brier": 0.10181144,
+          "bss": 0
+        },
+        "kharkivska": {
+          "n": 200,
+          "base_rate": 0.115,
+          "brier": 0.10183479,
+          "bss": 0
+        },
+        "lvivska": {
+          "n": 200,
+          "base_rate": 0.115,
+          "brier": 0.10190661,
+          "bss": 0
+        },
+        "odeska": {
+          "n": 200,
+          "base_rate": 0.115,
+          "brier": 0.10292557,
+          "bss": 0
+        }
+      },
+      "by_state": {
+        "quiet": {
+          "n": 750,
+          "base_rate": 0.116,
+          "brier": 0.10290443,
+          "bss": 0
+        },
+        "active": {
+          "n": 250,
+          "base_rate": 0.112,
+          "brier": 0.09966943,
+          "bss": 0
+        }
+      }
+    },
+    {
+      "model": "B1",
+      "horizon": 1,
+      "split": "test",
+      "row_set": "full",
+      "n": 1000,
+      "base_rate": 0.115,
+      "brier": 0.0823581,
+      "bss": 0.19332438,
+      "logloss": 0.27522688,
+      "pr_auc": 0.65670645,
+      "reliability": [
+        {
+          "lo": 0,
+          "hi": 0.1,
+          "mean_pred": 0.04166093,
+          "frac_pos": 0.01552106,
+          "count": 451
+        },
+        {
+          "lo": 0.1,
+          "hi": 0.2,
+          "mean_pred": 0.14900529,
+          "frac_pos": 0.1,
+          "count": 370
+        },
+        {
+          "lo": 0.2,
+          "hi": 0.3,
+          "mean_pred": 0.23070121,
+          "frac_pos": 0.27516779,
+          "count": 149
+        },
+        {
+          "lo": 0.3,
+          "hi": 0.4,
+          "mean_pred": 0.33762099,
+          "frac_pos": 1,
+          "count": 30
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.9,
+          "hi": 1,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        }
+      ],
+      "by_oblast": {
+        "cherkaska": {
+          "n": 200,
+          "base_rate": 0.115,
+          "brier": 0.08398929,
+          "bss": 0.17657558
+        },
+        "kyiv-city": {
+          "n": 200,
+          "base_rate": 0.115,
+          "brier": 0.08149886,
+          "bss": 0.19951174
+        },
+        "kharkivska": {
+          "n": 200,
+          "base_rate": 0.115,
+          "brier": 0.08275647,
+          "bss": 0.18734584
+        },
+        "lvivska": {
+          "n": 200,
+          "base_rate": 0.115,
+          "brier": 0.08207687,
+          "bss": 0.19458737
+        },
+        "odeska": {
+          "n": 200,
+          "base_rate": 0.115,
+          "brier": 0.081469,
+          "bss": 0.20846685
+        }
+      },
+      "by_state": {
+        "quiet": {
+          "n": 750,
+          "base_rate": 0.116,
+          "brier": 0.08287984,
+          "bss": 0.19459411
+        },
+        "active": {
+          "n": 250,
+          "base_rate": 0.112,
+          "brier": 0.08079288,
+          "bss": 0.18939155
+        }
+      }
+    },
+    {
+      "model": "M1",
+      "horizon": 1,
+      "split": "test",
+      "row_set": "full",
+      "n": 1000,
+      "base_rate": 0.115,
+      "brier": 0.07793108,
+      "bss": 0.23668583,
+      "logloss": 0.26371517,
+      "pr_auc": 0.65670645,
+      "reliability": [
+        {
+          "lo": 0,
+          "hi": 0.1,
+          "mean_pred": 0.0305108,
+          "frac_pos": 0.01552106,
+          "count": 451
+        },
+        {
+          "lo": 0.1,
+          "hi": 0.2,
+          "mean_pred": 0.1544201,
+          "frac_pos": 0.08921933,
+          "count": 269
+        },
+        {
+          "lo": 0.2,
+          "hi": 0.3,
+          "mean_pred": 0.2485287,
+          "frac_pos": 0.1377551,
+          "count": 196
+        },
+        {
+          "lo": 0.3,
+          "hi": 0.4,
+          "mean_pred": 0.33442642,
+          "frac_pos": 0.5,
+          "count": 54
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "mean_pred": 0.4466983,
+          "frac_pos": 1,
+          "count": 25
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "mean_pred": 0.50509739,
+          "frac_pos": 1,
+          "count": 5
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.9,
+          "hi": 1,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        }
+      ],
+      "by_oblast": {
+        "cherkaska": {
+          "n": 200,
+          "base_rate": 0.115,
+          "brier": 0.08006968,
+          "bss": 0.21500312
+        },
+        "kyiv-city": {
+          "n": 200,
+          "base_rate": 0.115,
+          "brier": 0.07664059,
+          "bss": 0.24723013
+        },
+        "kharkivska": {
+          "n": 200,
+          "base_rate": 0.115,
+          "brier": 0.07857269,
+          "bss": 0.22842977
+        },
+        "lvivska": {
+          "n": 200,
+          "base_rate": 0.115,
+          "brier": 0.0776521,
+          "bss": 0.23800721
+        },
+        "odeska": {
+          "n": 200,
+          "base_rate": 0.115,
+          "brier": 0.07672034,
+          "bss": 0.25460365
+        }
+      },
+      "by_state": {
+        "quiet": {
+          "n": 750,
+          "base_rate": 0.116,
+          "brier": 0.07835004,
+          "bss": 0.23861361
+        },
+        "active": {
+          "n": 250,
+          "base_rate": 0.112,
+          "brier": 0.07667422,
+          "bss": 0.23071479
+        }
+      }
+    },
+    {
+      "model": "B0",
+      "horizon": 3,
+      "split": "test",
+      "row_set": "full",
+      "n": 1000,
+      "base_rate": 0.265,
+      "brier": 0.19509568,
+      "bss": 0,
+      "logloss": 0.57908531,
+      "pr_auc": 0.265,
+      "reliability": [
+        {
+          "lo": 0,
+          "hi": 0.1,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.1,
+          "hi": 0.2,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.2,
+          "hi": 0.3,
+          "mean_pred": 0.25567543,
+          "frac_pos": 0.265,
+          "count": 1000
+        },
+        {
+          "lo": 0.3,
+          "hi": 0.4,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.9,
+          "hi": 1,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        }
+      ],
+      "by_oblast": {
+        "cherkaska": {
+          "n": 200,
+          "base_rate": 0.265,
+          "brier": 0.195,
+          "bss": 0
+        },
+        "kyiv-city": {
+          "n": 200,
+          "base_rate": 0.265,
+          "brier": 0.19481144,
+          "bss": 0
+        },
+        "kharkivska": {
+          "n": 200,
+          "base_rate": 0.265,
+          "brier": 0.19483479,
+          "bss": 0
+        },
+        "lvivska": {
+          "n": 200,
+          "base_rate": 0.265,
+          "brier": 0.19490661,
+          "bss": 0
+        },
+        "odeska": {
+          "n": 200,
+          "base_rate": 0.265,
+          "brier": 0.19592557,
+          "bss": 0
+        }
+      },
+      "by_state": {
+        "quiet": {
+          "n": 750,
+          "base_rate": 0.26533333,
+          "brier": 0.19529953,
+          "bss": 0
+        },
+        "active": {
+          "n": 250,
+          "base_rate": 0.264,
+          "brier": 0.19448414,
+          "bss": 0
+        }
+      }
+    },
+    {
+      "model": "B1",
+      "horizon": 3,
+      "split": "test",
+      "row_set": "full",
+      "n": 1000,
+      "base_rate": 0.265,
+      "brier": 0.15416295,
+      "bss": 0.20980849,
+      "logloss": 0.47830984,
+      "pr_auc": 0.76407343,
+      "reliability": [
+        {
+          "lo": 0,
+          "hi": 0.1,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.1,
+          "hi": 0.2,
+          "mean_pred": 0.15682429,
+          "frac_pos": 0,
+          "count": 224
+        },
+        {
+          "lo": 0.2,
+          "hi": 0.3,
+          "mean_pred": 0.25089925,
+          "frac_pos": 0.15197568,
+          "count": 329
+        },
+        {
+          "lo": 0.3,
+          "hi": 0.4,
+          "mean_pred": 0.34295894,
+          "frac_pos": 0.3033033,
+          "count": 333
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "mean_pred": 0.44810611,
+          "frac_pos": 1,
+          "count": 99
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "mean_pred": 0.51404628,
+          "frac_pos": 1,
+          "count": 15
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.9,
+          "hi": 1,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        }
+      ],
+      "by_oblast": {
+        "cherkaska": {
+          "n": 200,
+          "base_rate": 0.265,
+          "brier": 0.15511,
+          "bss": 0.20456409
+        },
+        "kyiv-city": {
+          "n": 200,
+          "base_rate": 0.265,
+          "brier": 0.15448287,
+          "bss": 0.20701337
+        },
+        "kharkivska": {
+          "n": 200,
+          "base_rate": 0.265,
+          "brier": 0.15443458,
+          "bss": 0.20735623
+        },
+        "lvivska": {
+          "n": 200,
+          "base_rate": 0.265,
+          "brier": 0.15393631,
+          "bss": 0.21020475
+        },
+        "odeska": {
+          "n": 200,
+          "base_rate": 0.265,
+          "brier": 0.15285099,
+          "bss": 0.21985177
+        }
+      },
+      "by_state": {
+        "quiet": {
+          "n": 750,
+          "base_rate": 0.26533333,
+          "brier": 0.15407923,
+          "bss": 0.21106194
+        },
+        "active": {
+          "n": 250,
+          "base_rate": 0.264,
+          "brier": 0.15441411,
+          "bss": 0.20603239
+        }
+      }
+    },
+    {
+      "model": "M1",
+      "horizon": 3,
+      "split": "test",
+      "row_set": "full",
+      "n": 1000,
+      "base_rate": 0.265,
+      "brier": 0.14167967,
+      "bss": 0.2737939,
+      "logloss": 0.44589818,
+      "pr_auc": 0.76407343,
+      "reliability": [
+        {
+          "lo": 0,
+          "hi": 0.1,
+          "mean_pred": 0.06528018,
+          "frac_pos": 0,
+          "count": 90
+        },
+        {
+          "lo": 0.1,
+          "hi": 0.2,
+          "mean_pred": 0.15370188,
+          "frac_pos": 0,
+          "count": 191
+        },
+        {
+          "lo": 0.2,
+          "hi": 0.3,
+          "mean_pred": 0.25312275,
+          "frac_pos": 0.18055556,
+          "count": 216
+        },
+        {
+          "lo": 0.3,
+          "hi": 0.4,
+          "mean_pred": 0.34808183,
+          "frac_pos": 0.2687747,
+          "count": 253
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "mean_pred": 0.43977296,
+          "frac_pos": 0.38666667,
+          "count": 150
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "mean_pred": 0.54341038,
+          "frac_pos": 1,
+          "count": 70
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "mean_pred": 0.63177878,
+          "frac_pos": 1,
+          "count": 30
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.9,
+          "hi": 1,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        }
+      ],
+      "by_oblast": {
+        "cherkaska": {
+          "n": 200,
+          "base_rate": 0.265,
+          "brier": 0.14294288,
+          "bss": 0.2669596
+        },
+        "kyiv-city": {
+          "n": 200,
+          "base_rate": 0.265,
+          "brier": 0.14213744,
+          "bss": 0.27038453
+        },
+        "kharkivska": {
+          "n": 200,
+          "base_rate": 0.265,
+          "brier": 0.14207904,
+          "bss": 0.2707717
+        },
+        "lvivska": {
+          "n": 200,
+          "base_rate": 0.265,
+          "brier": 0.14136799,
+          "bss": 0.27468857
+        },
+        "odeska": {
+          "n": 200,
+          "base_rate": 0.265,
+          "brier": 0.13987102,
+          "bss": 0.28610127
+        }
+      },
+      "by_state": {
+        "quiet": {
+          "n": 750,
+          "base_rate": 0.26533333,
+          "brier": 0.1415229,
+          "bss": 0.27535465
+        },
+        "active": {
+          "n": 250,
+          "base_rate": 0.264,
+          "brier": 0.14215001,
+          "bss": 0.26909203
+        }
+      }
+    },
+    {
+      "model": "B0",
+      "horizon": 12,
+      "split": "test",
+      "row_set": "full",
+      "n": 1000,
+      "base_rate": 0.515,
+      "brier": 0.25009568,
+      "bss": 0,
+      "logloss": 0.69333879,
+      "pr_auc": 0.515,
+      "reliability": [
+        {
+          "lo": 0,
+          "hi": 0.1,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.1,
+          "hi": 0.2,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.2,
+          "hi": 0.3,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.3,
+          "hi": 0.4,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "mean_pred": 0.48107994,
+          "frac_pos": 0.515,
+          "count": 200
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "mean_pred": 0.5118243,
+          "frac_pos": 0.515,
+          "count": 800
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.9,
+          "hi": 1,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        }
+      ],
+      "by_oblast": {
+        "cherkaska": {
+          "n": 200,
+          "base_rate": 0.515,
+          "brier": 0.25,
+          "bss": 0
+        },
+        "kyiv-city": {
+          "n": 200,
+          "base_rate": 0.515,
+          "brier": 0.24981144,
+          "bss": 0
+        },
+        "kharkivska": {
+          "n": 200,
+          "base_rate": 0.515,
+          "brier": 0.24983479,
+          "bss": 0
+        },
+        "lvivska": {
+          "n": 200,
+          "base_rate": 0.515,
+          "brier": 0.24990661,
+          "bss": 0
+        },
+        "odeska": {
+          "n": 200,
+          "base_rate": 0.515,
+          "brier": 0.25092557,
+          "bss": 0
+        }
+      },
+      "by_state": {
+        "quiet": {
+          "n": 750,
+          "base_rate": 0.516,
+          "brier": 0.25010443,
+          "bss": 0
+        },
+        "active": {
+          "n": 250,
+          "base_rate": 0.512,
+          "brier": 0.25006943,
+          "bss": 0
+        }
+      }
+    },
+    {
+      "model": "B1",
+      "horizon": 12,
+      "split": "test",
+      "row_set": "full",
+      "n": 1000,
+      "base_rate": 0.515,
+      "brier": 0.19759676,
+      "bss": 0.20991533,
+      "logloss": 0.58369629,
+      "pr_auc": 0.88459167,
+      "reliability": [
+        {
+          "lo": 0,
+          "hi": 0.1,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.1,
+          "hi": 0.2,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.2,
+          "hi": 0.3,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.3,
+          "hi": 0.4,
+          "mean_pred": 0.37757404,
+          "frac_pos": 0,
+          "count": 62
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "mean_pred": 0.45616655,
+          "frac_pos": 0.12796209,
+          "count": 211
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "mean_pred": 0.552392,
+          "frac_pos": 0.49859944,
+          "count": 357
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "mean_pred": 0.64605733,
+          "frac_pos": 0.76744186,
+          "count": 258
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "mean_pred": 0.73576385,
+          "frac_pos": 1,
+          "count": 112
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.9,
+          "hi": 1,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        }
+      ],
+      "by_oblast": {
+        "cherkaska": {
+          "n": 200,
+          "base_rate": 0.515,
+          "brier": 0.19755309,
+          "bss": 0.20978764
+        },
+        "kyiv-city": {
+          "n": 200,
+          "base_rate": 0.515,
+          "brier": 0.19738625,
+          "bss": 0.20985905
+        },
+        "kharkivska": {
+          "n": 200,
+          "base_rate": 0.515,
+          "brier": 0.1978696,
+          "bss": 0.20799822
+        },
+        "lvivska": {
+          "n": 200,
+          "base_rate": 0.515,
+          "brier": 0.19686349,
+          "bss": 0.21225177
+        },
+        "odeska": {
+          "n": 200,
+          "base_rate": 0.515,
+          "brier": 0.19831139,
+          "bss": 0.20968041
+        }
+      },
+      "by_state": {
+        "quiet": {
+          "n": 750,
+          "base_rate": 0.516,
+          "brier": 0.19760405,
+          "bss": 0.20991386
+        },
+        "active": {
+          "n": 250,
+          "base_rate": 0.512,
+          "brier": 0.19757492,
+          "bss": 0.20991975
+        }
+      }
+    },
+    {
+      "model": "M1",
+      "horizon": 12,
+      "split": "test",
+      "row_set": "full",
+      "n": 1000,
+      "base_rate": 0.515,
+      "brier": 0.18247271,
+      "bss": 0.27038841,
+      "logloss": 0.54436837,
+      "pr_auc": 0.88459167,
+      "reliability": [
+        {
+          "lo": 0,
+          "hi": 0.1,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.1,
+          "hi": 0.2,
+          "mean_pred": null,
+          "frac_pos": null,
+          "count": 0
+        },
+        {
+          "lo": 0.2,
+          "hi": 0.3,
+          "mean_pred": 0.28834374,
+          "frac_pos": 0,
+          "count": 17
+        },
+        {
+          "lo": 0.3,
+          "hi": 0.4,
+          "mean_pred": 0.35484381,
+          "frac_pos": 0,
+          "count": 99
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "mean_pred": 0.45356508,
+          "frac_pos": 0.17197452,
+          "count": 157
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "mean_pred": 0.55452794,
+          "frac_pos": 0.44635193,
+          "count": 233
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "mean_pred": 0.64729205,
+          "frac_pos": 0.5826087,
+          "count": 230
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "mean_pred": 0.74998633,
+          "frac_pos": 0.90789474,
+          "count": 152
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "mean_pred": 0.84667557,
+          "frac_pos": 1,
+          "count": 99
+        },
+        {
+          "lo": 0.9,
+          "hi": 1,
+          "mean_pred": 0.90672656,
+          "frac_pos": 1,
+          "count": 13
+        }
+      ],
+      "by_oblast": {
+        "cherkaska": {
+          "n": 200,
+          "base_rate": 0.515,
+          "brier": 0.18233465,
+          "bss": 0.2706614
+        },
+        "kyiv-city": {
+          "n": 200,
+          "base_rate": 0.515,
+          "brier": 0.1821844,
+          "bss": 0.27071237
+        },
+        "kharkivska": {
+          "n": 200,
+          "base_rate": 0.515,
+          "brier": 0.1828809,
+          "bss": 0.26799264
+        },
+        "lvivska": {
+          "n": 200,
+          "base_rate": 0.515,
+          "brier": 0.18147198,
+          "bss": 0.27384081
+        },
+        "odeska": {
+          "n": 200,
+          "base_rate": 0.515,
+          "brier": 0.18349162,
+          "bss": 0.26874086
+        }
+      },
+      "by_state": {
+        "quiet": {
+          "n": 750,
+          "base_rate": 0.516,
+          "brier": 0.18251475,
+          "bss": 0.27024585
+        },
+        "active": {
+          "n": 250,
+          "base_rate": 0.512,
+          "brier": 0.18234659,
+          "bss": 0.27081614
+        }
+      }
+    }
+  ],
+  "duration": [
+    {
+      "model": "D0",
+      "split": "val",
+      "n": 100,
+      "pinball_q10": 9.63,
+      "pinball_q50": 26.72,
+      "pinball_q90": 9.95,
+      "mae_q50_min": 53.44,
+      "coverage_80": 0.69
+    },
+    {
+      "model": "D1",
+      "split": "val",
+      "n": 100,
+      "pinball_q10": 6.47883982,
+      "pinball_q50": 9.41564114,
+      "pinball_q90": 7.9478255,
+      "mae_q50_min": 18.83128227,
+      "coverage_80": 1
+    },
+    {
+      "model": "D0",
+      "split": "test",
+      "n": 100,
+      "pinball_q10": 9.63,
+      "pinball_q50": 26.72,
+      "pinball_q90": 9.95,
+      "mae_q50_min": 53.44,
+      "coverage_80": 0.69
+    },
+    {
+      "model": "D1",
+      "split": "test",
+      "n": 100,
+      "pinball_q10": 6.47883982,
+      "pinball_q50": 9.41564114,
+      "pinball_q90": 7.9478255,
+      "mae_q50_min": 18.83128227,
+      "coverage_80": 1
+    }
+  ],
+  "selection": {
+    "onset": "M1",
+    "duration": "D1",
+    "note": "Synthetic fixture selection for frontend development; not a fitted-model decision."
+  },
+  "notes": [
+    "All scores are synthetic development fixtures, not model evaluation results.",
+    "CSV snapshot and hash are real; regime_switch is pending A1's analysis.",
+    "Duration pinball losses and MAE are in minutes."
+  ]
+}

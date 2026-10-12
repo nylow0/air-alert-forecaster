@@ -1,0 +1,120 @@
+# Air Alert Forecaster: rules for every agent
+
+Predicts air raid alerts per Ukrainian raion: P(an alert starts within 1/3/12 h) and the P10/P50/P90 duration of an alert once it starts. A black Svelte dashboard replays the test period on a map.
+
+- **Plan:** `docs/plan.md` (copy of https://a5f99090aaae9dcaad8479b273d99a69.llm-plans.com/). Read it before you start.
+- **This file** records the architect decisions made after the plan. Where the two disagree, this file wins.
+- **Owner:** project owner makes the decisions. The lead agent (architect) owns contracts and integration. Implementation agents own the paths assigned to them below.
+
+## Hard rule: the as-of contract
+
+A forecast made at time `t` may only use data from **strictly before `t`**. For every feature function, the result with the full data must equal the result with "the data as it stood at `t`". To rebuild that view, drop records with `started_at >= t` and set `finished_at` to null where `finished_at > t`. `tests/test_leakage.py` enforces this. Known ways to break it are listed in `docs/plan.md` §04. One more trap, found by the architect:
+
+- **The merge gap leaks.** Episodes merge records separated by less than `MERGE_GAP_MIN`. At a time `t` inside such a gap, the full-data episode says "active" while the as-of data says "ended". So features must be computed from as-of *records* (`records.parquet`), never from merged `episodes.parquet`. Merged episodes are only for labels and duration targets.
+
+## Rules for implementation agents
+
+1. Write only to paths you own (see the ownership table). Everything else is read-only to you. If a contract file is wrong or missing something, don't edit it. Put a **Contract change request** in your final report, and work around it locally until the lead decides.
+2. Exceptions: anyone may run `uv add <pkg>` / `bun add <pkg>` (in `web/`) to add a dependency. That's the only allowed edit to `pyproject.toml`, `uv.lock`, `web/package.json` and `bun.lock`. If the lock is busy, retry. List added dependencies in your report.
+3. No git state changes: don't commit, checkout, reset, stash or rebase. The lead commits after verifying each wave. Don't delete files you don't own.
+4. Before saying anything is done, run your brief's "done when" check for real (the actual CLI command, the actual tests, the actual page in a browser), and paste the evidence into your report. A compile or a narrow unit test is not "done".
+5. Tests are few and focused. Each one guards a real failure (see `docs/plan.md` §10). No snapshot or smoke-test sprawl.
+6. Comments: brief docstrings that tell the next agent how a function or module is used and why it is shaped this way. Keep them accurate when you change code.
+7. Python: type hints everywhere and `ruff check` clean. TypeScript: strict mode, never `any`, prefer inferred types.
+8. Use vectorised numpy/pandas (`searchsorted` on sorted per-raion times). Never loop in Python over the ~4.7M feature rows.
+9. Finish with this report: **Delivered** (paths), **Verified** (commands run and their real output), **Decisions/assumptions**, **Open issues**, **Contract change requests**, **Dependencies added**.
+
+## Facts verified in wave 0 (saved CSV, sha256 `b396f876…`)
+
+- The CSV **ends on 2026-09-07**, not on the plan date. `snapshot` = `2026-09-07T05:00:00Z`. Test = `[2026-08-01T00:00Z, 2026-09-06T17:00Z]` (about 37 days). Always read the snapshot from `snapshot.json`, never from today's date.
+- 299,275 rows. Timestamps look like `YYYY-MM-DD HH:MM:SS+00:00`. Levels: 130k oblast, 132k raion, 37k hromada. A hromada's parent raion is in the ordinary `raion` column.
+- Universe: **119 units** (118 raions plus `kyiv-city/kyiv-city`). Kyiv appears as oblast `Kyiv City` with an empty raion. Luhansk (`luhanska`) has only oblast-level rows. Crimea and Sevastopol have no rows at all.
+- `finished_at` is never empty: the dataset lists an alert only after it ends. So alerts still running at the snapshot are invisible in the `latest` hour. Note this as a limitation; it doesn't break the as-of rule.
+
+## Conventions
+
+- Python 3.12 via uv, package `airalert` under `src/`, CLI `uv run airalert <cmd>`. Frontend: `web/` uses Svelte 5, Vite, TypeScript, Tailwind 4 and bun.
+- Timestamps are always timezone-aware UTC: `datetime64[us, UTC]` in pandas, `timestamp[us, tz=UTC]` in Parquet, ISO 8601 with `Z` in JSON. Forecast times are hourly, on the hour, in UTC. Calendar features and the UI use `Europe/Kyiv`.
+- Constants live only in `src/airalert/config.py`: horizons, `MERGE_GAP_MIN`, split dates, excluded oblasts and paths. Never hardcode them anywhere else.
+- Data layout: `data/raw/` (dated CSV copies with `.sha256`), `data/processed/`, `data/geo/` (committed), `data/text/`, `artifacts/<model_id>/` (fitted models), `reports/` (metrics and figures). Everything under `data/` is git-ignored except `data/geo/`. `artifacts/` is git-ignored.
+
+## Identifiers
+
+- `slug(s)`: NFKD-normalise to ASCII, lowercase, drop apostrophes (`'` `’` `ʼ` `` ` ``), replace each run of other non-`[a-z0-9]` characters with `-`, and strip `-` at the ends.
+- `oblast_id` = `slug(<dataset English oblast name>)` with a trailing ` oblast` removed first. Example: `cherkaska`.
+- `raion_id` = `<oblast_id>/<slug(<dataset English raion name>)>`, with a trailing ` raion` removed first. Example: `cherkaska/umanskyi`.
+- A city with special status that has no raions in the dataset (for example Kyiv) is a single unit: `raion_id = <oblast_id>/<oblast_id>`.
+- Implemented once, in `src/airalert/ids.py`. The map side is matched to these ids, never the other way round.
+- **G1 fallback:** if more than 5% of dataset raions have no polygon, the unit becomes the oblast (`raion_id = oblast_id`). Every module must treat `raion_id` as an opaque string so this switch is cheap.
+
+## Raion universe
+
+Every raion that appears in the dataset's raion- or hromada-level records (any date), plus special-status city units, **minus** the excluded oblasts: Luhansk, the Autonomous Republic of Crimea and Sevastopol. They have been under permanent alerts that the dataset doesn't list. The universe is fixed by geography. Never filter it by activity in any period. `data/processed/raions.csv` is the one list everyone uses.
+
+## Data contracts (Parquet unless noted)
+
+| Path | Producer | Columns |
+|---|---|---|
+| `data/processed/records.parquet` | A1 | `raion_id`, `oblast_id`, `level` (`oblast`/`raion`/`hromada`), `started_at`, `finished_at` (null = still active at the snapshot). One row per (source record × covered raion), after expansion (oblast → all its raions, hromada → parent raion). Sorted by `raion_id`, `started_at`. **The as-of feature input.** |
+| `data/processed/episodes.parquet` | A1 | `raion_id`, `oblast_id`, `start`, `end` (null if censored), `source_level` (level of the earliest record in the episode), `censored` (bool). Merged with `MERGE_GAP_MIN`. **Labels and duration targets only.** |
+| `data/processed/raions.csv` | A1 | `raion_id`, `oblast_id`, `oblast_name`, `raion_name` |
+| `data/processed/snapshot.json` | A1 | `{"snapshot": ISO, "csv_sha256": str, "regime_switch": ISO date}`. `snapshot` = latest timestamp in the CSV, floored to the hour. |
+| `data/geo/raions.geojson` | A2 | FeatureCollection, simplified to under 600 KB. Each feature's properties are `raion_id`, `oblast_id`, `name` (English). Polygons with no dataset raion get `raion_id: null`. |
+| `data/geo/adjacency.json`, `data/geo/centroids.csv`, `data/geo/crosswalk.csv` | A2 | Adjacency: `{raion_id: [raion_id, ...]}`. Centroids: `raion_id,lat,lon`. Crosswalk: map polygon → `raion_id`, with the match method. |
+| `data/processed/features/{train,val,test,latest}.parquet` | B1 | Keys `t`, `raion_id`, `oblast_id`. Features are named `f_*`. Labels `y_1`, `y_3`, `y_12` are nullable: null when `t + H` is past the snapshot, always null in `latest`. One row per (hourly `t` × raion in the universe). |
+| `data/processed/preds/onset_<model_id>.parquet` | each onset model | `t`, `raion_id`, `split` (`val`/`test`/`latest`), `p_1`, `p_3`, `p_12` (calibrated). |
+| `data/processed/preds/duration_<model_id>.parquet` | each duration model | `raion_id`, `start`, `split`, `q10_min`, `q50_min`, `q90_min`, for every episode starting in val, test, or still active at `latest`. |
+| `data/processed/forecasts.parquet` | C2 | Exactly the `ForecastRow` fields from `schemas.py`, plus `t`. Monotonicity across horizons is enforced here. |
+| `reports/metrics/<fragment>.json` → `reports/metrics.json` | backtest (B2) | Each fragment is a partial `Report` (see `schemas.py`). `backtest` scores every preds file and writes `scores_val.json` (and `scores_test.json` with `--final`). C1 writes `selection.json` (the served models). `airalert.metrics.merge_reports()` concatenates the lists into `reports/metrics.json`. Only one writer per fragment file. Model variants are just distinct model ids (for example `M1-raionregime`), so they get scored like any other model. |
+
+**Splits** (forecast time `t`, in UTC): train `[2022-04-01, 2026-06-01)`, val `[2026-06-01, 2026-08-01)`, test `[2026-08-01, snapshot − 12h]`, latest = `{snapshot}`. Embargo: for horizon H, drop rows whose label window crosses the next split's start (train rows with `t > 2026-06-01 − H`, val rows with `t > 2026-08-01 − H`). The split and embargo code lives only in `backtest.py`. Test metrics are computed only with `airalert backtest --final`. Writing test *predictions* is allowed, because the replay needs them. Scoring test without `--final` is not.
+
+**Model ids:** `B0` climatology, `B1` logistic regression, `M1` LightGBM onset, `D0` empirical duration, `D1` LightGBM quantile duration. A stage-2 text variant adds `+text` (for example `M1+text`).
+
+## CLI contract (`src/airalert/cli.py`, lead-owned)
+
+Each subcommand imports its target lazily, so a module that isn't built yet doesn't break the others.
+
+| Command | Calls | Owner |
+|---|---|---|
+| `fetch` | `airalert.data.fetch()` | A1 (L0 writes a first version) |
+| `episodes` | `airalert.data.build_episodes()` | A1 |
+| `geo` | `airalert.geo.build()` | A2 |
+| `features` | `airalert.features.build()` | B1 |
+| `train --model {B0,B1,M1,D0,D1}` | `models.baseline.train()` / `models.onset.train(id)` / `models.duration.train(id)` | B2 / C1 / B3 |
+| `backtest [--final]` | `airalert.backtest.run(final)`: scores every preds file it finds and writes fragments, then `metrics.json` | B2 |
+| `precompute` | `airalert.precompute.run()` | C2 |
+| `serve [--port 8000]` | `airalert.api.serve(port)` | C2 |
+
+## API contract
+
+`src/airalert/schemas.py` (pydantic) is the source of truth. `web/src/lib/types.ts` is a hand-copy of it. The fixtures in `web/src/lib/fixtures/` must validate against the schemas (`tests/test_fixtures.py`). The API runs on `127.0.0.1:8000`, and Vite proxies `/api` to it.
+
+- `GET /api/meta` → `Meta`
+- `GET /api/raions` → the GeoJSON from `data/geo/raions.geojson`
+- `GET /api/forecast?at=ISO` → `ForecastResponse`. Without `at`, it returns the latest hour (`mode: "latest"`, and `actual_onset_*` is null).
+- `GET /api/raion/{raion_id}/history?from=ISO&to=ISO` → `HistoryResponse`. `raion_id` contains a `/`, so the route uses a path converter.
+- `GET /api/report` → `reports/metrics.json` exactly as stored (`Report`)
+
+## Ownership
+
+| Path | Owner |
+|---|---|
+| `AGENTS.md`, `docs/plan.md`, `docs/design-notes.md`, `.lead/`, `src/airalert/{config,ids,schemas,cli}.py`, `web/src/lib/types.ts`, `web/src/lib/fixtures/`, `tests/test_fixtures.py`, `.gitignore` | lead (wave 0 written by L0) |
+| `src/airalert/data.py`, `tests/test_episodes.py`, `docs/eda.md`, `data/raw/`, `data/processed/{records,episodes}.parquet`, `raions.csv`, `snapshot.json` | A1 |
+| `src/airalert/geo.py`, `data/geo/`, `data/raw/geo/`, `docs/geo.md`, `docs/geo_map.png` | A2 |
+| `web/` (except the lead-owned files above and `web/tests/`) | A3 |
+| `docs/research/text-sources.md` | R1 |
+| `src/airalert/features.py`, `src/airalert/labels.py`, `tests/test_leakage.py`, `tests/test_labels.py`, `data/processed/features/` | B1 |
+| `src/airalert/backtest.py`, `src/airalert/metrics.py`, `src/airalert/models/baseline.py`, `tests/test_split.py`, `reports/` (except fragments owned by others), `data/processed/preds/onset_B0.parquet` | B2 |
+| `src/airalert/models/duration.py`, `tests/test_duration.py`, `data/processed/preds/duration_*`, `artifacts/D*/` | B3 |
+| `src/airalert/models/onset.py`, `data/processed/preds/onset_{B1,M1}*`, `artifacts/{B1,M1}*/`, `reports/metrics/selection.json`, `reports/figures/onset_*` | C1 |
+| `src/airalert/api.py`, `src/airalert/precompute.py`, `tests/test_api.py`, `data/processed/forecasts.parquet` | C2 |
+| `docs/research/text-signal.md`, `scripts/text_probe.py` | R2 |
+| `web/tests/`, `web/playwright.config.ts`, `docs/audit.md` | D1 |
+| `README.md`, `docs/report.md` | D2 |
+| `src/airalert/text/`, `tests/test_text_leakage.py`, `data/text/` | T1 |
+
+## Frontend notes
+
+Full `#000` background and a dark UI only. Onest variable font (`@fontsource-variable/onest`, which covers Cyrillic). Draw the map as SVG with `d3-geo`, using a projection fitted to Ukraine, with no tiles. Use a single-hue sequential scale for probability and a white outline for raions where an alert really started. The layout must work from 1440 px down to 390 px. Every number on the report page comes from `/api/report`. Read `[private home path removed]` and `docs/design-notes.md` (if it exists) before building UI.

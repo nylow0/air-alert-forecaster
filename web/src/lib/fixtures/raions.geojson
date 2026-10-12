@@ -1,0 +1,285 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "raion_id": "lvivska/lvivskyi",
+        "oblast_id": "lvivska",
+        "name": "Lvivskyi"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              23.5,
+              49.3
+            ],
+            [
+              24.7,
+              49.3
+            ],
+            [
+              24.7,
+              50.3
+            ],
+            [
+              23.5,
+              50.3
+            ],
+            [
+              23.5,
+              49.3
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "raion_id": "kyiv-city/kyiv-city",
+        "oblast_id": "kyiv-city",
+        "name": "Kyiv City"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              30.2,
+              50.2
+            ],
+            [
+              30.9,
+              50.2
+            ],
+            [
+              30.9,
+              50.8
+            ],
+            [
+              30.2,
+              50.8
+            ],
+            [
+              30.2,
+              50.2
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "raion_id": "cherkaska/umanskyi",
+        "oblast_id": "cherkaska",
+        "name": "Umanskyi"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              29.8,
+              48.5
+            ],
+            [
+              30.9,
+              48.5
+            ],
+            [
+              30.9,
+              49.3
+            ],
+            [
+              29.8,
+              49.3
+            ],
+            [
+              29.8,
+              48.5
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "raion_id": "odeska/odeskyi",
+        "oblast_id": "odeska",
+        "name": "Odeskyi"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              30.1,
+              46
+            ],
+            [
+              31.2,
+              46
+            ],
+            [
+              31.2,
+              46.9
+            ],
+            [
+              30.1,
+              46.9
+            ],
+            [
+              30.1,
+              46
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "raion_id": "kharkivska/kharkivskyi",
+        "oblast_id": "kharkivska",
+        "name": "Kharkivskyi"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              35.7,
+              49.4
+            ],
+            [
+              36.8,
+              49.4
+            ],
+            [
+              36.8,
+              50.3
+            ],
+            [
+              35.7,
+              50.3
+            ],
+            [
+              35.7,
+              49.4
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "raion_id": "dnipropetrovska/dniprovskyi",
+        "oblast_id": "dnipropetrovska",
+        "name": "Dniprovskyi"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              34.3,
+              48
+            ],
+            [
+              35.4,
+              48
+            ],
+            [
+              35.4,
+              48.9
+            ],
+            [
+              34.3,
+              48.9
+            ],
+            [
+              34.3,
+              48
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "raion_id": "zaporizka/zaporizkyi",
+        "oblast_id": "zaporizka",
+        "name": "Zaporizkyi"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              34.5,
+              47.1
+            ],
+            [
+              35.7,
+              47.1
+            ],
+            [
+              35.7,
+              47.9
+            ],
+            [
+              34.5,
+              47.9
+            ],
+            [
+              34.5,
+              47.1
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "raion_id": null,
+        "oblast_id": "donetska",
+        "name": "Unmatched placeholder"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              37.4,
+              47.6
+            ],
+            [
+              38.4,
+              47.6
+            ],
+            [
+              38.4,
+              48.7
+            ],
+            [
+              37.4,
+              48.7
+            ],
+            [
+              37.4,
+              47.6
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
