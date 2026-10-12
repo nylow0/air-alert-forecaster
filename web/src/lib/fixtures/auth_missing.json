@@ -1,0 +1,7 @@
+{
+  "codex_installed": false,
+  "logged_in": false,
+  "login_in_progress": false,
+  "available_models": [],
+  "message": "Install Codex CLI and restart the server."
+}

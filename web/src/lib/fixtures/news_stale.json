@@ -1,0 +1,66 @@
+{
+  "status": {
+    "enabled": true,
+    "state": "stale",
+    "message": "The last news update is delayed.",
+    "last_poll_at": "2026-10-12T16:59:37Z",
+    "last_extraction_at": "2026-10-12T16:59:37Z",
+    "last_evaluation_at": "2026-10-12T16:59:37Z",
+    "news_as_of": "2026-10-12T16:59:37Z",
+    "models": {
+      "extract_model": "gpt-6-luna",
+      "extract_effort": "high",
+      "evaluate_model": "gpt-6.1-sol",
+      "evaluate_effort": "high"
+    }
+  },
+  "base_at": null,
+  "events": [
+    {
+      "id": "drone-1",
+      "type": "drone_group",
+      "status": "reported",
+      "oblast_ids": [
+        "kharkivska",
+        "sumska"
+      ],
+      "raion_ids": [],
+      "origin": null,
+      "heading": "west",
+      "confidence": 0.88,
+      "summary": "Drone groups reported heading towards Kharkivska and Sumska.",
+      "published_at": "2026-10-12T16:42:00Z",
+      "observed_at": "2026-10-12T16:43:00Z",
+      "expires_at": "2026-10-12T19:42:00Z",
+      "sources": [
+        {
+          "handle": "kpszsu",
+          "message_id": 45678,
+          "url": "https://t.me/kpszsu/45678"
+        }
+      ]
+    },
+    {
+      "id": "bomber-1",
+      "type": "bomber_takeoff",
+      "status": "preliminary",
+      "oblast_ids": [],
+      "raion_ids": [],
+      "origin": "airfield",
+      "heading": null,
+      "confidence": 0.81,
+      "summary": "Strategic aircraft takeoff reported. Route is not yet confirmed.",
+      "published_at": "2026-10-12T16:15:00Z",
+      "observed_at": "2026-10-12T16:16:00Z",
+      "expires_at": "2026-10-12T22:15:00Z",
+      "sources": [
+        {
+          "handle": "monitor",
+          "message_id": 12345,
+          "url": "https://t.me/monitor/12345"
+        }
+      ]
+    }
+  ],
+  "adjustments": []
+}

@@ -20,7 +20,7 @@
         {@const feature = features.get(row.raion_id)}
         <tr class:selected-row={selected === row.raion_id}>
           <th scope="row"><button class="raion-name" aria-pressed={selected === row.raion_id}
-            onclick={() => onselect(feature ?? { type: 'Feature', properties: { raion_id: row.raion_id, oblast_id: row.raion_id.split('/')[0], name: row.raion_id }, geometry: { type: 'Polygon', coordinates: [] } })}>
+            onclick={() => onselect(feature ?? { type: 'Feature', properties: { raion_id: row.raion_id, oblast_id: row.raion_id.split('/')[0], name: row.raion_id, display_key: '' }, geometry: { type: 'Polygon', coordinates: [] } })}>
             {feature?.properties.name ?? row.raion_id}<small>{oblastName(feature?.properties.oblast_id ?? row.raion_id.split('/')[0])}</small>
           </button></th>
           <td class:chosen={horizon === 1}>{probabilityText(row.p_1)}</td><td class:chosen={horizon === 3}>{probabilityText(row.p_3)}</td><td class:chosen={horizon === 12}>{probabilityText(row.p_12)}</td>

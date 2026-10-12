@@ -1,4 +1,4 @@
-import type { ForecastRow, HistoryPoint } from './types'
+import type { ForecastRow } from './types'
 
 export type Horizon = 1 | 3 | 12
 export const horizons: Horizon[] = [1, 3, 12]
@@ -22,7 +22,7 @@ export function clock(t: string): string {
 export function day(t: number): string {
   return dayFormatter.format(new Date(t))
 }
-export function probability(row: ForecastRow | HistoryPoint, h: Horizon): number {
+export function probability(row: Pick<ForecastRow, 'p_1' | 'p_3' | 'p_12'>, h: Horizon): number {
   return h === 1 ? row.p_1 : h === 3 ? row.p_3 : row.p_12
 }
 export function actual(row: ForecastRow, h: Horizon): boolean | null {

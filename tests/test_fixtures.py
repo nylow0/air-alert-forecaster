@@ -7,7 +7,18 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from airalert.config import DATA_GAPS, FIXTURES_DIR, HORIZONS, TEST_END_OFFSET_H
-from airalert.schemas import ForecastResponse, HistoryResponse, Meta, Range, Report
+from airalert.schemas import (
+    AuthStatus,
+    ForecastResponse,
+    HistoryResponse,
+    LiveState,
+    Meta,
+    NewsFeed,
+    Range,
+    Report,
+    Settings,
+    SystemStatus,
+)
 
 
 @pytest.mark.parametrize(
@@ -18,6 +29,17 @@ from airalert.schemas import ForecastResponse, HistoryResponse, Meta, Range, Rep
         ("forecast_latest.json", ForecastResponse),
         ("history.json", HistoryResponse),
         ("report.json", Report),
+        ("live.json", LiveState),
+        ("live_stale.json", LiveState),
+        ("system.json", SystemStatus),
+        ("settings.json", Settings),
+        *[(name, AuthStatus) for name in (
+            "auth_logged_out.json", "auth_logged_in.json", "auth_missing.json", "auth_pending.json"
+        )],
+        *[(name, NewsFeed) for name in (
+            "news.json", "news_off.json", "news_needs_codex.json", "news_needs_login.json",
+            "news_starting.json", "news_stale.json", "news_error.json", "news_quota_limited.json"
+        )],
     ],
 )
 def test_fixture_schema(filename: str, model: type[BaseModel]) -> None:
@@ -30,20 +52,26 @@ def test_forecast_and_map_consistency() -> None:
     meta = Meta.model_validate_json((FIXTURES_DIR / "meta.json").read_text())
     geo = json.loads((FIXTURES_DIR / "raions.geojson").read_text())
     assert geo["type"] == "FeatureCollection"
-    assert 6 <= len(geo["features"]) <= 10
+    assert len(geo["features"]) == 139
     map_ids: set[str] = set()
     for feature in geo["features"]:
         assert feature["type"] == "Feature"
         properties = feature["properties"]
-        assert set(properties) == {"raion_id", "oblast_id", "name"}
+        assert set(properties) == {"raion_id", "oblast_id", "name", "display_key"}
+        assert isinstance(properties["display_key"], str) and properties["display_key"]
         assert isinstance(properties["oblast_id"], str) and properties["oblast_id"]
         assert isinstance(properties["name"], str) and properties["name"]
         if properties["raion_id"] is not None:
             assert isinstance(properties["raion_id"], str)
             assert properties["raion_id"] not in map_ids
             map_ids.add(properties["raion_id"])
-        assert feature["geometry"]["type"] == "Polygon"
-        for ring in feature["geometry"]["coordinates"]:
+        assert feature["geometry"]["type"] in {"Polygon", "MultiPolygon"}
+        polygons = (
+            feature["geometry"]["coordinates"]
+            if feature["geometry"]["type"] == "MultiPolygon"
+            else [feature["geometry"]["coordinates"]]
+        )
+        for ring in (ring for polygon in polygons for ring in polygon):
             assert len(ring) >= 4 and ring[0] == ring[-1]
             assert all(len(point) == 2 for point in ring)
     assert any(feature["properties"]["raion_id"] is None for feature in geo["features"])
@@ -88,6 +116,35 @@ def test_forecast_and_map_consistency() -> None:
                 assert all(isinstance(value, bool) for value in actual)
                 assert actual[0] <= actual[1] <= actual[2]
     assert all_ids[0] == all_ids[1]
+
+
+def test_live_display_keys_and_news_adjustments_cover_real_ui_states() -> None:
+    """The maps share crosswalk keys; news deltas stay separate from probabilities."""
+    geo = json.loads((FIXTURES_DIR / "raions.geojson").read_text())
+    live = LiveState.model_validate_json((FIXTURES_DIR / "live.json").read_text())
+    keys = [feature["properties"]["display_key"] for feature in geo["features"]]
+    assert len(keys) == len(set(keys)) == 139
+    assert {unit.display_key for unit in live.units} == set(keys)
+    assert any(unit.red_since and unit.yellow_since for unit in live.units)
+    assert any(unit.yellow_since and not unit.red_since for unit in live.units)
+    assert any(unit.red_since and not unit.yellow_since for unit in live.units)
+    assert {unit.oblast_id for unit in live.units if unit.coverage == "inherited"} == {
+        "autonomous-republic-of-crimea", "luhanska"
+    }
+    assert {unit.oblast_id for unit in live.units if unit.coverage == "unknown"} == {
+        "kyivska", "sevastopol-city"
+    }
+    stale = LiveState.model_validate_json((FIXTURES_DIR / "live_stale.json").read_text())
+    assert stale.stale and stale.units == live.units
+    news = NewsFeed.model_validate_json((FIXTURES_DIR / "news.json").read_text())
+    base = ForecastResponse.model_validate_json((FIXTURES_DIR / "forecast_latest.json").read_text())
+    assert news.status.state == "running" and news.base_at is not None
+    ids = {event.id for event in news.events}
+    base_ids = {row.raion_id for row in base.rows}
+    for row in news.adjustments:
+        assert row.raion_id in base_ids
+        assert set(row.event_ids) <= ids
+        assert 0 <= row.p_1 <= row.p_3 <= row.p_12 <= 1
 
 
 def test_history_is_seven_hourly_days() -> None:

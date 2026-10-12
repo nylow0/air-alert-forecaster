@@ -1,5 +1,5 @@
 import { test as base, expect, type APIRequestContext, type Locator, type Page } from '@playwright/test'
-import type { ForecastResponse, ForecastRow, HistoryResponse, Meta, RaionFeature, RaionFeatureCollection, Report } from '../src/lib/types'
+import type { ForecastResponse, ForecastRow, HistoryResponse, LiveState, Meta, RaionFeature, RaionFeatureCollection, Report } from '../src/lib/types'
 
 type Horizon = 1 | 3 | 12
 const probabilityKeys = { 1: 'p_1', 3: 'p_3', 12: 'p_12' } as const
@@ -32,6 +32,7 @@ let geo: RaionFeatureCollection
 let forecast: ForecastResponse
 let nextForecast: ForecastResponse
 let report: Report
+let live: LiveState
 
 async function api<T>(request: APIRequestContext, path: string): Promise<T> {
   const response = await request.get(path)
@@ -151,8 +152,8 @@ async function noOverflow(page: Page): Promise<void> {
 }
 
 test.beforeAll(async ({ request }) => {
-  ;[meta, geo, report] = await Promise.all([
-    api<Meta>(request, '/api/meta'), api<RaionFeatureCollection>(request, '/api/raions'), api<Report>(request, '/api/report'),
+  ;[meta, geo, report, live] = await Promise.all([
+    api<Meta>(request, '/api/meta'), api<RaionFeatureCollection>(request, '/api/raions'), api<Report>(request, '/api/report'), api<LiveState>(request, '/api/live'),
   ])
   expect(meta.horizons).toEqual(horizons)
   // Look for adjacent varying hours, bounded to one day. Avoid outages and leave room for transport controls.
@@ -181,7 +182,7 @@ test.beforeEach(async ({ page }) => {
   else await expect(mockNotice).toHaveCount(0)
 })
 
-test('map covers every forecast raion exactly once and null polygons have no data', async ({ page }) => {
+test('map covers every forecast raion and excluded polygons show live status without a forecast', async ({ page }) => {
   const rendered = await map(page).getByRole('button').evaluateAll(elements => elements.map(element => ({
     id: element.getAttribute('data-raion-id'), label: element.getAttribute('aria-label'),
     tag: element.tagName.toLowerCase(), path: element.getAttribute('d'), fill: element.getAttribute('fill'),
@@ -195,7 +196,12 @@ test('map covers every forecast raion exactly once and null polygons have no dat
     expect(item.width).toBeGreaterThan(0)
     expect(item.height).toBeGreaterThan(0)
     expect(item.label).toBeTruthy()
-    if (item.id === null) { expect(item.fill).toBe('#111'); expect(item.label).toContain('No data') }
+    if (item.id === null) {
+      expect(item.label).toContain('No forecast')
+      const unit = live.units.find(unit => item.label?.startsWith(`${unit.name},`))!
+      expect(unit).toBeDefined()
+      expect(item.fill).toBe(unit.coverage === 'unknown' ? '#111' : unit.red_since && unit.yellow_since ? 'url(#excluded-both)' : unit.red_since ? '#e54862' : unit.yellow_since ? '#eee34b' : '#111')
+    }
     else { expect(item.label).toContain(featureFor(item.id).properties.name); expect(item.fill).not.toBe('#111') }
   }
   await assertLabels(page, forecast, 3)
@@ -456,22 +462,22 @@ test('duration tables, model selection, and report notes match the API', async (
   for (const note of report.notes) await expect(page.getByText(note, { exact: true })).toBeVisible()
 })
 
-test('latest uses the snapshot and hides the replay timeline and outcomes', async ({ page, request }) => {
+test('Now uses the current-hour forecast and hides replay controls and outcomes', async ({ page, request }) => {
   await selectRaion(page, request)
-  await page.getByRole('button', { name: 'Latest', exact: true }).click()
+  await page.getByRole('button', { name: 'Now', exact: true }).click()
   const latest = await api<ForecastResponse>(request, '/api/forecast')
   expect(latest.mode).toBe('latest')
-  expect(Date.parse(latest.at)).toBe(Date.parse(meta.latest_at))
+  expect(Date.parse(latest.at)).toBe(Math.floor(Date.now() / hour) * hour)
   await expect.poll(() => new URL(page.url()).searchParams.get('mode')).toBe('latest')
-  await expect.poll(() => new URL(page.url()).searchParams.get('at')).toBe(iso(Date.parse(meta.latest_at)))
+  await expect.poll(() => new URL(page.url()).searchParams.get('at')).toBe(iso(Date.parse(latest.at)))
   await expect(page.getByRole('slider', { name: 'Replay hour', exact: true })).toHaveCount(0)
   await expect(page.getByRole('region', { name: 'Replay timeline' })).toHaveCount(0)
   await expect(page.getByRole('region', { name: 'Forecasts by raion' }).locator('..')).toHaveAttribute('aria-busy', 'false')
   await expect(page.getByRole('heading', { name: 'What actually happened' })).toHaveCount(0)
   await expect(page.getByText(/^Alert actually started within/)).toHaveCount(0)
   const snapshotTime = page.locator('main time').first()
-  await expect(snapshotTime).toHaveAttribute('datetime', meta.latest_at)
-  await expect(snapshotTime).toHaveText(kyivTime(meta.snapshot))
+  await expect(snapshotTime).toHaveAttribute('datetime', latest.at)
+  await expect(snapshotTime).toHaveText(kyivTime(latest.at))
   await assertLabels(page, latest, 3)
   expect(latest.rows.every(row => horizons.every(horizon => row[outcomeKeys[horizon]] === null))).toBeTruthy()
   await page.getByRole('button', { name: 'Replay', exact: true }).click()

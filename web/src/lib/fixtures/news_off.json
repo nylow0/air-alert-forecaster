@@ -1,0 +1,20 @@
+{
+  "status": {
+    "enabled": false,
+    "state": "off",
+    "message": null,
+    "last_poll_at": null,
+    "last_extraction_at": null,
+    "last_evaluation_at": null,
+    "news_as_of": null,
+    "models": {
+      "extract_model": "gpt-6-luna",
+      "extract_effort": "high",
+      "evaluate_model": "gpt-6.1-sol",
+      "evaluate_effort": "high"
+    }
+  },
+  "base_at": null,
+  "events": [],
+  "adjustments": []
+}

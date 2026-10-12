@@ -1,0 +1,20 @@
+{
+  "status": {
+    "enabled": true,
+    "state": "needs_login",
+    "message": "Login with ChatGPT in Settings.",
+    "last_poll_at": "2026-10-12T16:59:37Z",
+    "last_extraction_at": "2026-10-12T16:59:37Z",
+    "last_evaluation_at": "2026-10-12T16:59:37Z",
+    "news_as_of": "2026-10-12T16:59:37Z",
+    "models": {
+      "extract_model": "gpt-6-luna",
+      "extract_effort": "high",
+      "evaluate_model": "gpt-6.1-sol",
+      "evaluate_effort": "high"
+    }
+  },
+  "base_at": null,
+  "events": [],
+  "adjustments": []
+}

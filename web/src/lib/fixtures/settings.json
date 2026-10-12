@@ -1,0 +1,30 @@
+{
+  "news_enabled": false,
+  "models": {
+    "extract_model": "gpt-6-luna",
+    "extract_effort": "high",
+    "evaluate_model": "gpt-6.1-sol",
+    "evaluate_effort": "high"
+  },
+  "poll_seconds": 120,
+  "channels": [
+    {
+      "handle": "kpszsu",
+      "title": "Повітряні Сили ЗС України",
+      "subscribers": 1300000,
+      "enabled": true
+    },
+    {
+      "handle": "monitor",
+      "title": "Monitor",
+      "subscribers": 980000,
+      "enabled": true
+    },
+    {
+      "handle": "war_monitor",
+      "title": "War monitor",
+      "subscribers": 420000,
+      "enabled": false
+    }
+  ]
+}

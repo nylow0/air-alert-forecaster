@@ -1,0 +1,11 @@
+{
+  "codex_installed": true,
+  "logged_in": true,
+  "login_in_progress": false,
+  "available_models": [
+    "gpt-6-luna",
+    "gpt-6.1-sol",
+    "gpt-6-astra"
+  ],
+  "message": null
+}
