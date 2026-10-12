@@ -70,11 +70,11 @@ real browser suite and its reviewed screenshots.
 
 ## Privacy publication status
 
-The local history rewrite passed the lead's and independent structural
-preservation checks. Both independent post-prune scans cleared credentials,
-personal emails, private paths and numeric process identifiers. Owner-name
-redaction and its final name-specific scan remain the publication step in
-progress; GitHub publication is not claimed here.
+The local history rewrite and privacy remediation passed the lead's and
+independent verification. Post-prune scans cleared credentials, personal emails,
+private paths and numeric process identifiers. Owner-name redaction is complete;
+the final independent name and metadata scan also passed. All required privacy
+checks are complete.
 
 - The verified history retains all commits and all 133 refs, including app
   checkpoints. Dates, timezone offsets, ordered parent links and intended
@@ -88,6 +88,8 @@ progress; GitHub publication is not claimed here.
   set, refs, tracked files and index. They found zero guard-category matches,
   including expanded numeric process-identifier patterns, nonanonymous metadata
   or ref/tree-name findings. The post-prune scans found no unreachable objects.
+- The lead and final independent scan found zero owner-name occurrences across
+  stored objects, refs and index.
 - The repository-local neutral Git identity and supplied hook are installed.
   No remote operation or push was part of privacy remediation.
 - The API and dashboard still responded after cleanup, including the actual

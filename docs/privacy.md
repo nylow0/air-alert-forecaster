@@ -75,12 +75,13 @@ A rejection exits nonzero and prints pattern categories or the rejected identity
 
 The owner authorized removing private information from local Git history before publication. Current documentation now uses portable paths or redacted tool-safety examples. The staged guard also blocks future private commit emails. Its installed local hook matches the supplied hook.
 
-The local all-ref rewrite passed the lead's and independent structural preservation checks. Both independent post-prune scans cleared credentials, personal emails, private paths and numeric process identifiers. Owner-name redaction and its final name-specific scan remain the publication step in progress. GitHub publication is not claimed here.
+The local all-ref rewrite and privacy remediation passed the lead's and independent verification. Post-prune scans cleared credentials, personal emails, private paths and numeric process identifiers. Owner-name redaction is complete; the final independent name and metadata scan also passed. All required privacy checks are complete.
 
 - The verified history retains all commits and all 133 refs, including app checkpoints. Dates, timezone offsets, ordered parent links and intended sanitized trees/messages match the structural proof. Contributor identities were normalized, and signatures invalidated by the rewrite were removed.
 - The checked-out tree was unchanged by the rewrite. Hashes for all eight checked frozen report, manifest and lock artifacts were unchanged.
 - Reflogs were expired and obsolete unreachable objects pruned. `git fsck --full --no-reflogs --unreachable` exited 0 with empty output.
 - The lead and both independent auditors scanned the complete stored object set, refs, tracked files and index. They found zero guard-category matches, including expanded numeric process-identifier patterns, nonanonymous metadata or ref/tree-name findings. The post-prune scans found no unreachable objects.
+- The lead and final independent scan found zero owner-name occurrences across stored objects, refs and index.
 - The neutral repository-local identity and supplied pre-commit hook are installed. A real commit attempt containing a synthetic home-path pattern was blocked. The final focused guard tests returned `2 passed in 1.05s`, and the full Ruff check passed. PNG checks cover text metadata rather than compressed pixel bytes.
 - No remote operation or push was part of privacy remediation. Runtime data and Codex credentials remained outside this process; the credential cache was never read.
 
@@ -138,7 +139,7 @@ The broken references found and corrected were:
 
 **Decisions/assumptions.** The independent v2 audit supplies the 524.08-second setup evidence. This documentation task checked commands and links without rerunning setup, model fitting, enabled-news login or the UI workflow. The v1 audit's measurements and shutdown meaning remain unchanged.
 
-**Open issues.** Structural preservation and the independent guard-category checks passed as recorded above. Owner-name redaction and its final name-specific scan are pending. The shared worktree contained unrelated edits at Y3's entry; those were left to their owners. Y3 edited only its four owned documents.
+**Open issues.** Historical privacy remediation and all required independent checks are complete as recorded above. The shared worktree contained unrelated edits at Y3's entry; those were left to their owners. Y3 edited only its four owned documents.
 
 **Contract change requests.** None.
 
