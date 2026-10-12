@@ -12,6 +12,8 @@ A forecast made at time `t` may only use data from **strictly before `t`**. For 
 
 - **The merge gap leaks.** Episodes merge records separated by less than `MERGE_GAP_MIN`. At a time `t` inside such a gap, the full-data episode says "active" while the as-of data says "ended". So features must be computed from as-of *records* (`records.parquet`), never from merged `episodes.parquet`. Merged episodes are only for labels and duration targets.
 
+**The duration model is deliberately different:** its prediction is made *at* the episode start `s`, the moment the alert is issued, so its features may use records with `started_at <= s` (including the starting record itself), with ends after `s` masked. This follows plan §03 "Target (d)". The strict `< t` rule governs every hourly onset forecast.
+
 ## Rules for implementation agents
 
 1. Write only to paths you own (see the ownership table). Everything else is read-only to you. If a contract file is wrong or missing something, don't edit it. Put a **Contract change request** in your final report, and work around it locally until the lead decides.
