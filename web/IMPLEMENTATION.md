@@ -1,5 +1,60 @@
 # F1 frontend v2 implementation
 
+## F1b frontend polish
+
+### Delivered
+
+- `web/src/App.svelte`: put the page in its own scroll viewport and Settings in a separate bottom-left dock. The dock reserves 64 px plus the device safe area at every width, so neither maps nor footer text can pass behind the button. Added a Live-specific class for compact desktop spacing.
+- `web/src/app.css`, `web/src/lib/LiveMap.svelte`: moved each live layer's label and count into a compact row above its full-width map; removed the redundant status subtitle; shortened the desktop Live header and preview notice; increased map height from 278 to 340 px at 1440×900, with a viewport-based height and 250/380 px limits. The geographic footprint is about 485 px wide, up from 397 px, without changing the projection. Yellow remains above red. Coverage legend text has more contrast.
+- `web/src/app.css`: news follows Live below 1191 px and Forecast below 1400 px. At wider widths it stays in an independent sidebar with bounded height and its own scrolling. Closing it releases the sidebar width to the map canvas. Forecast retains the map and selection panel side by side from 1024 px when news is stacked.
+- `web/src/app.css`: bounded Settings above the dock, accounted for safe areas, added scroll padding for its sticky heading, and prevented scroll chaining. Model labels can shrink and channel/news text can wrap. Removed the obsolete 88 px footer padding now that the dock has its own space.
+- `web/tests/live.spec.ts`: added one focused layout workflow at 390, 1024, 1280 and 1440 px; checked dock separation, footer safety text, news dismissal and recovered width, Forecast stacking, dialog bounds and the final Settings action. Extended the existing map workflow to check pointer tooltips alongside keyboard tooltips and the new scroll viewport's horizontal overflow. Captures now use exact viewport sizes, with both landing and slightly scrolled Live views.
+- `web/IMPLEMENTATION.md`: this report. All F1b edits are in these five web files.
+
+### Verified
+
+Commands ran from `web/` and exited 0:
+
+- `bun run check`: `svelte-check found 0 errors and 0 warnings`.
+- `bun run build`: `335 modules transformed`; `built in 1.04s`.
+- `bunx playwright test`: `50 passed (1.2m)`, with no retries or skipped tests. The existing extreme-probability workflow still reports that the sampled mock hour has no probabilities below 0.01 or above 0.99, so those optional assertions were not exercised.
+- `bunx tsc --ignoreConfig --noEmit --strict --target ES2022 --module ESNext --moduleResolution Bundler --types node playwright.config.ts tests/global-setup.ts tests/dashboard.spec.ts tests/live.spec.ts`: no diagnostics.
+
+The first full run passed 49/50. The new scroll-distance assertion used Playwright's centering scroll, which moved farther than needed. Using `scrollIntoView({ block: 'nearest' })` checks the minimum movement instead; the final complete run above passed.
+
+The mock was also inspected in the collaborative browser, including the 1024 px Forecast layout and scrolling the mobile selected-raion and Settings panels. The manual mock server on 5188 was stopped; Playwright stopped its server on 5187. The final listener check found zero listeners on both ports.
+
+### Screenshots opened and inspected
+
+All captures below are from the final passing mock run. Desktop files are 1440×900; mobile files are 390×844.
+
+| View | Desktop | Mobile | Observations |
+|---|---|---|---|
+| Live, both maps | [Open](test-results/artifacts/mock/live-system-footer-reports-621a5-apture-desktop-mobile-views-desktop/live.png) | [Open](test-results/artifacts/mock/live-system-footer-reports-621a5-apture-desktop-mobile-views-mobile/live.png) | Yellow over red, clear count rows, readable hatching/dots and legends, with Settings in its own strip. Desktop needs a 79 px scroll to show both complete maps and the key. Mobile is scrolled past the page header to show both complete maps; news follows them. |
+| Live, landing position | [Open](test-results/artifacts/mock/live-system-footer-reports-621a5-apture-desktop-mobile-views-desktop/live-landing.png) | [Open](test-results/artifacts/mock/live-system-footer-reports-621a5-apture-desktop-mobile-views-mobile/live-landing.png) | These retain the app header and show the initial viewport honestly. The bottom of the red map is below the scroll viewport, with the button separated from it. |
+| Settings open | [Open](test-results/artifacts/mock/live-system-footer-reports-621a5-apture-desktop-mobile-views-desktop/settings.png) | [Open](test-results/artifacts/mock/live-system-footer-reports-621a5-apture-desktop-mobile-views-mobile/settings.png) | Bottom-left dialog stays fully above the dock. Model/effort fields and Cyrillic channels fit; later channels and the news-reopening action are reachable by scrolling inside the dialog. |
+| Forecast with news | [Open](test-results/artifacts/mock/live-system-footer-reports-621a5-apture-desktop-mobile-views-desktop/forecast-news.png) | [Open](test-results/artifacts/mock/live-system-footer-reports-621a5-apture-desktop-mobile-views-mobile/forecast-news.png) | Desktop keeps the map, selected raion and news in separate columns. Mobile stacks controls, map, selected panel and news. The selected panel was separately scrolled into view and visually checked in the browser; its comparison table and history remain clear above the dock. |
+
+### Decisions/assumptions
+
+The small desktop scroll is intentional to give the maps more size while preserving geographic proportions. The normal 1440×900 mock view needs 79 px to include both maps and their key, within the layout test's 100 px allowance. Loading/error banners can add height. Verification used the mock, as requested.
+
+### Open issues
+
+Real v2 backend integration remains for the lead to verify. No unresolved overlap was found in the requested mock workflows.
+
+### Contract change requests
+
+None.
+
+### Dependencies added
+
+None.
+
+## F1 initial integration record
+
+The following is the earlier F1 delivery record. Its layout and screenshot observations are superseded by the F1b report above.
+
 The v2 frontend is ready for backend integration. Live is the default landing tab, with independent yellow and red maps stacked vertically. The required mock UI workflows and screenshots were verified at 1440×900 and 390×844. Every server started by F1 has been stopped.
 
 ## Delivered

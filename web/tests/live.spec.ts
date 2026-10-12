@@ -32,6 +32,8 @@ async function noOverflow(page: Page): Promise<void> {
   const dimensions = await page.evaluate(() => [document.documentElement.clientWidth, document.documentElement.scrollWidth, document.body.scrollWidth])
   expect(dimensions[1]).toBeLessThanOrEqual(dimensions[0])
   expect(dimensions[2]).toBeLessThanOrEqual(dimensions[0])
+  const scroll = await page.locator('.page-scroll').evaluate(element => ({ width: element.clientWidth, content: element.scrollWidth }))
+  expect(scroll.content, 'Page scroll area horizontal overflow').toBeLessThanOrEqual(scroll.width)
 }
 
 test('Live is the landing view; both independent maps cover the API units in yellow-over-red order', async ({ page }) => {
@@ -58,6 +60,14 @@ test('Live is the landing view; both independent maps cover the API units in yel
   const red = await page.getByLabel('Ukraine live red alerts').boundingBox()
   expect(red!.y).toBeGreaterThanOrEqual(yellow!.y + yellow!.height)
   const inherited = live.units.find(unit => unit.coverage === 'inherited')!
+  await page.locator(`[data-layer="red"] [data-display-key="${inherited.display_key}"]`).hover()
+  await expect(page.locator('.live-tooltip')).toContainText('Oblast-level alert')
+  const tooltip = (await page.locator('.live-tooltip').boundingBox())!
+  const viewport = (await page.locator('.page-scroll').boundingBox())!
+  expect(tooltip.x).toBeGreaterThanOrEqual(0)
+  expect(tooltip.x + tooltip.width).toBeLessThanOrEqual(viewport.width)
+  expect(tooltip.y + tooltip.height).toBeLessThanOrEqual(viewport.y + viewport.height)
+  await page.mouse.move(0, 0)
   await page.locator(`[data-layer="red"] [data-display-key="${inherited.display_key}"]`).focus()
   await expect(page.getByRole('status')).toContainText('Oblast-level alert')
   const unknown = live.units.find(unit => unit.coverage === 'unknown')!
@@ -107,6 +117,73 @@ test('news dismissal survives reload and settings restores the card; Esc restore
   for (const event of feed.events.slice(0, 3)) {
     await expect(card.getByText(event.summary, { exact: true })).toBeVisible()
     for (const source of event.sources) await expect(card.getByRole('link', { name: `@${source.handle}`, exact: true })).toHaveAttribute('href', source.url)
+  }
+})
+
+test('maps, news, footer and Settings have separate space at mobile and desktop widths', async ({ page }) => {
+  await scenario(page, { news_state: 'running', auth: 'in' })
+  await page.goto('/')
+  await expect(page.locator('.live-path')).toHaveCount(278)
+  await page.evaluate(() => document.fonts.ready)
+  const widths = page.viewportSize()!.width < 700 ? [390] : [1024, 1280, 1440]
+  for (const width of widths) {
+    await page.setViewportSize({ width, height: width < 700 ? 844 : 900 })
+    await page.locator('.page-scroll').evaluate(element => element.scrollTop = 0)
+    const scroll = (await page.locator('.page-scroll').boundingBox())!
+    const dock = (await page.locator('.settings-dock').boundingBox())!
+    const settings = (await page.getByRole('button', { name: 'Open settings', exact: true }).boundingBox())!
+    expect(scroll.y + scroll.height).toBeLessThanOrEqual(dock.y)
+    expect(settings.x).toBeLessThanOrEqual(24)
+    expect(settings.y).toBeGreaterThanOrEqual(dock.y)
+    const live = (await page.locator('.live-view').boundingBox())!
+    const map = (await page.locator('.live-map-canvas').first().boundingBox())!
+    expect(map.width).toBeCloseTo(live.width, 0)
+    const card = page.getByRole('complementary', { name: 'News agent' })
+    const news = (await card.boundingBox())!
+    if (width < 1191) expect(news.y).toBeGreaterThanOrEqual(live.y + live.height)
+    else {
+      expect(news.x).toBeGreaterThanOrEqual(live.x + live.width)
+      await page.locator('.live-key').evaluate(element => element.scrollIntoView({ block: 'nearest' }))
+      const amount = await page.locator('.page-scroll').evaluate(element => element.scrollTop)
+      expect(amount, 'Both maps and their key need at most a small scroll').toBeLessThanOrEqual(100)
+      const yellow = (await page.getByLabel('Ukraine live yellow alerts').boundingBox())!
+      const red = (await page.getByLabel('Ukraine live red alerts').boundingBox())!
+      expect(yellow.y).toBeGreaterThanOrEqual(scroll.y)
+      expect(red.y + red.height).toBeLessThanOrEqual(dock.y)
+      const legend = (await page.locator('.live-key').boundingBox())!
+      expect(legend.y + legend.height).toBeLessThanOrEqual(dock.y)
+    }
+    await card.getByRole('button', { name: 'Close news card' }).click()
+    const expanded = (await page.locator('.live-map-canvas').first().boundingBox())!
+    if (width >= 1191) expect(expanded.width).toBeGreaterThan(map.width + 200)
+    else expect(expanded.width).toBeCloseTo(map.width, 0)
+    await openSettings(page)
+    const panel = page.getByRole('dialog')
+    const bounds = (await panel.boundingBox())!
+    expect(bounds.x).toBeGreaterThanOrEqual(0)
+    expect(bounds.y).toBeGreaterThanOrEqual(0)
+    expect(bounds.y + bounds.height).toBeLessThanOrEqual(dock.y)
+    const reopen = panel.getByRole('button', { name: 'Show news card again' })
+    await reopen.scrollIntoViewIfNeeded()
+    const action = (await reopen.boundingBox())!
+    const heading = (await panel.locator('.settings-heading').boundingBox())!
+    expect(action.y).toBeGreaterThanOrEqual(heading.y + heading.height)
+    expect(action.y + action.height).toBeLessThanOrEqual(bounds.y + bounds.height)
+    await reopen.click()
+    await panel.press('Escape')
+    await expect(card).toBeVisible()
+    await page.getByRole('button', { name: 'Forecast', exact: true }).click()
+    await expect(page.locator('.ukraine-map')).toBeVisible()
+    const dashboard = (await page.locator('.dashboard').boundingBox())!
+    const forecastNews = (await card.boundingBox())!
+    if (width < 1400) expect(forecastNews.y).toBeGreaterThanOrEqual(dashboard.y + dashboard.height)
+    else expect(forecastNews.x).toBeGreaterThanOrEqual(dashboard.x + dashboard.width)
+    await page.locator('footer').scrollIntoViewIfNeeded()
+    const safety = (await page.locator('footer > p').boundingBox())!
+    expect(safety.y).toBeGreaterThanOrEqual(scroll.y)
+    expect(safety.y + safety.height).toBeLessThanOrEqual(dock.y)
+    await noOverflow(page)
+    await page.getByRole('button', { name: 'Live', exact: true }).click()
   }
 })
 
@@ -222,7 +299,15 @@ test('system footer reports API data coverage and nightly time; capture desktop/
   if (system.coverage_gaps.length) await expect(page.getByLabel('System status')).toContainText('Coverage gaps:')
   await expect(page.getByLabel('Ukraine live red alerts').getByRole('button')).toHaveCount(139)
   await page.evaluate(() => document.fonts.ready)
-  await page.screenshot({ path: testInfo.outputPath('live.png'), fullPage: true })
+  await page.screenshot({ path: testInfo.outputPath('live-landing.png') })
+  if (page.viewportSize()!.width < 700) {
+    await page.locator('.page-scroll').evaluate(element => {
+      const live = element.querySelector<HTMLElement>('.live-view')!
+      element.scrollTop += live.getBoundingClientRect().top
+    })
+    await page.screenshot({ path: testInfo.outputPath('live-maps.png') })
+  } else await page.locator('.live-key').evaluate(element => element.scrollIntoView({ block: 'nearest' }))
+  await page.screenshot({ path: testInfo.outputPath('live.png') })
   await noOverflow(page)
   await page.getByRole('button', { name: 'Forecast', exact: true }).click()
   await expect(page.locator('.ukraine-map')).toBeVisible()
@@ -233,7 +318,9 @@ test('system footer reports API data coverage and nightly time; capture desktop/
   await expect(page.getByRole('complementary', { name: 'Selected raion' }).getByRole('slider')).toBeVisible()
   await page.getByRole('button', { name: 'News-adjusted (experimental)', exact: true }).click()
   await page.mouse.move(4, 4)
-  await page.screenshot({ path: testInfo.outputPath('forecast-news.png'), fullPage: true })
+  await page.screenshot({ path: testInfo.outputPath('forecast-news.png') })
+  await page.getByRole('button', { name: 'Live', exact: true }).click()
+  await page.locator('.page-scroll').evaluate(element => element.scrollTop = 0)
   await openSettings(page)
   await noOverflow(page)
   await page.screenshot({ path: testInfo.outputPath('settings.png') })

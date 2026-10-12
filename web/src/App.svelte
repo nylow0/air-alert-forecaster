@@ -168,7 +168,7 @@
 <svelte:window onkeydown={keyboard} />
 <svelte:head><meta name="description" content="Replay hourly alert onset forecasts across Ukraine’s raions and inspect model evaluation." /></svelte:head>
 <a class="skip-link" href="#main">Skip to dashboard</a>
-<div class="app-shell">
+<div class="page-scroll" class:live-page={tab === 'live'}><div class="app-shell">
   <header class="topbar"><div class="brand"><h1>Air Alert Forecaster</h1><p>Live alerts and hourly forecasts across Ukraine</p></div><nav class="tabs" aria-label="Dashboard pages"><button class:current={tab === 'live'} aria-current={tab === 'live' ? 'page' : undefined} onclick={() => tab = 'live'}>Live</button><button class:current={tab === 'map'} aria-current={tab === 'map' ? 'page' : undefined} onclick={() => tab = 'map'}>Forecast</button><button class:current={tab === 'report'} aria-current={tab === 'report' ? 'page' : undefined} onclick={() => tab = 'report'}>Model report</button></nav></header>
   {#if mock}<div class="fixture-notice" role="note">Development preview. Probabilities, history, and scores are synthetic fixtures.</div>{/if}
   <div class="workspace" class:has-news={!newsHidden && tab !== 'report'}><main id="main">
@@ -218,6 +218,6 @@
     {/if}
   </main>{#if !newsHidden && tab !== 'report'}<NewsCard feed={news.data} {now} error={news.error} onclose={() => dismissNews(true)} opensettings={openSettings} />{/if}</div>
   <footer><p>Research demo. Use official alert channels for safety decisions.</p><SystemFooter system={system.data} {now} error={system.error} /></footer>
-  <button class="settings-button" aria-label="Open settings" aria-haspopup="dialog" onclick={openSettings}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 3 3 1 2 5-2 5-3 1-1 3H9l-1-3-3-1-2-5 2-5 3-1z"/><circle cx="12" cy="12" r="3"/></svg>Settings</button>
-  {#if settingsOpen}<SettingsPanel settings={settings.data} auth={auth.data} {saving} error={saveError} loadError={settings.error} authLoadError={auth.error} onclose={() => settingsOpen = false} save={saveSettings} refreshauth={async () => { await auth.load(signal => api.auth(signal)); await news.load(signal => api.news(signal)) }} reopennews={() => dismissNews(false)} />{/if}
-</div>
+</div></div>
+<div class="settings-dock"><button class="settings-button" aria-label="Open settings" aria-haspopup="dialog" onclick={openSettings}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 3 3 1 2 5-2 5-3 1-1 3H9l-1-3-3-1-2-5 2-5 3-1z"/><circle cx="12" cy="12" r="3"/></svg>Settings</button></div>
+{#if settingsOpen}<SettingsPanel settings={settings.data} auth={auth.data} {saving} error={saveError} loadError={settings.error} authLoadError={auth.error} onclose={() => settingsOpen = false} save={saveSettings} refreshauth={async () => { await auth.load(signal => api.auth(signal)); await news.load(signal => api.news(signal)) }} reopennews={() => dismissNews(false)} />{/if}

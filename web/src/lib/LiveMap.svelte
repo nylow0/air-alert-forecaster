@@ -30,7 +30,6 @@
   <div class="live-layer-heading">
     <h3><i style:background={liveColors[layer]}></i>{layer === 'yellow' ? 'Yellow' : 'Red'} alerts</h3>
     <p data-testid={`${layer}-count`}><strong>{count}</strong> raions {layer}</p>
-    <span class="muted">{layer === 'yellow' ? 'Yellow status, independently reported' : 'Red status, independently reported'}</span>
   </div>
   <div class="live-map-canvas">
     <svg class="live-map" viewBox="0 0 800 500" aria-label={`Ukraine live ${layer} alerts`}>
