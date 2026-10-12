@@ -113,11 +113,11 @@ Each subcommand imports its target lazily, so a module that isn't built yet does
 | `src/airalert/features.py`, `src/airalert/labels.py`, `tests/test_leakage.py`, `tests/test_labels.py`, `data/processed/features/`, `docs/features.md` | B1 |
 | `src/airalert/backtest.py`, `src/airalert/metrics.py`, `src/airalert/models/baseline.py`, `tests/test_split.py`, `reports/` (except fragments owned by others), `data/processed/preds/onset_B0.parquet` | B2 |
 | `src/airalert/models/duration.py`, `tests/test_duration.py`, `data/processed/preds/duration_*`, `artifacts/D*/`, `docs/duration.md` | B3 |
-| `src/airalert/models/onset.py`, `data/processed/preds/onset_{B1,M1}*`, `artifacts/{B1,M1}*/`, `reports/metrics/selection.json`, `reports/figures/onset_*` | C1 |
+| `src/airalert/models/onset.py`, `tests/test_onset.py`, `docs/onset.md`, `data/processed/preds/onset_{B1,M1}*`, `artifacts/{B1,M1}*/`, `reports/metrics/selection.json`, `reports/figures/onset_*` | C1 |
 | `src/airalert/api.py`, `src/airalert/precompute.py`, `tests/test_api.py`, `data/processed/forecasts.parquet` | C2 |
 | `docs/research/text-signal.md`, `scripts/text_probe.py` | R2 |
 | `web/tests/`, `web/playwright.config.ts`, `docs/audit.md` | D1 |
-| `README.md`, `docs/report.md` | D2 |
+| `README.md`, `docs/report.md`, `scripts/report_tables.py` | D2 |
 | `src/airalert/text/`, `tests/test_text_leakage.py`, `data/text/` | T1 |
 
 ## Frontend notes
