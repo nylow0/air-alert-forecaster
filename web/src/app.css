@@ -164,6 +164,17 @@ th:first-child { padding-left: 0; }
 .report-notes { background: var(--surface); border-left: 2px solid #898781; margin: 26px 0; padding: 16px 20px; }
 .report-notes p { font-size: 13px; max-width: 85ch; }
 .report-notes p + p { margin-top: 6px; }
+.report-notes h3 { margin-bottom: 12px; font-size: 16px; }
+.report-notes p { overflow-wrap: anywhere; }
+.model-comparisons { margin-top: 28px; border-top: 1px solid var(--border); }
+.model-comparisons > summary { font-weight: 600; }
+.evaluation-section .table-scroll { margin-bottom: 24px; }
+.evaluation-section .reliability-title { margin-top: 28px; margin-bottom: 16px; }
+.evaluation-section h4 { margin-bottom: 12px; }
+.evaluation-section p { margin-bottom: 16px; font-size: 13px; }
+.selected-skill-table { width: min(100%, 680px); }
+.selected-skill-table td { color: var(--ink); }
+.history-missing { font-size: 11px; margin-bottom: 12px; }
 .selection-section { padding: 10px 0 30px; border-bottom: 1px solid var(--border); }
 .selected-models { display: flex; flex-wrap: wrap; gap: 18px 40px; margin: 15px 0; }
 .selected-models p { font-size: 13px; }

@@ -1,42 +1,47 @@
 <script lang="ts">
-  import ReliabilityChart from './ReliabilityChart.svelte'
-  import SkillTable from './SkillTable.svelte'
-  import { localTime, number } from './format'
-  import type { OnsetScore, Report } from './types'
-  let { report }: { report: Report } = $props()
-  const splits = $derived((['val', 'test'] as const).filter(split => report.onset.some(s => s.split === split) || report.duration.some(s => s.split === split)))
-  const rowSets = $derived([...new Set(report.onset.filter(s => s.row_set !== 'full').map(s => s.row_set))])
-  // Validation and test fragments can repeat the same evaluation note.
+  import ReportScores from './ReportScores.svelte'
+  import { localTime } from './format'
+  import type { DurationScore, Meta, OnsetScore, Report } from './types'
+  let { report, meta }: { report: Report; meta: Meta | null } = $props()
+  const splits = $derived((['test', 'val'] as const).filter(split => report.onset.some(s => s.split === split) || report.duration.some(s => s.split === split)))
   const notes = $derived([...new Set(report.notes)])
-  function batches(scores: OnsetScore[]): OnsetScore[][] {
-    const sorted = [...scores].sort((a, b) => a.model.localeCompare(b.model))
-    return Array.from({ length: Math.ceil(sorted.length / 3) }, (_, i) => sorted.slice(i * 3, i * 3 + 3))
+  const onsetModel = $derived(report.selection?.onset ?? meta?.onset_model)
+  const durationModel = $derived(report.selection?.duration ?? meta?.duration_model)
+
+  function selectedOnset(split: 'val' | 'test'): OnsetScore[] {
+    const scores = report.onset.filter(s => s.split === split && s.model === onsetModel)
+    const rowSet = scores.find(s => /(^|-)served$/.test(s.row_set))?.row_set ?? scores.find(s => s.row_set === 'full')?.row_set ?? scores[0]?.row_set
+    return scores.filter(s => s.row_set === rowSet)
+  }
+  function selectedDuration(split: 'val' | 'test'): DurationScore[] {
+    // D2@60 is the selected D2 model evaluated after an alert survives 60 minutes.
+    return report.duration.filter(s => s.split === split && (s.model === durationModel || s.model.startsWith(`${durationModel}@`)))
   }
 </script>
 
 <article class="model-report">
-  <div class="report-heading"><h2>Model report</h2><p>How the forecasts compare, and which models are served.</p>{#if report.generated_at}<small>Generated {localTime(report.generated_at)} Kyiv</small>{/if}</div>
-  <p class="report-notes" role="note">Onset scores use each model's per-horizon probabilities before the serving adjustment. The map shows adjusted values, with each longer-horizon probability raised if needed to match the highest shorter-horizon value.</p>
-  {#if notes.length}<div class="report-notes" role="note">{#each notes as note}<p>{note}</p>{/each}</div>{/if}
-  {#if report.selection}<section class="selection-section"><h3>Selected models</h3><div class="selected-models"><p>Alert onset <strong>{report.selection.onset ?? 'Not selected'}</strong></p><p>Duration <strong>{report.selection.duration ?? 'Not selected'}</strong></p></div>{#if report.selection.note}<p>{report.selection.note}</p>{/if}</section>{/if}
+  <div class="report-heading"><h2>Model report</h2><p>Selected forecasts first, then all model comparisons.</p>{#if report.generated_at}<small>Generated {localTime(report.generated_at)} Kyiv</small>{/if}</div>
+  {#if report.selection || onsetModel || durationModel}<section class="selection-section"><h3>Selected models</h3><div class="selected-models"><p>Alert onset <strong>{onsetModel ?? 'Not selected'}</strong></p><p>Duration <strong>{durationModel ?? 'Not selected'}</strong></p></div>{#if report.selection?.note}<p>{report.selection.note}</p>{/if}</section>{/if}
   {#if !report.onset.length && !report.duration.length}<p class="empty-state">No evaluation scores have been published yet.</p>{/if}
   {#each splits as split}
-    {@const full = report.onset.filter(s => s.split === split && s.row_set === 'full')}
-    {@const duration = report.duration.filter(s => s.split === split)}
-    {@const horizons = [...new Set(full.map(s => s.horizon))].sort((a, b) => a - b)}
-    <section class="evaluation-section">
-      <h3>{split === 'val' ? 'Validation' : 'Test'} results</h3>
-      {#if full.length}
-        <h4>Alert onset skill</h4><SkillTable scores={full} caption={`${split === 'val' ? 'Validation' : 'Test'}, full row set`} />
-        <h4 class="reliability-title">Reliability</h4>
-        <div class="reliability-grid">{#each horizons as horizon}{#each batches(full.filter(s => s.horizon === horizon)) as scores}<ReliabilityChart {scores} {horizon} />{/each}{/each}</div>
-      {/if}
-      {#if duration.length}
-        <h4>Alert duration</h4><p class="muted">Pinball loss and mean absolute error of the median (P50) prediction are in minutes. The coverage target is 80%.</p>
-        <!-- svelte-ignore a11y_no_noninteractive_tabindex (Keyboard users need to focus the scroll region to scroll this table.) -->
-        <div class="table-scroll" tabindex="0" role="region" aria-label={`${split} duration metrics`}><table><caption>{split === 'val' ? 'Validation' : 'Test'} duration scores</caption><thead><tr><th>Model</th><th>Episodes</th><th>Pinball P10</th><th>Pinball P50</th><th>Pinball P90</th><th>P50 mean absolute error</th><th>80% coverage</th></tr></thead><tbody>{#each duration as d}<tr><th scope="row">{d.model}</th><td>{d.n}</td><td>{number(d.pinball_q10, 2)}</td><td>{number(d.pinball_q50, 2)}</td><td>{number(d.pinball_q90, 2)}</td><td>{number(d.mae_q50_min, 2)}</td><td>{number(d.coverage_80 * 100, 1)}%</td></tr>{/each}</tbody></table></div>
-      {/if}
-    </section>
+    {@const onset = selectedOnset(split)}
+    {@const duration = selectedDuration(split)}
+    {#if onset.length || duration.length}<section class="evaluation-section" aria-label={`${split === 'test' ? 'Test' : 'Validation'} selected results`}>
+      <h3>{split === 'test' ? 'Test' : 'Validation'} results for selected models</h3>
+      {#if meta}<p class="muted">{localTime(meta.splits[split].start)} to {localTime(meta.splits[split].end)} Kyiv</p>{/if}
+      <ReportScores {onset} {duration} caption={`${split === 'test' ? 'Test' : 'Validation'}, selected ${onset[0]?.row_set ?? 'models'}`} durationLabel={`${split} selected duration metrics`} reliability={true} />
+    </section>{/if}
   {/each}
-  {#if rowSets.length}<section class="evaluation-section text-comparison"><h3>Text signal comparison</h3><p class="muted">Compare models on the same row set. Subset scores are shown separately from the full evaluation.</p>{#each rowSets as rowSet}{#each splits as split}{@const scores = report.onset.filter(s => s.row_set === rowSet && s.split === split)}{#if scores.length}<SkillTable {scores} caption={`${split === 'val' ? 'Validation' : 'Test'}, row set ${rowSet}`} />{/if}{/each}{/each}</section>{/if}
+  {#if notes.length}<section class="report-notes" aria-label="Report notes"><h3>Evaluation notes and live track record</h3>{#each notes as note}<p>{note}</p>{/each}</section>{/if}
+  <details class="model-comparisons"><summary>All model comparisons ({report.onset.length} onset scores, {report.duration.length} duration scores)</summary>
+    <p class="muted">Compare models within the same split and row set. Served scores include the horizon monotonicity adjustment. Unprojected scores use each model's original probabilities.</p>
+    {#each splits as split}<section class="evaluation-section">
+      <h3>{split === 'test' ? 'Test' : 'Validation'} comparisons</h3>
+      {#each [...new Set(report.onset.filter(s => s.split === split).map(s => s.row_set))] as rowSet}
+        {@const onset = report.onset.filter(s => s.split === split && s.row_set === rowSet)}
+        <ReportScores {onset} duration={[]} caption={`${split === 'test' ? 'Test' : 'Validation'}, ${rowSet === 'full' ? 'full row set' : `row set ${rowSet}`}`} durationLabel="" />
+      {/each}
+      <ReportScores onset={[]} duration={report.duration.filter(s => s.split === split)} caption="" durationLabel={`${split} duration metrics`} />
+    </section>{/each}
+  </details>
 </article>

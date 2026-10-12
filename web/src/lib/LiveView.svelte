@@ -8,7 +8,7 @@
 
 <section class="live-view" aria-label="Live alert maps">
   <div class="live-heading"><h2>Alerts right now</h2><p>{#if live?.fetched_at}Updated {elapsed(live.fetched_at, now)} ago <span>at {clock(live.fetched_at)} Kyiv</span>{:else}Waiting for the first live update{/if}</p></div>
-  {#if live?.stale || error}<p class="stale-banner" role="status">Live updates are delayed. The last known status stays on the maps.{#if error} <button onclick={retry}>Retry live alerts</button>{/if}</p>{/if}
+  {#if live?.stale || error || live?.fetched_at && now - Date.parse(live.fetched_at) >= 180_000}<p class="stale-banner" role="status">Live updates are delayed. The last known status stays on the maps.{#if error} <button onclick={retry}>Retry live alerts</button>{/if}</p>{/if}
   {#if geo && live}
     <LiveMap {geo} {live} layer="yellow" {now} />
     <LiveMap {geo} {live} layer="red" {now} />

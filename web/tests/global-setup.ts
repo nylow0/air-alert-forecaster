@@ -15,7 +15,7 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
       } catch (error) {
         throw new Error(
           'E2E_TARGET=live requires the prepared FastAPI backend at 127.0.0.1:8000. ' +
-          'From the repository root, run uv run airalert serve --port 8000 before Playwright. ' +
+          'From the repository root, run uv run --no-sync airalert serve --port 8000 before Playwright. ' +
           `GET /api/meta failed: ${error instanceof Error ? error.message : String(error)}`,
         )
       }

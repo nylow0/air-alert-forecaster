@@ -7,6 +7,7 @@ if (target !== 'mock' && target !== 'live') {
 
 export default defineConfig({
   testDir: './tests',
+  testIgnore: target === 'mock' ? '**/news-live.spec.ts' : undefined,
   globalSetup: './tests/global-setup.ts',
   outputDir: `./test-results/artifacts/${target}`,
   fullyParallel: false,
@@ -27,7 +28,7 @@ export default defineConfig({
   },
   projects: [
     { name: 'desktop', use: { viewport: { width: 1440, height: 900 } } },
-    { name: 'mobile', use: { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true } },
+    { name: 'mobile', testIgnore: '**/news-live.spec.ts', use: { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true } },
   ],
   webServer: {
     command: `bun run ${target === 'mock' ? 'dev:mock' : 'dev'} --host 127.0.0.1 --port 5187 --strictPort`,

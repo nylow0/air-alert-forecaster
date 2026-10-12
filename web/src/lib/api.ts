@@ -1,5 +1,10 @@
 import type { AuthStatus, ForecastResponse, HistoryResponse, LiveState, Meta, NewsFeed, RaionFeatureCollection, Report, Settings, SystemStatus } from './types'
 
+/** HTTP status distinguishes an unissued hour from a connection failure. */
+export class ApiError extends Error {
+  constructor(message: string, readonly status: number) { super(message) }
+}
+
 async function request<T>(path: string, label: string, signal?: AbortSignal, init?: RequestInit): Promise<T> {
   let response: Response
   try {
@@ -8,7 +13,7 @@ async function request<T>(path: string, label: string, signal?: AbortSignal, ini
     if (signal?.aborted) throw error
     throw new Error(`Could not reach the server to load ${label}. Try again.`)
   }
-  if (!response.ok) throw new Error(`Could not load ${label}. Try again.`)
+  if (!response.ok) throw new ApiError(`Could not load ${label}. Try again.`, response.status)
   return response.json() as Promise<T>
 }
 

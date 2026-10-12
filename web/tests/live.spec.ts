@@ -4,15 +4,19 @@ import type { AuthStatus, ForecastResponse, LiveState, NewsFeed, RaionFeatureCol
 const test = base.extend<{ browserErrors: void }>({
   browserErrors: [async ({ page }, use) => {
     const errors: string[] = []
+    const protectedWrites: string[] = []
     page.on('pageerror', error => errors.push(error.message))
+    page.on('request', request => {
+      if (request.method() !== 'GET' && /\/api\/(settings|auth\/)/.test(request.url())) protectedWrites.push(request.url())
+    })
     await page.addInitScript(() => { window.addEventListener('unhandledrejection', event => { throw event.reason }) })
     await use()
     expect(errors, 'Uncaught browser errors').toEqual([])
+    if ((process.env.E2E_TARGET ?? 'mock') === 'live') expect(protectedWrites, 'Common live workflows must be read-only').toEqual([])
   }, { auto: true }],
 })
 
-// Auth actions and scenario controls are intentionally exercised only against dev middleware.
-test.skip((process.env.E2E_TARGET ?? 'mock') !== 'mock', 'v2 state and auth workflows require the isolated mock API.')
+const mock = (process.env.E2E_TARGET ?? 'mock') === 'mock'
 
 async function read<T>(page: Page, path: string): Promise<T> {
   const response = await page.request.get(`/api/${path}`)
@@ -37,9 +41,11 @@ async function noOverflow(page: Page): Promise<void> {
 }
 
 test('Live is the landing view; both independent maps cover the API units in yellow-over-red order', async ({ page }) => {
+  const receipt = page.waitForResponse(response => response.url().endsWith('/api/live'))
   await page.goto('/')
-  const [live, geo] = await Promise.all([read<LiveState>(page, 'live'), read<RaionFeatureCollection>(page, 'raions')])
-  expect(geo.features).toHaveLength(139)
+  const live = await (await receipt).json() as LiveState
+  const geo = await read<RaionFeatureCollection>(page, 'raions')
+  expect(geo.features.length).toBeGreaterThan(0)
   expect(live.units).toHaveLength(geo.features.length)
   await expect(page.getByRole('button', { name: 'Live', exact: true })).toHaveAttribute('aria-current', 'page')
   for (const layer of ['yellow', 'red'] as const) {
@@ -78,7 +84,7 @@ test('Live is the landing view; both independent maps cover the API units in yel
   await expect(page.getByRole('button', { name: 'Live', exact: true })).toHaveAttribute('aria-current', 'page')
 })
 
-test('stale live data retains both maps and a calm delay banner', async ({ page }) => {
+if (mock) test('stale live data retains both maps and a calm delay banner', async ({ page }) => {
   await scenario(page, { stale: true })
   const live = await read<LiveState>(page, 'live')
   await page.goto('/')
@@ -99,7 +105,7 @@ test('live status polls after 60 seconds and failed polling keeps the last maps'
 })
 
 test('news dismissal survives reload and settings restores the card; Esc restores keyboard focus', async ({ page }) => {
-  await scenario(page, { news_state: 'running', auth: 'in' })
+  if (mock) await scenario(page, { news_state: 'running', auth: 'in' })
   await page.goto('/')
   const card = page.getByRole('complementary', { name: 'News agent' })
   await expect(card).toBeVisible()
@@ -121,9 +127,10 @@ test('news dismissal survives reload and settings restores the card; Esc restore
 })
 
 test('maps, news, footer and Settings have separate space at mobile and desktop widths', async ({ page }) => {
-  await scenario(page, { news_state: 'running', auth: 'in' })
+  if (mock) await scenario(page, { news_state: 'running', auth: 'in' })
   await page.goto('/')
-  await expect(page.locator('.live-path')).toHaveCount(278)
+  const geo = await read<RaionFeatureCollection>(page, 'raions')
+  await expect(page.locator('.live-path')).toHaveCount(geo.features.length * 2)
   await page.evaluate(() => document.fonts.ready)
   const widths = page.viewportSize()!.width < 700 ? [390] : [1024, 1280, 1440]
   for (const width of widths) {
@@ -187,7 +194,7 @@ test('maps, news, footer and Settings have separate space at mobile and desktop 
   }
 })
 
-test('settings toggle and channel changes PUT their values; a failed save rolls back', async ({ page }) => {
+if (mock) test('settings toggle and channel changes PUT their values; a failed save rolls back', async ({ page }) => {
   await page.goto('/')
   const original = await read<Settings>(page, 'settings')
   await openSettings(page)
@@ -222,7 +229,7 @@ test('settings toggle and channel changes PUT their values; a failed save rolls 
   expect((await read<Settings>(page, 'settings')).news_enabled).toBe(saved.news_enabled)
 })
 
-test('ChatGPT login polls to completion, supports cancellation, and confirms machine logout', async ({ page }) => {
+if (mock) test('ChatGPT login polls to completion, supports cancellation, and confirms machine logout', async ({ page }) => {
   await page.goto('/')
   await openSettings(page)
   await page.getByRole('button', { name: 'Login with ChatGPT' }).click()
@@ -244,7 +251,7 @@ test('ChatGPT login polls to completion, supports cancellation, and confirms mac
   await expect(page.getByText('Not logged in', { exact: true })).toBeVisible()
 })
 
-test('missing Codex gives installation guidance', async ({ page }) => {
+if (mock) test('missing Codex gives installation guidance', async ({ page }) => {
   await scenario(page, { auth: 'missing' })
   await page.goto('/')
   await openSettings(page)
@@ -253,7 +260,7 @@ test('missing Codex gives installation guidance', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Login with ChatGPT' })).toHaveCount(0)
 })
 
-test('news adjusts the matching Now forecast and panel, with linked events; replay stays base', async ({ page }) => {
+if (mock) test('news adjusts the matching Now forecast and panel, with linked events; replay stays base', async ({ page }) => {
   await scenario(page, { news_state: 'running', auth: 'in' })
   await page.goto('/?tab=map&mode=latest')
   const [feed, base, geo] = await Promise.all([read<NewsFeed>(page, 'news'), read<ForecastResponse>(page, 'forecast'), read<RaionFeatureCollection>(page, 'raions')])
@@ -278,7 +285,7 @@ test('news adjusts the matching Now forecast and panel, with linked events; repl
   await expect(panel.getByRole('region', { name: 'Base and news-adjusted probabilities' })).toHaveCount(0)
 })
 
-test('all news states are available through the mock and fit the viewport', async ({ page }) => {
+if (mock) test('all news states are available through the mock and fit the viewport', async ({ page }) => {
   for (const state of ['off', 'needs_login', 'needs_codex', 'starting', 'running', 'stale', 'error', 'quota_limited']) {
     await scenario(page, { news_state: state })
     const feed = await read<NewsFeed>(page, 'news')
@@ -292,12 +299,13 @@ test('all news states are available through the mock and fit the viewport', asyn
 })
 
 test('system footer reports API data coverage and nightly time; capture desktop/mobile views', async ({ page }, testInfo) => {
-  await scenario(page, { news_state: 'running', auth: 'in' })
+  if (mock) await scenario(page, { news_state: 'running', auth: 'in' })
   await page.goto('/')
   const system = await read<SystemStatus>(page, 'system')
   await expect(page.getByLabel('System status')).toContainText('Nightly update at 00:00 Kyiv')
   if (system.coverage_gaps.length) await expect(page.getByLabel('System status')).toContainText('Coverage gaps:')
-  await expect(page.getByLabel('Ukraine live red alerts').getByRole('button')).toHaveCount(139)
+  const geo = await read<RaionFeatureCollection>(page, 'raions')
+  await expect(page.getByLabel('Ukraine live red alerts').getByRole('button')).toHaveCount(geo.features.length)
   await page.evaluate(() => document.fonts.ready)
   await page.screenshot({ path: testInfo.outputPath('live-landing.png') })
   if (page.viewportSize()!.width < 700) {
@@ -312,16 +320,39 @@ test('system footer reports API data coverage and nightly time; capture desktop/
   await page.getByRole('button', { name: 'Forecast', exact: true }).click()
   await expect(page.locator('.ukraine-map')).toBeVisible()
   const forecast = await read<ForecastResponse>(page, 'forecast')
-  const sample = (await read<NewsFeed>(page, 'news')).adjustments[0]
+  const sample = forecast.rows.find(row => row.active) ?? forecast.rows[0]
   expect(forecast.rows.some(row => row.raion_id === sample.raion_id)).toBe(true)
   await page.locator(`.ukraine-map [data-raion-id="${sample.raion_id}"]`).click()
   await expect(page.getByRole('complementary', { name: 'Selected raion' }).getByRole('slider')).toBeVisible()
-  await page.getByRole('button', { name: 'News-adjusted (experimental)', exact: true }).click()
+  const selected = page.getByRole('complementary', { name: 'Selected raion' })
+  if (sample.active && sample.end_p10 && sample.end_p50 && sample.end_p90) {
+    const remaining = [sample.end_p10, sample.end_p50, sample.end_p90].map(t => Math.ceil((Date.parse(t) - Date.parse(forecast.at)) / 60_000))
+    if (remaining.every(minutes => minutes > 0)) {
+      await expect(selected).toContainText(`Expected remaining time ${remaining[1]} min`)
+      await expect(selected).toContainText(`P10–P90: ${remaining[0]}–${remaining[2]} min remaining at this forecast hour.`)
+    } else await expect(selected).toContainText('No current remaining-time estimate is available.')
+  }
+  await expect(selected).not.toContainText('predicted median end')
   await page.mouse.move(4, 4)
-  await page.screenshot({ path: testInfo.outputPath('forecast-news.png') })
+  await page.locator('.page-scroll').evaluate(element => element.scrollTop = 0)
+  await page.screenshot({ path: testInfo.outputPath('forecast-now.png') })
+  if (testInfo.project.name === 'mobile') {
+    await page.getByRole('complementary', { name: 'Selected raion' }).scrollIntoViewIfNeeded()
+    await page.screenshot({ path: testInfo.outputPath('forecast-now-panel.png') })
+  }
+  await page.getByRole('button', { name: 'Model report', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Selected models', exact: true })).toBeVisible()
+  await page.locator('.page-scroll').evaluate(element => element.scrollTop = 0)
+  await page.screenshot({ path: testInfo.outputPath('report.png') })
   await page.getByRole('button', { name: 'Live', exact: true }).click()
   await page.locator('.page-scroll').evaluate(element => element.scrollTop = 0)
   await openSettings(page)
+  const [settings, auth] = await Promise.all([read<Settings>(page, 'settings'), read<AuthStatus>(page, 'auth/status')])
+  const panel = page.getByRole('dialog')
+  await expect(panel.getByRole('checkbox', { name: /^News agent/ })).toBeChecked({ checked: settings.news_enabled })
+  await expect(panel.getByLabel('Extraction model', { exact: true })).toHaveValue(settings.models.extract_model)
+  await expect(panel.getByLabel('Evaluation model', { exact: true })).toHaveValue(settings.models.evaluate_model)
+  await expect(panel.locator('.auth-status')).toHaveText(!auth.codex_installed ? 'Codex is not installed' : auth.logged_in ? 'Logged in with ChatGPT' : auth.login_in_progress ? 'Login in progress' : 'Not logged in')
   await noOverflow(page)
   await page.screenshot({ path: testInfo.outputPath('settings.png') })
 })

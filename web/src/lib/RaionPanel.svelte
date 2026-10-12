@@ -4,17 +4,18 @@
   import { gapState } from './gaps'
   import { liveDescription, sourceUrl } from './live-format'
   import type { ForecastRow, HistoryResponse, LiveUnit, NewsAdjustmentRow, NewsFeed, RaionFeature, Range } from './types'
-  let { feature, row, baseRow, adjustment, news, liveUnit, now, at, mode, horizon, gaps, history, loading, error, retry }: {
+  let { feature, row, unavailable = false, baseRow, adjustment, news, liveUnit, now, at, mode, horizon, gaps, history, loading, error, retry }: {
     feature: RaionFeature | null; row: ForecastRow | undefined; at: string
     baseRow: ForecastRow | undefined; adjustment: NewsAdjustmentRow | undefined; news: NewsFeed | null; liveUnit: LiveUnit | undefined; now: number
     mode: 'replay' | 'latest'; horizon: Horizon; history: HistoryResponse | null
     gaps: Range[]
+    unavailable?: boolean
     loading: boolean; error: string | null; retry: () => void
   } = $props()
   const sourceState = $derived(gapState(Date.parse(at), gaps))
   const remaining = $derived.by(() => {
     if (!row?.end_p10 || !row.end_p50 || !row.end_p90) return null
-    return [row.end_p10, row.end_p50, row.end_p90].map(t => Math.round((Date.parse(t) - Date.parse(at)) / 60_000))
+    return [row.end_p10, row.end_p50, row.end_p90].map(t => Math.ceil((Date.parse(t) - Date.parse(at)) / 60_000))
   })
 </script>
 
@@ -39,9 +40,8 @@
           <p><i class="dot-key"></i>Alert active {row.active_since ? `since ${clock(row.active_since)}` : 'at this hour'}</p>
           {#if row.active_since}<small>{localTime(row.active_since)} Kyiv</small>{/if}
           {#if remaining}
-            {#if remaining[1] > 0}<p>Expected to end in <strong>{remaining[1]} min</strong></p>
-            {:else}<p>The predicted median end {remaining[1] === 0 ? 'is now' : `passed ${Math.abs(remaining[1])} min ago`}. The alert is still active.</p>{/if}
-            <small>P10–P90: {remaining[0]}–{remaining[2]} min relative to this forecast. {remaining[0] < 0 ? 'Negative values are estimates that have already passed.' : ''}</small>
+            {#if remaining.every(minutes => Number.isFinite(minutes) && minutes > 0)}<p>Expected remaining time <strong>{remaining[1]} min</strong></p><small>P10–P90: {remaining[0]}–{remaining[2]} min remaining at this forecast hour.</small>
+            {:else}<p class="muted">No current remaining-time estimate is available. The alert is still active.</p>{/if}
           {:else}<p class="muted">No end-time estimate is available.</p>{/if}
         {:else}<p>No alert active at this hour.</p>{/if}
       </div>
@@ -53,7 +53,7 @@
         {#if error}<div class="error-state" role="alert"><p>{error}</p><button onclick={retry}>Retry history</button></div>{/if}
         <div class:dimmed={loading}>{#if history && history.raion_id === row.raion_id}<HistoryChart data={history} {horizon} {gaps} />{:else if loading}<p class="empty-state">Loading seven-day history…</p>{:else if !error}<p class="empty-state">No history is available.</p>{/if}</div>
       </section>
-    {:else}<p class="empty-state">No forecast. This display unit is outside the forecast universe.</p><div class="alert-status"><h3>Current live status</h3><p>{liveDescription(liveUnit, now)}</p><small>Live status is current, even while replaying a historical forecast.</small></div>{/if}
+    {:else}<p class="empty-state">{unavailable ? 'No forecast is available for this hour.' : 'No forecast. This display unit is outside the forecast universe.'}</p><div class="alert-status"><h3>Current live status</h3><p>{liveDescription(liveUnit, now)}</p><small>Live status is current, even while replaying a historical forecast.</small></div>{/if}
   {:else}
     <div class="panel-empty"><h2>Look closer at a raion</h2><p>Select a region on the map or in the list to see its probabilities, alert status, and seven-day history.</p><span class="muted">You can also focus a polygon and press Enter.</span></div>
   {/if}

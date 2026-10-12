@@ -1,6 +1,6 @@
 <script lang="ts">
   import { scaleLinear, scaleTime } from 'd3-scale'
-  import { day, localTime, probability, probabilityText, type Horizon } from './format'
+  import { day, hourMs, localTime, probability, probabilityText, type Horizon } from './format'
   import { gapBands, gapNotice, gapState } from './gaps'
   import type { HistoryResponse, Range } from './types'
   let { data, horizon, gaps }: { data: HistoryResponse; horizon: Horizon; gaps: Range[] } = $props()
@@ -8,7 +8,9 @@
   const width = 328, height = 180, left = 28, right = 8, top = 12, bottom = 28
   const x = $derived(scaleTime().domain([new Date(data.start), new Date(data.end)]).range([left, width - right]))
   const y = scaleLinear().domain([0, 1]).range([height - bottom, top])
-  const path = $derived(data.series.map((p, i) => `${i ? 'L' : 'M'}${x(new Date(p.t))},${y(probability(p, horizon))}`).join(' '))
+  const missingHours = $derived(data.series.some((p, i) => i > 0 && Date.parse(p.t) - Date.parse(data.series[i - 1].t) > hourMs))
+  // A missing issued hour is a break, not an interpolated probability.
+  const path = $derived(data.series.map((p, i) => `${i && Date.parse(p.t) - Date.parse(data.series[i - 1].t) === hourMs ? 'L' : 'M'}${x(new Date(p.t))},${y(probability(p, horizon))}`).join(' '))
   const point = $derived(hovered === null ? null : data.series[Math.min(hovered, data.series.length - 1)])
   const active = $derived(point && data.episodes.some(e => Date.parse(e.start) <= Date.parse(point.t) && (e.end === null || Date.parse(e.end) > Date.parse(point.t))))
   const sourceState = $derived(point ? gapState(Date.parse(point.t), gaps, horizon) : null)
@@ -60,6 +62,7 @@
     {:else}<span>Hover, touch, or focus the chart and use arrow keys.</span>{/if}
   </div>
   <div class="chart-key"><span><i class="line-key"></i>P within {horizon} h</span><span><i class="band-key"></i>Actual alert episodes</span>{#if bands.length}<span><i class="gap-key"></i>Source outage, observations unknown</span>{/if}</div>
+  {#if missingHours}<p class="muted history-missing">Breaks in the line mark hours with no stored forecast.</p>{/if}
   <details class="chart-data"><summary>History data and episodes</summary>
     <!-- svelte-ignore a11y_no_noninteractive_tabindex (Keyboard users need to focus the scroll region to scroll this table.) -->
     <div class="table-scroll" tabindex="0" role="region" aria-label="Hourly history data"><table><thead><tr><th>Kyiv time</th><th>P1</th><th>P3</th><th>P12</th></tr></thead><tbody>{#each data.series as p}<tr><th scope="row">{localTime(p.t)}</th><td>{probabilityText(p.p_1)}</td><td>{probabilityText(p.p_3)}</td><td>{probabilityText(p.p_12)}</td></tr>{/each}</tbody></table></div>

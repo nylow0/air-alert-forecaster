@@ -16,7 +16,8 @@ export default defineConfig(({ command, mode }) => {
     plugins: [svelte(), tailwindcss(), ...(mock ? [mockApi()] : [])],
     server: {
       proxy: {
-        '/api': 'http://127.0.0.1:8000',
+        // The backend compares Origin with Host for local settings/auth writes.
+        '/api': { target: 'http://127.0.0.1:8000', changeOrigin: false },
       },
     },
   }

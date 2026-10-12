@@ -128,7 +128,7 @@ async function selectRaion(page: Page, request: APIRequestContext, row: Forecast
   await expect(panel.getByRole('heading', { name: featureFor(row.raion_id).properties.name, exact: true })).toBeVisible()
   await expect.poll(() => new URL(page.url()).searchParams.get('raion')).toBe(row.raion_id)
   const history = await api<HistoryResponse>(request,
-    `/api/raion/${row.raion_id}/history?${new URLSearchParams({ from: iso(Date.parse(at) - 7 * 24 * hour), to: at })}`,
+    `/api/raion/${row.raion_id}/history?${new URLSearchParams({ from: iso(Math.max(Date.parse(meta.replay.start), Date.parse(at) - 7 * 24 * hour)), to: at })}`,
   )
   await expect(panel.getByRole('slider', { name: /^Seven-day probability history/ })).toBeVisible()
   return history
@@ -175,7 +175,9 @@ test.beforeAll(async ({ request }) => {
 })
 
 test.beforeEach(async ({ page }) => {
+  const receipt = page.waitForResponse(response => response.url().endsWith('/api/live'))
   await page.goto(`/?${new URLSearchParams({ mode: 'replay', horizon: '3', at: forecast.at })}`)
+  live = await (await receipt).json() as LiveState
   await ready(page, forecast.at)
   const mockNotice = page.getByText('Development preview. Probabilities, history, and scores are synthetic fixtures.', { exact: true })
   if ((process.env.E2E_TARGET ?? 'mock') === 'mock') await expect(mockNotice).toBeVisible()
@@ -374,7 +376,7 @@ test('keyboard polygon selection and history exploration preserve the forecast h
   await expect(page.getByRole('status')).toContainText(probabilityText(row.p_3))
   await path.press('Enter')
   await expect(path).toHaveAttribute('aria-pressed', 'true')
-  const history = await api<HistoryResponse>(request, `/api/raion/${row.raion_id}/history?${new URLSearchParams({ from: iso(Date.parse(forecast.at) - 7 * 24 * hour), to: forecast.at })}`)
+  const history = await api<HistoryResponse>(request, `/api/raion/${row.raion_id}/history?${new URLSearchParams({ from: iso(Math.max(Date.parse(meta.replay.start), Date.parse(forecast.at) - 7 * 24 * hour)), to: forecast.at })}`)
   expect(history.series.length, 'Hourly history for keyboard exploration').toBeGreaterThan(1)
   const chart = page.getByRole('slider', { name: /^Seven-day probability history/ })
   await chart.focus()
@@ -413,6 +415,7 @@ test('list contains every raion sorted by the chosen horizon and opens its panel
 
 test('every displayed onset metric matches the API at three decimal places', async ({ page }) => {
   await openReport(page)
+  await page.getByText(/^All model comparisons \(/).click()
   expect(report.onset.length, 'The prepared report needs onset evaluation scores').toBeGreaterThan(0)
   for (const split of ['val', 'test'] as const) {
     const rowSets = [...new Set(report.onset.filter(score => score.split === split).map(score => score.row_set))]
@@ -424,21 +427,18 @@ test('every displayed onset metric matches the API at three decimal places', asy
       const models = [...new Set(scores.map(score => score.model))].sort()
       const rows = table.getByRole('row').filter({ has: page.getByRole('rowheader') })
       await expect(rows).toHaveCount(models.length)
-      for (const score of scores) {
-        const row = rows.filter({ has: page.getByRole('rowheader', { name: score.model, exact: true }) })
-        const cells = row.getByRole('cell')
-        const offset = tableHorizons.indexOf(score.horizon) * 4
-        const values = [score.bss, score.brier, score.logloss, score.pr_auc]
-        for (let index = 0; index < values.length; index++) {
-          await expect(cells.nth(offset + index), `${split}/${rowSet}/${score.model}/${score.horizon} metric ${index}`).toHaveText(values[index] === null ? '—' : values[index]!.toFixed(3))
-        }
-      }
+      const displayed = await rows.evaluateAll(items => items.map(row => ({ model: row.querySelector('th')?.textContent?.trim(), values: [...row.querySelectorAll('td')].map(cell => cell.textContent?.trim()) })))
+      expect(displayed, `${split}/${rowSet}: every model, horizon and metric`).toEqual(models.map(model => ({ model, values: tableHorizons.flatMap(horizon => {
+        const score = scores.find(score => score.model === model && score.horizon === horizon)
+        return score ? [score.bss, score.brier, score.logloss, score.pr_auc].map(value => value === null ? '—' : value.toFixed(3)) : ['—', '—', '—', '—']
+      }) })))
     }
   }
 })
 
 test('duration tables, model selection, and report notes match the API', async ({ page }) => {
   await openReport(page)
+  await page.getByText(/^All model comparisons \(/).click()
   for (const split of ['val', 'test'] as const) {
     const scores = report.duration.filter(score => score.split === split)
     const region = page.getByRole('region', { name: `${split} duration metrics`, exact: true })
@@ -454,11 +454,11 @@ test('duration tables, model selection, and report notes match the API', async (
     }
   }
   if (report.selection) {
-    await expect(page.getByRole('heading', { name: 'Selected models' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Selected models', exact: true })).toBeVisible()
     await expect(page.getByText(`Alert onset ${report.selection.onset ?? 'Not selected'}`, { exact: true })).toBeVisible()
     await expect(page.getByText(`Duration ${report.selection.duration ?? 'Not selected'}`, { exact: true })).toBeVisible()
     if (report.selection.note) await expect(page.getByText(report.selection.note, { exact: true })).toBeVisible()
-  } else await expect(page.getByRole('heading', { name: 'Selected models' })).toHaveCount(0)
+  } else await expect(page.getByRole('heading', { name: 'Selected models', exact: true })).toHaveCount(0)
   for (const note of report.notes) await expect(page.getByText(note, { exact: true })).toBeVisible()
 })
 

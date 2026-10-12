@@ -19,6 +19,7 @@
   const geo = new Resource<RaionFeatureCollection>()
   const forecast = new Resource<ForecastResponse>()
   const history = new Resource<HistoryResponse>()
+  const replayHours = new Resource<number[]>()
   const report = new Resource<Report>()
   const live = new Resource<LiveState>()
   const news = new Resource<NewsFeed>()
@@ -47,11 +48,14 @@
   const end = $derived(meta.data ? Date.parse(meta.data.replay.end) : 0)
   const gaps = $derived(meta.data?.data_gaps ?? [])
   const bands = $derived(gapBands(gaps, start, end))
-  const requestedAt = $derived(!meta.data ? '' : mode === 'latest' ? new Date(Math.floor(now / hourMs) * hourMs).toISOString().replace('.000Z', 'Z') : new Date(timeMs || end - 14 * hourMs).toISOString().replace('.000Z', 'Z'))
+  const requestedAt = $derived(!meta.data ? '' : mode === 'latest' ? new Date(Math.floor(now / hourMs) * hourMs).toISOString().replace('.000Z', 'Z') : new Date(timeMs || end).toISOString().replace('.000Z', 'Z'))
   const sourceNotice = $derived(gapNotice(gapState(Date.parse(requestedAt), gaps, horizon), horizon))
   const selectedFeature = $derived(noDataFeature ?? geo.data?.features.find(f => f.properties.raion_id === selectedId && selectedId !== null) ?? null)
   const selectedRow = $derived(forecast.data?.rows.find(row => row.raion_id === selectedId))
-  const ready = $derived(meta.data && geo.data && forecast.data)
+  const forecastMissing = $derived(forecast.status === 404 && !forecast.loading)
+  const forecastPending = $derived(forecast.status === 503 && !forecast.loading)
+  const validForecast = $derived(forecast.data && (forecast.loading || Date.parse(forecast.data.at) === Date.parse(requestedAt)) ? forecast.data : null)
+  const ready = $derived(meta.data && geo.data && validForecast)
   const observationsUnknown = $derived(forecast.data ? gapState(Date.parse(forecast.data.at), gaps) === 'outage' : false)
   // Adjustments belong to exactly one current-hour base. Never apply them to replay.
   const canAdjust = $derived(mode === 'latest' && forecast.data?.mode === 'latest' && news.data?.status.enabled && news.data.status.state === 'running' && news.data.base_at !== null && Date.parse(news.data.base_at) === Date.parse(forecast.data.at) && news.data.adjustments.length > 0)
@@ -95,8 +99,23 @@
     selectedId = feature.properties.raion_id
     noDataFeature = selectedId === null ? feature : null
   }
+  async function storedHours(signal: AbortSignal, id: string, first: number, last: number): Promise<number[]> {
+    // History lists actual issued hours. Its endpoint accepts at most 31 days per request.
+    const times = new Set<number>()
+    for (let from = first; from <= last; from += 31 * 24 * hourMs) {
+      const to = Math.min(last, from + 31 * 24 * hourMs - hourMs)
+      const data = await api.history(id, new Date(from).toISOString(), new Date(to).toISOString(), signal)
+      for (const point of data.series) times.add(Date.parse(point.t))
+    }
+    return [...times].sort((a, b) => a - b)
+  }
   function step(direction: number): void {
-    if (mode === 'replay' && meta.data) timeMs = clampTime(timeMs + direction * hourMs)
+    if (mode !== 'replay' || !meta.data || forecast.loading) return
+    const hours = replayHours.data
+    if (!hours) { if (replayHours.error) timeMs = clampTime(timeMs + direction * hourMs); return }
+    const next = direction > 0 ? hours.find(t => t > timeMs) : hours.findLast(t => t < timeMs)
+    if (next !== undefined) timeMs = next
+    else playing = false
   }
   function keyboard(event: KeyboardEvent): void {
     if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
@@ -107,9 +126,9 @@
   }
 
   onMount(() => {
-    void meta.load(signal => api.meta(signal))
     void geo.load(signal => api.raions(signal))
     const refresh = () => {
+      void meta.load(signal => api.meta(signal))
       void live.load(signal => api.live(signal))
       void news.load(signal => api.news(signal))
       void system.load(signal => api.system(signal))
@@ -118,26 +137,41 @@
     refresh()
     const poll = window.setInterval(refresh, 60_000)
     const clock = window.setInterval(() => now = Date.now(), 10_000)
-    return () => { window.clearInterval(poll); window.clearInterval(clock); for (const resource of [meta, geo, forecast, history, report, live, news, system, settings, auth]) resource.cancel() }
+    return () => { window.clearInterval(poll); window.clearInterval(clock); for (const resource of [meta, geo, forecast, history, replayHours, report, live, news, system, settings, auth]) resource.cancel() }
   })
   $effect(() => {
     if (meta.data) {
       const current = untrack(() => timeMs)
-      timeMs = clampTime(current || end - 14 * hourMs)
+      timeMs = clampTime(current || end)
     }
   })
   $effect(() => {
-    const at = requestedAt, retry = forecastRetry, available = meta.data
+    const at = requestedAt, retry = forecastRetry, available = Boolean(meta.data)
     if (!available || !at) return
     void retry
     const queryAt = mode === 'replay' ? at : undefined
     untrack(() => void forecast.load(signal => api.forecast(queryAt, signal)))
   })
   $effect(() => {
-    const id = selectedId, at = forecast.data?.at, retry = historyRetry
+    const id = geo.data?.features.find(f => f.properties.raion_id)?.properties.raion_id
+    const first = start, last = end, activeMode = mode
+    if (activeMode === 'replay' && id && first && last) untrack(() => void replayHours.load(signal => storedHours(signal, id, first, last)))
+  })
+  $effect(() => {
+    if (!forecastPending) return
+    const timer = window.setTimeout(() => forecastRetry++, 2000)
+    return () => window.clearTimeout(timer)
+  })
+  $effect(() => {
+    if (!settings.data?.news_enabled || news.data?.status.state !== 'starting') return
+    const timer = window.setInterval(() => void news.load(signal => api.news(signal)), 2000)
+    return () => window.clearInterval(timer)
+  })
+  $effect(() => {
+    const id = selectedId, at = forecast.data?.at, retry = historyRetry, first = start
     if (!id || !at) { history.cancel(); return }
     void retry
-    const from = new Date(Date.parse(at) - 7 * 24 * hourMs).toISOString()
+    const from = new Date(Math.max(first, Date.parse(at) - 7 * 24 * hourMs)).toISOString()
     untrack(() => void history.load(signal => api.history(id, from, at, signal)))
   })
   $effect(() => {
@@ -187,7 +221,7 @@
               <button class="play-button" aria-label={playing ? 'Pause replay' : 'Play replay'} aria-pressed={playing} onclick={() => { if (timeMs >= end) timeMs = start; playing = !playing }}><svg viewBox="0 0 20 20" aria-hidden="true">{#if playing}<path d="M6 4v12M14 4v12" />{:else}<path d="M6 3l11 7-11 7z" />{/if}</svg></button>
               <button aria-label="Step forward one hour" title="Step forward one hour" disabled={timeMs >= end} onclick={() => { playing = false; step(1) }}><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M15 4v12M5 4l8 6-8 6z" /></svg></button>
             </div>
-            <div class="time-readout"><time datetime={requestedAt}>{localTime(requestedAt)}</time><small>Kyiv time / test period</small></div>
+            <div class="time-readout"><time datetime={requestedAt}>{localTime(requestedAt)}</time><small>Kyiv time / stored forecast replay</small></div>
             <div class="scrubber">
               <label class="sr-only" for="replay-time">Replay hour</label>
               <div class="scrubber-track">
@@ -199,22 +233,24 @@
             </div>
             {#if sourceNotice}<p class="source-notice" role="note">{sourceNotice}</p>{/if}
           </section>
-        {:else}<section class="latest-notice"><div><time datetime={forecast.data?.at ?? requestedAt}>{localTime(forecast.data?.at ?? requestedAt)}</time><small>Kyiv time / current hourly forecast</small></div><p>Live alerts update every minute. Forecast probabilities update on the hour.</p></section>{#if sourceNotice}<p class="source-notice latest-source-notice" role="note">{sourceNotice}</p>{/if}{/if}
+        {:else}<section class="latest-notice"><div><time datetime={requestedAt}>{localTime(requestedAt)}</time><small>Kyiv time / current hourly forecast</small></div><p>Live alerts update every minute. Forecast probabilities update on the hour.</p></section>{#if sourceNotice}<p class="source-notice latest-source-notice" role="note">{sourceNotice}</p>{/if}{/if}
       {/if}
-      {#if forecast.error}<div class="error-state" role="alert"><p>{forecast.error}</p><button onclick={() => forecastRetry++}>Retry forecast</button></div>{/if}
+      {#if forecastMissing}<div class="empty-state" role="status"><p>No forecast stored for this hour.</p><p>Choose another hour. Stepping and playback use stored forecasts.</p></div>
+      {:else if forecastPending}<p class="empty-state" role="status">Preparing this hour's forecast. Checking again shortly.</p>
+      {:else if forecast.error}<div class="error-state" role="alert"><p>{forecast.error}</p><button onclick={() => forecastRetry++}>Retry forecast</button></div>{/if}
       <div class="dashboard" aria-busy={forecast.loading || geo.loading}>
         <section class="geography" aria-label="Forecasts by raion"><div class="map-heading"><h2>{view === 'map' ? 'Alert onset across Ukraine' : 'Raion forecasts'}</h2><span class="muted">{forecast.loading ? 'Updating…' : forecast.data ? `${forecast.data.rows.length} raions` : 'Loading…'}</span></div>
           <div class:dimmed={forecast.loading || geo.loading}>
-            {#if ready && geo.data && forecast.data}{#if view === 'map'}<MapView geo={geo.data} rows={displayRows} live={live.data} {now} {horizon} {observationsUnknown} mode={forecast.data.mode} selected={selectedId} onselect={select} />{:else}<RaionList geo={geo.data} rows={displayRows} {horizon} {observationsUnknown} selected={selectedId} onselect={select} />{/if}{#if forecast.data.rows.length === 0}<p class="empty-state">No forecasts are available for this hour. Choose another time.</p>{/if}
+            {#if ready && geo.data && validForecast}{#if view === 'map'}<MapView geo={geo.data} rows={displayRows} live={live.data} {now} {horizon} {observationsUnknown} mode={validForecast.mode} selected={selectedId} onselect={select} />{:else}<RaionList geo={geo.data} rows={displayRows} {horizon} {observationsUnknown} selected={selectedId} onselect={select} />{/if}{#if validForecast.rows.length === 0}<p class="empty-state">No forecasts are available for this hour. Choose another time.</p>{/if}
             {:else if meta.loading || geo.loading || forecast.loading}<div class="initial-loading">Loading the map and hourly forecasts…</div>{/if}
           </div>
-          {#if forecast.data}<div class="served-models"><span>Onset {forecast.data.onset_model}</span><span>Duration {forecast.data.duration_model ?? 'unavailable'}</span><span>Probabilities describe alert starts, including when an alert is already active.</span></div>{/if}
+          {#if validForecast}<div class="served-models"><span>Onset {validForecast.onset_model}</span><span>Duration {validForecast.duration_model ?? 'unavailable'}</span><span>Probabilities describe alert starts, including when an alert is already active.</span></div>{/if}
         </section>
-        <div class:dimmed={forecast.loading}><RaionPanel feature={selectedFeature} row={displayRow} baseRow={selectedRow} adjustment={canAdjust ? adjustments.get(selectedId ?? '') : undefined} news={news.data} liveUnit={selectedLive} {now} at={forecast.data?.at ?? requestedAt} mode={forecast.data?.mode ?? mode} {horizon} {gaps} history={history.data} loading={history.loading} error={history.error} retry={() => historyRetry++} /></div>
+        <div class:dimmed={forecast.loading}><RaionPanel feature={selectedFeature} row={validForecast ? displayRow : undefined} unavailable={!validForecast} baseRow={selectedRow} adjustment={canAdjust ? adjustments.get(selectedId ?? '') : undefined} news={news.data} liveUnit={selectedLive} {now} at={validForecast?.at ?? requestedAt} mode={mode} {horizon} {gaps} history={history.data} loading={history.loading} error={history.error} retry={() => historyRetry++} /></div>
       </div>
     {:else}
       {#if report.error}<div class="error-state" role="alert"><p>{report.error}</p><button onclick={() => reportRetry++}>Retry report</button></div>{/if}
-      <div class:dimmed={report.loading} aria-busy={report.loading}>{#if report.data}<ModelReport report={report.data} />{:else if report.loading}<p class="initial-loading">Loading model evaluation…</p>{/if}</div>
+      <div class:dimmed={report.loading} aria-busy={report.loading}>{#if report.data}<ModelReport report={report.data} meta={meta.data} />{:else if report.loading}<p class="initial-loading">Loading model evaluation…</p>{/if}</div>
     {/if}
   </main>{#if !newsHidden && tab !== 'report'}<NewsCard feed={news.data} {now} error={news.error} onclose={() => dismissNews(true)} opensettings={openSettings} />{/if}</div>
   <footer><p>Research demo. Use official alert channels for safety decisions.</p><SystemFooter system={system.data} {now} error={system.error} /></footer>

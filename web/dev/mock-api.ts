@@ -133,9 +133,18 @@ export function mockApi(): Plugin {
               body = { detail: 'History requires a raion id and a valid from/to range.' }
             } else {
               const delta = end - Date.parse(base.end)
+              const forecast = fixture<ForecastResponse>('forecast_replay.json')
+              const index = forecast.rows.findIndex(row => row.raion_id === id)
+              const row = forecast.rows[Math.max(0, index)]
+              // Like the real API, history lists every stored hour, including long replay ranges.
+              const series = Array.from({ length: Math.floor((end - start) / hour) + 1 }, (_, i) => {
+                const t = start + i * hour
+                const factor = 1 + 0.65 * Math.sin((t - Date.parse(forecast.at)) / hour * 0.63 + Math.max(0, index) * 0.7)
+                const p = (value: number) => Math.min(0.99, Math.max(0, value * factor))
+                return { t: new Date(t).toISOString().replace('.000Z', 'Z'), p_1: p(row.p_1), p_3: p(row.p_3), p_12: p(row.p_12) }
+              })
               body = { ...base, raion_id: id, start: new Date(start).toISOString(), end: new Date(end).toISOString(),
-                series: base.series.map(point => ({ ...point, t: shift(point.t, delta)! }))
-                  .filter(point => Date.parse(point.t) >= start && Date.parse(point.t) <= end),
+                series,
                 episodes: base.episodes.map(e => ({ start: shift(e.start, delta)!, end: shift(e.end, delta) }))
                   .filter(e => Date.parse(e.start) <= end && (e.end === null || Date.parse(e.end) >= start)),
               }
