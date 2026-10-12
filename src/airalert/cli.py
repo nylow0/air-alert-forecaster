@@ -3,6 +3,7 @@
 import argparse
 import importlib
 import sys
+from datetime import UTC, datetime
 
 
 def main() -> int:
@@ -17,6 +18,8 @@ def main() -> int:
         ("backtest", "backtest", "run", "B2"),
         ("precompute", "precompute", "run", "C2"),
         ("serve", "api", "serve", "C2"),
+        ("backfill", "ingest", "catch_up", "I1"),
+        ("live-once", "ingest", "live_state", "I1"),
     )
     for command, module, function, owner in stages:
         subparser = commands.add_parser(command)
@@ -45,6 +48,9 @@ def main() -> int:
         call_args = (args.final,)
     elif args.command == "serve":
         call_args = (args.port,)
+    elif args.command in {"backfill", "live-once"}:
+        # Both ingest entry points take the current aware UTC time.
+        call_args = (datetime.now(UTC),)
     try:
         module = importlib.import_module(args.module)
     except ModuleNotFoundError as error:
