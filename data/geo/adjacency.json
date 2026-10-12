@@ -1,0 +1,842 @@
+{
+  "cherkaska/cherkaskyi": [
+    "cherkaska/zolotoniskyi",
+    "cherkaska/zvenyhorodskyi",
+    "kirovohradska/kropyvnytskyi",
+    "kirovohradska/novoukrainskyi",
+    "kirovohradska/oleksandriiskyi",
+    "kyivska/boryspilskyi",
+    "kyivska/obukhivskyi",
+    "poltavska/kremenchutskyi"
+  ],
+  "cherkaska/umanskyi": [
+    "cherkaska/zvenyhorodskyi",
+    "kirovohradska/holovanivskyi",
+    "kyivska/bilotserkivskyi",
+    "vinnytska/haisynskyi",
+    "vinnytska/vinnytskyi"
+  ],
+  "cherkaska/zolotoniskyi": [
+    "cherkaska/cherkaskyi",
+    "kyivska/boryspilskyi",
+    "poltavska/kremenchutskyi",
+    "poltavska/lubenskyi"
+  ],
+  "cherkaska/zvenyhorodskyi": [
+    "cherkaska/cherkaskyi",
+    "cherkaska/umanskyi",
+    "kirovohradska/holovanivskyi",
+    "kirovohradska/novoukrainskyi",
+    "kyivska/bilotserkivskyi",
+    "kyivska/obukhivskyi"
+  ],
+  "chernihivska/chernihivskyi": [
+    "chernihivska/koriukivskyi",
+    "chernihivska/nizhynskyi",
+    "kyivska/brovarskyi",
+    "kyivska/vyshhorodskyi"
+  ],
+  "chernihivska/koriukivskyi": [
+    "chernihivska/chernihivskyi",
+    "chernihivska/nizhynskyi",
+    "chernihivska/novhorod-siverskyi"
+  ],
+  "chernihivska/nizhynskyi": [
+    "chernihivska/chernihivskyi",
+    "chernihivska/koriukivskyi",
+    "chernihivska/novhorod-siverskyi",
+    "chernihivska/prylutskyi",
+    "kyivska/brovarskyi",
+    "sumska/konotopskyi"
+  ],
+  "chernihivska/novhorod-siverskyi": [
+    "chernihivska/koriukivskyi",
+    "chernihivska/nizhynskyi",
+    "sumska/konotopskyi",
+    "sumska/shostkynskyi"
+  ],
+  "chernihivska/prylutskyi": [
+    "chernihivska/nizhynskyi",
+    "kyivska/boryspilskyi",
+    "kyivska/brovarskyi",
+    "poltavska/lubenskyi",
+    "poltavska/myrhorodskyi",
+    "sumska/konotopskyi",
+    "sumska/romenskyi"
+  ],
+  "chernivetska/chernivetskyi": [
+    "chernivetska/dnistrovskyi",
+    "chernivetska/vyzhnytskyi",
+    "ivano-frankivska/kolomyiskyi",
+    "ternopilska/chortkivskyi"
+  ],
+  "chernivetska/dnistrovskyi": [
+    "chernivetska/chernivetskyi",
+    "khmelnytska/kamianets-podilskyi",
+    "ternopilska/chortkivskyi",
+    "vinnytska/mohyliv-podilskyi"
+  ],
+  "chernivetska/vyzhnytskyi": [
+    "chernivetska/chernivetskyi",
+    "ivano-frankivska/kolomyiskyi",
+    "ivano-frankivska/kosivskyi",
+    "ivano-frankivska/verkhovynskyi"
+  ],
+  "dnipropetrovska/dniprovskyi": [
+    "dnipropetrovska/kamianskyi",
+    "dnipropetrovska/kryvorizkyi",
+    "dnipropetrovska/nikopolskyi",
+    "dnipropetrovska/samarivskyi",
+    "dnipropetrovska/synelnykivskyi",
+    "poltavska/poltavskyi",
+    "zaporizka/zaporizkyi"
+  ],
+  "dnipropetrovska/kamianskyi": [
+    "dnipropetrovska/dniprovskyi",
+    "dnipropetrovska/kryvorizkyi",
+    "kirovohradska/oleksandriiskyi",
+    "poltavska/kremenchutskyi",
+    "poltavska/poltavskyi"
+  ],
+  "dnipropetrovska/kryvorizkyi": [
+    "dnipropetrovska/dniprovskyi",
+    "dnipropetrovska/kamianskyi",
+    "dnipropetrovska/nikopolskyi",
+    "khersonska/beryslavskyi",
+    "khersonska/kakhovskyi",
+    "kirovohradska/kropyvnytskyi",
+    "kirovohradska/oleksandriiskyi",
+    "mykolaivska/bashtanskyi"
+  ],
+  "dnipropetrovska/nikopolskyi": [
+    "dnipropetrovska/dniprovskyi",
+    "dnipropetrovska/kryvorizkyi",
+    "khersonska/kakhovskyi",
+    "zaporizka/vasylivskyi",
+    "zaporizka/zaporizkyi"
+  ],
+  "dnipropetrovska/pavlohradskyi": [
+    "dnipropetrovska/samarivskyi",
+    "dnipropetrovska/synelnykivskyi",
+    "kharkivska/krasnohradskyi",
+    "kharkivska/lozivskyi"
+  ],
+  "dnipropetrovska/samarivskyi": [
+    "dnipropetrovska/dniprovskyi",
+    "dnipropetrovska/pavlohradskyi",
+    "dnipropetrovska/synelnykivskyi",
+    "kharkivska/krasnohradskyi",
+    "poltavska/poltavskyi"
+  ],
+  "dnipropetrovska/synelnykivskyi": [
+    "dnipropetrovska/dniprovskyi",
+    "dnipropetrovska/pavlohradskyi",
+    "dnipropetrovska/samarivskyi",
+    "donetska/kramatorskyi",
+    "donetska/pokrovskyi",
+    "donetska/volnovaskyi",
+    "kharkivska/lozivskyi",
+    "zaporizka/polohivskyi",
+    "zaporizka/zaporizkyi"
+  ],
+  "donetska/bakhmutskyi": [
+    "donetska/horlivskyi",
+    "donetska/kramatorskyi",
+    "donetska/pokrovskyi"
+  ],
+  "donetska/donetskyi": [
+    "donetska/horlivskyi",
+    "donetska/kalmiuskyi",
+    "donetska/pokrovskyi"
+  ],
+  "donetska/horlivskyi": [
+    "donetska/bakhmutskyi",
+    "donetska/donetskyi",
+    "donetska/kramatorskyi",
+    "donetska/pokrovskyi"
+  ],
+  "donetska/kalmiuskyi": [
+    "donetska/donetskyi",
+    "donetska/mariupolskyi",
+    "donetska/pokrovskyi",
+    "donetska/volnovaskyi"
+  ],
+  "donetska/kramatorskyi": [
+    "dnipropetrovska/synelnykivskyi",
+    "donetska/bakhmutskyi",
+    "donetska/horlivskyi",
+    "donetska/pokrovskyi",
+    "kharkivska/iziumskyi",
+    "kharkivska/lozivskyi"
+  ],
+  "donetska/mariupolskyi": [
+    "donetska/kalmiuskyi",
+    "donetska/volnovaskyi",
+    "zaporizka/berdianskyi",
+    "zaporizka/polohivskyi"
+  ],
+  "donetska/pokrovskyi": [
+    "dnipropetrovska/synelnykivskyi",
+    "donetska/bakhmutskyi",
+    "donetska/donetskyi",
+    "donetska/horlivskyi",
+    "donetska/kalmiuskyi",
+    "donetska/kramatorskyi",
+    "donetska/volnovaskyi"
+  ],
+  "donetska/volnovaskyi": [
+    "dnipropetrovska/synelnykivskyi",
+    "donetska/kalmiuskyi",
+    "donetska/mariupolskyi",
+    "donetska/pokrovskyi",
+    "zaporizka/polohivskyi"
+  ],
+  "ivano-frankivska/ivano-frankivskyi": [
+    "ivano-frankivska/kaluskyi",
+    "ivano-frankivska/kolomyiskyi",
+    "ivano-frankivska/nadvirnianskyi",
+    "lvivska/lvivskyi",
+    "lvivska/stryiskyi",
+    "ternopilska/chortkivskyi",
+    "ternopilska/ternopilskyi",
+    "zakarpatska/tiachivskyi"
+  ],
+  "ivano-frankivska/kaluskyi": [
+    "ivano-frankivska/ivano-frankivskyi",
+    "lvivska/stryiskyi",
+    "zakarpatska/khustskyi",
+    "zakarpatska/tiachivskyi"
+  ],
+  "ivano-frankivska/kolomyiskyi": [
+    "chernivetska/chernivetskyi",
+    "chernivetska/vyzhnytskyi",
+    "ivano-frankivska/ivano-frankivskyi",
+    "ivano-frankivska/kosivskyi",
+    "ivano-frankivska/nadvirnianskyi",
+    "ternopilska/chortkivskyi"
+  ],
+  "ivano-frankivska/kosivskyi": [
+    "chernivetska/vyzhnytskyi",
+    "ivano-frankivska/kolomyiskyi",
+    "ivano-frankivska/nadvirnianskyi",
+    "ivano-frankivska/verkhovynskyi"
+  ],
+  "ivano-frankivska/nadvirnianskyi": [
+    "ivano-frankivska/ivano-frankivskyi",
+    "ivano-frankivska/kolomyiskyi",
+    "ivano-frankivska/kosivskyi",
+    "ivano-frankivska/verkhovynskyi",
+    "zakarpatska/rakhivskyi",
+    "zakarpatska/tiachivskyi"
+  ],
+  "ivano-frankivska/verkhovynskyi": [
+    "chernivetska/vyzhnytskyi",
+    "ivano-frankivska/kosivskyi",
+    "ivano-frankivska/nadvirnianskyi",
+    "zakarpatska/rakhivskyi"
+  ],
+  "kharkivska/bohodukhivskyi": [
+    "kharkivska/kharkivskyi",
+    "kharkivska/krasnohradskyi",
+    "poltavska/poltavskyi",
+    "sumska/okhtyrskyi"
+  ],
+  "kharkivska/chuhuivskyi": [
+    "kharkivska/iziumskyi",
+    "kharkivska/kharkivskyi",
+    "kharkivska/krasnohradskyi",
+    "kharkivska/kupianskyi",
+    "kharkivska/lozivskyi"
+  ],
+  "kharkivska/iziumskyi": [
+    "donetska/kramatorskyi",
+    "kharkivska/chuhuivskyi",
+    "kharkivska/kupianskyi",
+    "kharkivska/lozivskyi"
+  ],
+  "kharkivska/kharkivskyi": [
+    "kharkivska/bohodukhivskyi",
+    "kharkivska/chuhuivskyi",
+    "kharkivska/krasnohradskyi"
+  ],
+  "kharkivska/krasnohradskyi": [
+    "dnipropetrovska/pavlohradskyi",
+    "dnipropetrovska/samarivskyi",
+    "kharkivska/bohodukhivskyi",
+    "kharkivska/chuhuivskyi",
+    "kharkivska/kharkivskyi",
+    "kharkivska/lozivskyi",
+    "poltavska/poltavskyi"
+  ],
+  "kharkivska/kupianskyi": [
+    "kharkivska/chuhuivskyi",
+    "kharkivska/iziumskyi"
+  ],
+  "kharkivska/lozivskyi": [
+    "dnipropetrovska/pavlohradskyi",
+    "dnipropetrovska/synelnykivskyi",
+    "donetska/kramatorskyi",
+    "kharkivska/chuhuivskyi",
+    "kharkivska/iziumskyi",
+    "kharkivska/krasnohradskyi"
+  ],
+  "khersonska/beryslavskyi": [
+    "dnipropetrovska/kryvorizkyi",
+    "khersonska/kakhovskyi",
+    "khersonska/khersonskyi",
+    "mykolaivska/bashtanskyi"
+  ],
+  "khersonska/henicheskyi": [
+    "khersonska/kakhovskyi",
+    "zaporizka/melitopolskyi"
+  ],
+  "khersonska/kakhovskyi": [
+    "dnipropetrovska/kryvorizkyi",
+    "dnipropetrovska/nikopolskyi",
+    "khersonska/beryslavskyi",
+    "khersonska/henicheskyi",
+    "khersonska/khersonskyi",
+    "khersonska/skadovskyi",
+    "zaporizka/melitopolskyi",
+    "zaporizka/vasylivskyi"
+  ],
+  "khersonska/khersonskyi": [
+    "khersonska/beryslavskyi",
+    "khersonska/kakhovskyi",
+    "khersonska/skadovskyi",
+    "mykolaivska/bashtanskyi",
+    "mykolaivska/mykolaivskyi"
+  ],
+  "khersonska/skadovskyi": [
+    "khersonska/kakhovskyi",
+    "khersonska/khersonskyi",
+    "mykolaivska/mykolaivskyi"
+  ],
+  "khmelnytska/kamianets-podilskyi": [
+    "chernivetska/dnistrovskyi",
+    "khmelnytska/khmelnytskyi",
+    "ternopilska/chortkivskyi",
+    "vinnytska/mohyliv-podilskyi",
+    "vinnytska/zhmerynskyi"
+  ],
+  "khmelnytska/khmelnytskyi": [
+    "khmelnytska/kamianets-podilskyi",
+    "khmelnytska/shepetivskyi",
+    "ternopilska/chortkivskyi",
+    "ternopilska/kremenetskyi",
+    "ternopilska/ternopilskyi",
+    "vinnytska/khmilnytskyi",
+    "vinnytska/vinnytskyi",
+    "vinnytska/zhmerynskyi",
+    "zhytomyrska/zhytomyrskyi"
+  ],
+  "khmelnytska/shepetivskyi": [
+    "khmelnytska/khmelnytskyi",
+    "rivnenska/rivnenskyi",
+    "ternopilska/kremenetskyi",
+    "zhytomyrska/zhytomyrskyi",
+    "zhytomyrska/zviahelskyi"
+  ],
+  "kirovohradska/holovanivskyi": [
+    "cherkaska/umanskyi",
+    "cherkaska/zvenyhorodskyi",
+    "kirovohradska/novoukrainskyi",
+    "mykolaivska/pervomaiskyi",
+    "odeska/podilskyi",
+    "vinnytska/haisynskyi"
+  ],
+  "kirovohradska/kropyvnytskyi": [
+    "cherkaska/cherkaskyi",
+    "dnipropetrovska/kryvorizkyi",
+    "kirovohradska/novoukrainskyi",
+    "kirovohradska/oleksandriiskyi",
+    "mykolaivska/bashtanskyi",
+    "mykolaivska/voznesenskyi"
+  ],
+  "kirovohradska/novoukrainskyi": [
+    "cherkaska/cherkaskyi",
+    "cherkaska/zvenyhorodskyi",
+    "kirovohradska/holovanivskyi",
+    "kirovohradska/kropyvnytskyi",
+    "mykolaivska/pervomaiskyi",
+    "mykolaivska/voznesenskyi"
+  ],
+  "kirovohradska/oleksandriiskyi": [
+    "cherkaska/cherkaskyi",
+    "dnipropetrovska/kamianskyi",
+    "dnipropetrovska/kryvorizkyi",
+    "kirovohradska/kropyvnytskyi",
+    "poltavska/kremenchutskyi"
+  ],
+  "kyiv-city/kyiv-city": [
+    "kyivska/boryspilskyi",
+    "kyivska/brovarskyi",
+    "kyivska/buchanskyi",
+    "kyivska/fastivskyi",
+    "kyivska/obukhivskyi",
+    "kyivska/vyshhorodskyi"
+  ],
+  "kyivska/bilotserkivskyi": [
+    "cherkaska/umanskyi",
+    "cherkaska/zvenyhorodskyi",
+    "kyivska/fastivskyi",
+    "kyivska/obukhivskyi",
+    "vinnytska/vinnytskyi",
+    "zhytomyrska/berdychivskyi",
+    "zhytomyrska/zhytomyrskyi"
+  ],
+  "kyivska/boryspilskyi": [
+    "cherkaska/cherkaskyi",
+    "cherkaska/zolotoniskyi",
+    "chernihivska/prylutskyi",
+    "kyiv-city/kyiv-city",
+    "kyivska/brovarskyi",
+    "kyivska/obukhivskyi",
+    "poltavska/lubenskyi"
+  ],
+  "kyivska/brovarskyi": [
+    "chernihivska/chernihivskyi",
+    "chernihivska/nizhynskyi",
+    "chernihivska/prylutskyi",
+    "kyiv-city/kyiv-city",
+    "kyivska/boryspilskyi",
+    "kyivska/vyshhorodskyi"
+  ],
+  "kyivska/buchanskyi": [
+    "kyiv-city/kyiv-city",
+    "kyivska/fastivskyi",
+    "kyivska/vyshhorodskyi",
+    "zhytomyrska/korostenskyi",
+    "zhytomyrska/zhytomyrskyi"
+  ],
+  "kyivska/fastivskyi": [
+    "kyiv-city/kyiv-city",
+    "kyivska/bilotserkivskyi",
+    "kyivska/buchanskyi",
+    "kyivska/obukhivskyi",
+    "zhytomyrska/zhytomyrskyi"
+  ],
+  "kyivska/obukhivskyi": [
+    "cherkaska/cherkaskyi",
+    "cherkaska/zvenyhorodskyi",
+    "kyiv-city/kyiv-city",
+    "kyivska/bilotserkivskyi",
+    "kyivska/boryspilskyi",
+    "kyivska/fastivskyi"
+  ],
+  "kyivska/vyshhorodskyi": [
+    "chernihivska/chernihivskyi",
+    "kyiv-city/kyiv-city",
+    "kyivska/brovarskyi",
+    "kyivska/buchanskyi",
+    "zhytomyrska/korostenskyi"
+  ],
+  "lvivska/chervonohradskyi": [
+    "lvivska/lvivskyi",
+    "lvivska/zolochivskyi",
+    "volynska/lutskyi",
+    "volynska/volodymyr-volynskyi"
+  ],
+  "lvivska/drohobytskyi": [
+    "lvivska/lvivskyi",
+    "lvivska/sambirskyi",
+    "lvivska/stryiskyi"
+  ],
+  "lvivska/lvivskyi": [
+    "ivano-frankivska/ivano-frankivskyi",
+    "lvivska/chervonohradskyi",
+    "lvivska/drohobytskyi",
+    "lvivska/sambirskyi",
+    "lvivska/stryiskyi",
+    "lvivska/yavorivskyi",
+    "lvivska/zolochivskyi",
+    "ternopilska/ternopilskyi"
+  ],
+  "lvivska/sambirskyi": [
+    "lvivska/drohobytskyi",
+    "lvivska/lvivskyi",
+    "lvivska/stryiskyi",
+    "lvivska/yavorivskyi",
+    "zakarpatska/mukachivskyi",
+    "zakarpatska/uzhhorodskyi"
+  ],
+  "lvivska/stryiskyi": [
+    "ivano-frankivska/ivano-frankivskyi",
+    "ivano-frankivska/kaluskyi",
+    "lvivska/drohobytskyi",
+    "lvivska/lvivskyi",
+    "lvivska/sambirskyi",
+    "zakarpatska/khustskyi",
+    "zakarpatska/mukachivskyi"
+  ],
+  "lvivska/yavorivskyi": [
+    "lvivska/lvivskyi",
+    "lvivska/sambirskyi"
+  ],
+  "lvivska/zolochivskyi": [
+    "lvivska/chervonohradskyi",
+    "lvivska/lvivskyi",
+    "rivnenska/dubenskyi",
+    "ternopilska/kremenetskyi",
+    "ternopilska/ternopilskyi",
+    "volynska/lutskyi"
+  ],
+  "mykolaivska/bashtanskyi": [
+    "dnipropetrovska/kryvorizkyi",
+    "khersonska/beryslavskyi",
+    "khersonska/khersonskyi",
+    "kirovohradska/kropyvnytskyi",
+    "mykolaivska/mykolaivskyi",
+    "mykolaivska/voznesenskyi"
+  ],
+  "mykolaivska/mykolaivskyi": [
+    "khersonska/khersonskyi",
+    "khersonska/skadovskyi",
+    "mykolaivska/bashtanskyi",
+    "mykolaivska/voznesenskyi",
+    "odeska/berezivskyi",
+    "odeska/odeskyi"
+  ],
+  "mykolaivska/pervomaiskyi": [
+    "kirovohradska/holovanivskyi",
+    "kirovohradska/novoukrainskyi",
+    "mykolaivska/voznesenskyi",
+    "odeska/berezivskyi",
+    "odeska/podilskyi"
+  ],
+  "mykolaivska/voznesenskyi": [
+    "kirovohradska/kropyvnytskyi",
+    "kirovohradska/novoukrainskyi",
+    "mykolaivska/bashtanskyi",
+    "mykolaivska/mykolaivskyi",
+    "mykolaivska/pervomaiskyi",
+    "odeska/berezivskyi"
+  ],
+  "odeska/berezivskyi": [
+    "mykolaivska/mykolaivskyi",
+    "mykolaivska/pervomaiskyi",
+    "mykolaivska/voznesenskyi",
+    "odeska/odeskyi",
+    "odeska/podilskyi",
+    "odeska/rozdilnianskyi"
+  ],
+  "odeska/bilhorod-dnistrovskyi": [
+    "odeska/bolhradskyi",
+    "odeska/izmailskyi",
+    "odeska/odeskyi"
+  ],
+  "odeska/bolhradskyi": [
+    "odeska/bilhorod-dnistrovskyi",
+    "odeska/izmailskyi"
+  ],
+  "odeska/izmailskyi": [
+    "odeska/bilhorod-dnistrovskyi",
+    "odeska/bolhradskyi"
+  ],
+  "odeska/odeskyi": [
+    "mykolaivska/mykolaivskyi",
+    "odeska/berezivskyi",
+    "odeska/bilhorod-dnistrovskyi",
+    "odeska/rozdilnianskyi"
+  ],
+  "odeska/podilskyi": [
+    "kirovohradska/holovanivskyi",
+    "mykolaivska/pervomaiskyi",
+    "odeska/berezivskyi",
+    "odeska/rozdilnianskyi",
+    "vinnytska/haisynskyi",
+    "vinnytska/tulchynskyi"
+  ],
+  "odeska/rozdilnianskyi": [
+    "odeska/berezivskyi",
+    "odeska/odeskyi",
+    "odeska/podilskyi"
+  ],
+  "poltavska/kremenchutskyi": [
+    "cherkaska/cherkaskyi",
+    "cherkaska/zolotoniskyi",
+    "dnipropetrovska/kamianskyi",
+    "kirovohradska/oleksandriiskyi",
+    "poltavska/lubenskyi",
+    "poltavska/myrhorodskyi",
+    "poltavska/poltavskyi"
+  ],
+  "poltavska/lubenskyi": [
+    "cherkaska/zolotoniskyi",
+    "chernihivska/prylutskyi",
+    "kyivska/boryspilskyi",
+    "poltavska/kremenchutskyi",
+    "poltavska/myrhorodskyi"
+  ],
+  "poltavska/myrhorodskyi": [
+    "chernihivska/prylutskyi",
+    "poltavska/kremenchutskyi",
+    "poltavska/lubenskyi",
+    "poltavska/poltavskyi",
+    "sumska/okhtyrskyi",
+    "sumska/romenskyi",
+    "sumska/sumskyi"
+  ],
+  "poltavska/poltavskyi": [
+    "dnipropetrovska/dniprovskyi",
+    "dnipropetrovska/kamianskyi",
+    "dnipropetrovska/samarivskyi",
+    "kharkivska/bohodukhivskyi",
+    "kharkivska/krasnohradskyi",
+    "poltavska/kremenchutskyi",
+    "poltavska/myrhorodskyi",
+    "sumska/okhtyrskyi"
+  ],
+  "rivnenska/dubenskyi": [
+    "lvivska/zolochivskyi",
+    "rivnenska/rivnenskyi",
+    "ternopilska/kremenetskyi",
+    "volynska/lutskyi"
+  ],
+  "rivnenska/rivnenskyi": [
+    "khmelnytska/shepetivskyi",
+    "rivnenska/dubenskyi",
+    "rivnenska/sarnenskyi",
+    "rivnenska/varaskyi",
+    "ternopilska/kremenetskyi",
+    "volynska/lutskyi",
+    "zhytomyrska/zviahelskyi"
+  ],
+  "rivnenska/sarnenskyi": [
+    "rivnenska/rivnenskyi",
+    "rivnenska/varaskyi",
+    "zhytomyrska/korostenskyi",
+    "zhytomyrska/zviahelskyi"
+  ],
+  "rivnenska/varaskyi": [
+    "rivnenska/rivnenskyi",
+    "rivnenska/sarnenskyi",
+    "volynska/kamin-kashyrskyi",
+    "volynska/lutskyi"
+  ],
+  "sumska/konotopskyi": [
+    "chernihivska/nizhynskyi",
+    "chernihivska/novhorod-siverskyi",
+    "chernihivska/prylutskyi",
+    "sumska/romenskyi",
+    "sumska/shostkynskyi",
+    "sumska/sumskyi"
+  ],
+  "sumska/okhtyrskyi": [
+    "kharkivska/bohodukhivskyi",
+    "poltavska/myrhorodskyi",
+    "poltavska/poltavskyi",
+    "sumska/sumskyi"
+  ],
+  "sumska/romenskyi": [
+    "chernihivska/prylutskyi",
+    "poltavska/myrhorodskyi",
+    "sumska/konotopskyi",
+    "sumska/sumskyi"
+  ],
+  "sumska/shostkynskyi": [
+    "chernihivska/novhorod-siverskyi",
+    "sumska/konotopskyi"
+  ],
+  "sumska/sumskyi": [
+    "poltavska/myrhorodskyi",
+    "sumska/konotopskyi",
+    "sumska/okhtyrskyi",
+    "sumska/romenskyi"
+  ],
+  "ternopilska/chortkivskyi": [
+    "chernivetska/chernivetskyi",
+    "chernivetska/dnistrovskyi",
+    "ivano-frankivska/ivano-frankivskyi",
+    "ivano-frankivska/kolomyiskyi",
+    "khmelnytska/kamianets-podilskyi",
+    "khmelnytska/khmelnytskyi",
+    "ternopilska/ternopilskyi"
+  ],
+  "ternopilska/kremenetskyi": [
+    "khmelnytska/khmelnytskyi",
+    "khmelnytska/shepetivskyi",
+    "lvivska/zolochivskyi",
+    "rivnenska/dubenskyi",
+    "rivnenska/rivnenskyi",
+    "ternopilska/ternopilskyi"
+  ],
+  "ternopilska/ternopilskyi": [
+    "ivano-frankivska/ivano-frankivskyi",
+    "khmelnytska/khmelnytskyi",
+    "lvivska/lvivskyi",
+    "lvivska/zolochivskyi",
+    "ternopilska/chortkivskyi",
+    "ternopilska/kremenetskyi"
+  ],
+  "vinnytska/haisynskyi": [
+    "cherkaska/umanskyi",
+    "kirovohradska/holovanivskyi",
+    "odeska/podilskyi",
+    "vinnytska/tulchynskyi",
+    "vinnytska/vinnytskyi"
+  ],
+  "vinnytska/khmilnytskyi": [
+    "khmelnytska/khmelnytskyi",
+    "vinnytska/vinnytskyi",
+    "zhytomyrska/berdychivskyi",
+    "zhytomyrska/zhytomyrskyi"
+  ],
+  "vinnytska/mohyliv-podilskyi": [
+    "chernivetska/dnistrovskyi",
+    "khmelnytska/kamianets-podilskyi",
+    "vinnytska/tulchynskyi",
+    "vinnytska/zhmerynskyi"
+  ],
+  "vinnytska/tulchynskyi": [
+    "odeska/podilskyi",
+    "vinnytska/haisynskyi",
+    "vinnytska/mohyliv-podilskyi",
+    "vinnytska/vinnytskyi",
+    "vinnytska/zhmerynskyi"
+  ],
+  "vinnytska/vinnytskyi": [
+    "cherkaska/umanskyi",
+    "khmelnytska/khmelnytskyi",
+    "kyivska/bilotserkivskyi",
+    "vinnytska/haisynskyi",
+    "vinnytska/khmilnytskyi",
+    "vinnytska/tulchynskyi",
+    "vinnytska/zhmerynskyi",
+    "zhytomyrska/berdychivskyi"
+  ],
+  "vinnytska/zhmerynskyi": [
+    "khmelnytska/kamianets-podilskyi",
+    "khmelnytska/khmelnytskyi",
+    "vinnytska/mohyliv-podilskyi",
+    "vinnytska/tulchynskyi",
+    "vinnytska/vinnytskyi"
+  ],
+  "volynska/kamin-kashyrskyi": [
+    "rivnenska/varaskyi",
+    "volynska/kovelskyi",
+    "volynska/lutskyi"
+  ],
+  "volynska/kovelskyi": [
+    "volynska/kamin-kashyrskyi",
+    "volynska/lutskyi",
+    "volynska/volodymyr-volynskyi"
+  ],
+  "volynska/lutskyi": [
+    "lvivska/chervonohradskyi",
+    "lvivska/zolochivskyi",
+    "rivnenska/dubenskyi",
+    "rivnenska/rivnenskyi",
+    "rivnenska/varaskyi",
+    "volynska/kamin-kashyrskyi",
+    "volynska/kovelskyi",
+    "volynska/volodymyr-volynskyi"
+  ],
+  "volynska/volodymyr-volynskyi": [
+    "lvivska/chervonohradskyi",
+    "volynska/kovelskyi",
+    "volynska/lutskyi"
+  ],
+  "zakarpatska/berehivskyi": [
+    "zakarpatska/khustskyi",
+    "zakarpatska/mukachivskyi",
+    "zakarpatska/uzhhorodskyi"
+  ],
+  "zakarpatska/khustskyi": [
+    "ivano-frankivska/kaluskyi",
+    "lvivska/stryiskyi",
+    "zakarpatska/berehivskyi",
+    "zakarpatska/mukachivskyi",
+    "zakarpatska/tiachivskyi"
+  ],
+  "zakarpatska/mukachivskyi": [
+    "lvivska/sambirskyi",
+    "lvivska/stryiskyi",
+    "zakarpatska/berehivskyi",
+    "zakarpatska/khustskyi",
+    "zakarpatska/uzhhorodskyi"
+  ],
+  "zakarpatska/rakhivskyi": [
+    "ivano-frankivska/nadvirnianskyi",
+    "ivano-frankivska/verkhovynskyi",
+    "zakarpatska/tiachivskyi"
+  ],
+  "zakarpatska/tiachivskyi": [
+    "ivano-frankivska/ivano-frankivskyi",
+    "ivano-frankivska/kaluskyi",
+    "ivano-frankivska/nadvirnianskyi",
+    "zakarpatska/khustskyi",
+    "zakarpatska/rakhivskyi"
+  ],
+  "zakarpatska/uzhhorodskyi": [
+    "lvivska/sambirskyi",
+    "zakarpatska/berehivskyi",
+    "zakarpatska/mukachivskyi"
+  ],
+  "zaporizka/berdianskyi": [
+    "donetska/mariupolskyi",
+    "zaporizka/melitopolskyi",
+    "zaporizka/polohivskyi"
+  ],
+  "zaporizka/melitopolskyi": [
+    "khersonska/henicheskyi",
+    "khersonska/kakhovskyi",
+    "zaporizka/berdianskyi",
+    "zaporizka/polohivskyi",
+    "zaporizka/vasylivskyi"
+  ],
+  "zaporizka/polohivskyi": [
+    "dnipropetrovska/synelnykivskyi",
+    "donetska/mariupolskyi",
+    "donetska/volnovaskyi",
+    "zaporizka/berdianskyi",
+    "zaporizka/melitopolskyi",
+    "zaporizka/vasylivskyi",
+    "zaporizka/zaporizkyi"
+  ],
+  "zaporizka/vasylivskyi": [
+    "dnipropetrovska/nikopolskyi",
+    "khersonska/kakhovskyi",
+    "zaporizka/melitopolskyi",
+    "zaporizka/polohivskyi",
+    "zaporizka/zaporizkyi"
+  ],
+  "zaporizka/zaporizkyi": [
+    "dnipropetrovska/dniprovskyi",
+    "dnipropetrovska/nikopolskyi",
+    "dnipropetrovska/synelnykivskyi",
+    "zaporizka/polohivskyi",
+    "zaporizka/vasylivskyi"
+  ],
+  "zhytomyrska/berdychivskyi": [
+    "kyivska/bilotserkivskyi",
+    "vinnytska/khmilnytskyi",
+    "vinnytska/vinnytskyi",
+    "zhytomyrska/zhytomyrskyi"
+  ],
+  "zhytomyrska/korostenskyi": [
+    "kyivska/buchanskyi",
+    "kyivska/vyshhorodskyi",
+    "rivnenska/sarnenskyi",
+    "zhytomyrska/zhytomyrskyi",
+    "zhytomyrska/zviahelskyi"
+  ],
+  "zhytomyrska/zhytomyrskyi": [
+    "khmelnytska/khmelnytskyi",
+    "khmelnytska/shepetivskyi",
+    "kyivska/bilotserkivskyi",
+    "kyivska/buchanskyi",
+    "kyivska/fastivskyi",
+    "vinnytska/khmilnytskyi",
+    "zhytomyrska/berdychivskyi",
+    "zhytomyrska/korostenskyi",
+    "zhytomyrska/zviahelskyi"
+  ],
+  "zhytomyrska/zviahelskyi": [
+    "khmelnytska/shepetivskyi",
+    "rivnenska/rivnenskyi",
+    "rivnenska/sarnenskyi",
+    "zhytomyrska/korostenskyi",
+    "zhytomyrska/zhytomyrskyi"
+  ]
+}
