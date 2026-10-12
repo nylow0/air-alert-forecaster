@@ -10,11 +10,13 @@ VAL_START = datetime(2026, 6, 1, tzinfo=UTC)
 TEST_START = datetime(2026, 8, 1, tzinfo=UTC)
 TEST_END_OFFSET_H = 12
 KYIV_TZ = "Europe/Kyiv"
-# Source outages: [start, end) with no alert events nationwide (4.3 days, found by A1/lead).
+# Source outages: [start, end) with no alert events nationwide. v1 had one (2026-08-29T06:00Z to
+# 2026-09-02T14:00Z in the CSV); v2 filled it from the validated alerts.in.ua day archive
+# (docs/ingest.md), so the list is empty. The mask code stays: a future outage is added here.
 # Rows whose label window (t, t+H] touches a gap, or with t in [start, end + recovery), are
 # excluded from training and scoring; episodes overlapping a gap are excluded from duration work.
-# Recovery equals the longest feature lookback, so no scored row sees a gap-corrupted window.
-DATA_GAPS = (
+DATA_GAPS: tuple[tuple[datetime, datetime], ...] = ()
+V1_DATA_GAPS = (
     (datetime(2026, 8, 29, 6, tzinfo=UTC), datetime(2026, 9, 2, 14, tzinfo=UTC)),
 )
 DATA_GAP_FEATURE_RECOVERY_H = 168  # longest feature lookback (f_starts_168h)
@@ -60,3 +62,23 @@ OFFICIAL_CSV_URL = (
     "ukrainian-air-raid-sirens-dataset/main/datasets/official_data_en.csv"
 )
 RAW_CSV_TEMPLATE = "official_data_en_{date}.csv"
+
+# v2 keeps the previously scored period in validation and reserves a new test.
+V2_TRAIN_START = TRAIN_START
+V2_VAL_START = datetime(2026, 8, 1, tzinfo=UTC)
+V2_TEST_START = datetime(2026, 9, 8, tzinfo=UTC)
+V2_TEST_END_OFFSET_H = 12
+V2_CALIBRATION_WEEKS = 6
+V2_BOOTSTRAP_SAMPLES = 2000
+V2_BOOTSTRAP_SEED = 20261012
+V2_FEATURES_DIR = FEATURES_DIR / "v2"
+V2_PREDS_DIR = PREDS_DIR / "v2"
+V2_REPORTS_DIR = REPORTS_DIR / "v2"
+V2_METRICS_DIR = V2_REPORTS_DIR / "metrics"
+V2_METRICS_PATH = V2_REPORTS_DIR / "metrics.json"
+V2_SELECTION_PATH = V2_REPORTS_DIR / "selection.json"
+V2_ARTIFACTS_DIR = ARTIFACTS_DIR / "v2"
+V2_PRODUCTION_DIR = ARTIFACTS_DIR / "production"
+V2_FORECASTS_DIR = V2_PREDS_DIR / "issued"
+V2_STATIC_FEATURES_PATH = GEO_DIR / "static_features.csv"
+V2_LIVE_OBSERVATIONS_DIR = DATA_DIR / "live" / "observations"

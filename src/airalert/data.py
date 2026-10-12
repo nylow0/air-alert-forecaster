@@ -12,6 +12,8 @@ import numpy as np
 import pandas as pd
 
 from airalert.config import (
+    DATA_DIR,
+    DATA_GAPS,
     EPISODES_PATH,
     EXCLUDED_OBLASTS,
     MERGE_GAP_MIN,
@@ -30,7 +32,7 @@ from airalert.ids import raion_id as make_raion_id
 
 @dataclass(frozen=True)
 class Snapshot:
-    """CSV provenance and UTC timestamps; regime_switch is midnight on its date."""
+    """CSV base provenance and snapshot UTC clock; regime_switch is UTC midnight."""
 
     snapshot: pd.Timestamp
     csv_sha256: str
@@ -148,7 +150,8 @@ def expand_records(source: pd.DataFrame, raions: pd.DataFrame) -> pd.DataFrame:
     uncovered = set(raw.oblast_id).difference(universe.oblast_id)
     if uncovered:
         raise ValueError(f"Source oblasts absent from the universe: {sorted(uncovered)}")
-    columns = ["raion_id", "oblast_id", "level", "started_at", "finished_at"]
+    raw["severity"], raw["source"] = "unknown", "csv"
+    columns = ["raion_id", "oblast_id", "level", "started_at", "finished_at", "severity", "source"]
     oblasts = raw.loc[raw.level.eq("oblast")].merge(
         universe[["raion_id", "oblast_id"]], on="oblast_id", how="left", validate="many_to_many"
     )
@@ -246,7 +249,12 @@ def detect_regime_switch(source: pd.DataFrame) -> pd.Timestamp:
 
 
 def build_episodes() -> None:
-    """Rebuild A1 artifacts from the newest dated CSV, never from prior outputs."""
+    """Rebuild CSV artifacts, or the validated v2 partitions when a ledger exists."""
+    if (DATA_DIR / "live/ledger.json").exists():
+        from airalert.ingest import rebuild
+
+        rebuild()
+        return
     began = perf_counter()
     candidates = sorted(RAW_DIR.glob("official_data_en_*.csv"))
     if not candidates:
@@ -279,6 +287,18 @@ def build_episodes() -> None:
             "snapshot": snapshot.isoformat().replace("+00:00", "Z"),
             "csv_sha256": digest,
             "regime_switch": switch.date().isoformat(),
+            "sources": ["csv"],
+            "cutover": None,
+            "coverage": {
+                "csv_through": max(source.started_at.max(), source.finished_at.max())
+                .isoformat().replace("+00:00", "Z"),
+                "gaps": [
+                    {"start": start.isoformat().replace("+00:00", "Z"),
+                     "end": end.isoformat().replace("+00:00", "Z")}
+                    for start, end in DATA_GAPS
+                ],
+                "archive_gate_passed": False,
+            },
         }, indent=2) + "\n",
         encoding="utf-8",
     )
@@ -297,8 +317,10 @@ def build_episodes() -> None:
 def load_records() -> pd.DataFrame:
     """Raw coverage sorted by raion/start; UTC us starts, nullable UTC us ends.
 
-    Source duplicates remain. Before computing features at t, retain starts < t
-    and mask ends > t to null. No merge-gap closure is applied to these records.
+    CSV duplicates remain. Archive origins are upserted, then their same-raion
+    starts inside 120s are collapsed under the lead's cutover policy. For
+    features at t, retain starts < t and mask ends > t to null. Episode
+    merge-gap closure is never used to build this feature input.
     """
     result = pd.read_parquet(RECORDS_PATH)
     for column in ("started_at", "finished_at"):
