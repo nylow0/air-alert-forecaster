@@ -18,6 +18,8 @@ uv run airalert serve
 
 Setup fetches the CSV, validates the twelve reviewed overlap days, adopts the committed August 29 cutover, and reconciles complete Kyiv days through yesterday. It uses the committed geography, so Python setup needs neither Bun nor mapshaper. The source gate must pass for the downloaded CSV; failures stop setup and leave a resumable checkpoint.
 
+The [fresh-clone audit](docs/audit-v2.md#5-literal-fresh-clone-quickstart) completed setup in 524.08 seconds, about nine minutes. Download and fitting times depend on the network and machine.
+
 Production onset fits rebuild the per-horizon configuration in [selection.json](reports/v2/selection.json), including its fixed rounds, training window, geography and chronological calibration. Duration uses the same D2 refit as nightly maintenance, with earlier interval fitting and a separate calibration tail. Setup needs no evaluation artifacts, never selects models or scores test2, and writes nothing under `reports/v2/`.
 
 Each step prints its time. Repeating `uv run airalert setup` skips completed steps when their inputs and outputs still agree. `uv run airalert setup --force` repeats the steps; source caches, the accepted ledger and immutable issued hours are preserved. Stop the backend before setup or manual maintenance. Progress is saved in git-ignored `data/live/setup.json`.
@@ -74,7 +76,7 @@ The midnight scheduler handles Kyiv daylight-saving changes. Long jobs and upstr
 
 ### News agent
 
-News is off by default. Install the [Codex CLI](https://learn.chatgpt.com/docs/codex/cli), make `codex` available on PATH to the backend, and use **Login with ChatGPT** in Settings. Run the backend under the same OS account as that CLI login. Codex owns the browser flow, credential storage and refresh; the app never reads the credential cache. [Official authentication documentation](https://learn.chatgpt.com/docs/auth) explains the login.
+News is off by default. It requires the [Codex CLI](https://learn.chatgpt.com/docs/codex/cli) installed and signed in with ChatGPT. Make `codex` available on PATH to the backend. Settings → **Login with ChatGPT** runs `codex login`; Codex handles the browser flow, credential storage and refresh. The app never sees your password or tokens and never reads the credential cache. Run the backend under the same OS account as that CLI login. [Official authentication documentation](https://learn.chatgpt.com/docs/auth) explains the login.
 
 Enable news deliberately in Settings after checking the source terms. Both selected models and reasoning efforts must be available to the signed-in account. Calls share that account's usage allowance. An unavailable model, quota limit or invalid output leaves the base forecast available.
 
@@ -98,7 +100,7 @@ Test2 runs from September 8 through October 11, 2026, with 95,438 rows per horiz
 
 Duration improved but remains under its nominal 80% coverage. D1c onset coverage is 77.26% on test2; D2 remaining-time coverage at eight elapsed hours is 70.23%. These values come from [duration_scores.json](reports/v2/duration_scores.json); [duration notes](docs/duration-v2.md) explain the comparison.
 
-V1 is a frozen earlier evaluation in [docs/report.md](docs/report.md) and [reports/metrics.json](reports/metrics.json). Its numbers are unchanged. Different periods, sources and targets prevent attributing the v2 gain to a single change. The production refit and news overlay need prospective evaluation; the published [rolling track record](reports/v2/track_record.json) currently has no matured eligible scores.
+V1 is a frozen earlier evaluation in [docs/report.md](docs/report.md) and [reports/metrics.json](reports/metrics.json). Its numbers are unchanged. Different periods, sources and targets prevent attributing the v2 gain to a single change. The production refit and news overlay need prospective evaluation. The server writes the rolling live track record nightly to git-ignored `reports/v2/track_record.json`. Once that runtime file exists, its scores appear in the report page's notes.
 
 ## Sources, licenses and terms
 

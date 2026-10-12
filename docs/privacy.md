@@ -12,6 +12,7 @@ Keep credentials, machine-specific state and unreviewed downloaded content out o
 | `data/settings.local.json`, `settings.local.json` | Machine-local news choices and settings. Defaults leave news off. |
 | `.env`, `.env.*`, with `!.env.example` | Optional provider credentials. Only the empty template belongs in git. |
 | `artifacts/` | Fitted models, calibrators and production generations. A reviewed release bundle needs a separate distribution decision; git ignores these files. |
+| `reports/v2/track_record.json` | Rolling live scores written by the server's nightly job. This is git-ignored runtime state; once written, its scores appear in the report page's notes. |
 | `*.session`, `secrets/`, `credentials*`, `auth.json`, `*.pem`, `*.key` | Session files, credential exports and private keys. Do not copy Codex credentials into this project. |
 | `.lead/`, `docs/current-state.md` | Local coordination files and the machine-specific inventory. They can contain paths, process details or transient logs. |
 | `.venv/`, `__pycache__/`, Ruff/pytest caches, `web/node_modules/`, `web/dist/`, `web/test-results/`, `web/playwright-report/` | Environment, build and test output. Review any screenshot or log separately before sharing it. |
@@ -20,7 +21,7 @@ Committed reports and geography are public artifacts. Check their contents and s
 
 ## ChatGPT login and optional news
 
-The app invokes the installed Codex CLI. **Login with ChatGPT** starts one app-owned CLI login process; Codex opens the browser flow, handles the callback, stores credentials and refreshes them. The backend runs under the same OS account. The app checks CLI status and model availability without opening, copying or logging the credential cache. It does not accept a ChatGPT password. [Official authentication documentation](https://learn.chatgpt.com/docs/auth), [app implementation](../src/airalert/news/auth.py)
+Optional news requires the Codex CLI installed and signed in with ChatGPT. Settings → **Login with ChatGPT** starts one app-owned `codex login` process; Codex opens the browser flow, handles the callback, stores credentials and refreshes them. The backend runs under the same OS account. The app checks CLI status and model availability without opening, copying or logging the credential cache. The app never sees your password or tokens. [Official authentication documentation](https://learn.chatgpt.com/docs/auth), [app implementation](../src/airalert/news/auth.py)
 
 Canceling login stops that app-owned login process. Turning news off stops news processing and does not sign out of Codex. Explicit logout affects other Codex use sharing that login on the machine. Login URLs and child stderr are not forwarded to the browser or saved in application logs. [News authentication](news.md#codex-safety-model)
 
@@ -69,7 +70,7 @@ A rejection exits nonzero and prints the affected path and pattern category. Rev
 4. Review author and committer identities with `git log --format='%an <%ae> | %cn <%ce>'`. Commit metadata can publish a personal email even when every staged file passes. Check the configured identity with `git var GIT_AUTHOR_IDENT` and `git var GIT_COMMITTER_IDENT` before the next commit. Keep this output private.
 5. Review existing history for credential or personal-data exposure; the hook checks only the next staged content. Revoke any exposed credential promptly and coordinate history remediation with the owner.
 6. Check screenshots, copied command output, examples and links for private values. Use repository-relative paths in committed instructions.
-7. Preserve source notices and attribution. Check the optional news terms and the [fresh-clone release blocker](../README.md#prepare-models-and-serving-artifacts) before presenting the repository as ready to run.
+7. Preserve source notices and attribution. Check the optional news terms and the [fresh-clone Quickstart](../README.md#quickstart-from-a-fresh-clone) before publishing run instructions.
 
 [Operations](operations.md) covers the service lifecycle. The [README](../README.md) documents optional features, source terms and the safety disclaimer.
 
@@ -77,14 +78,44 @@ A rejection exits nonzero and prints the affected path and pattern category. Rev
 
 **Delivered.** [README.md](../README.md), the short v2 pointer in [report.md](report.md), [overview-v2.md](overview-v2.md), [.env.example](../.env.example), and this privacy guide. Only these assigned files were edited. No commit was made.
 
-**Verified.** Fifteen CLI/module help checks returned exit 0, including the ingest validation/cutover options, v2 evaluation modules, duration production mode, production actions and serving. Bun's install/run interfaces and every documented package script exist. The mapshaper cache command matches the geography implementation. Headline BSS, intervals and duration coverage match the v2 JSON. Removing the pointer restores the original v1 report SHA256 byte for byte. All five working files have zero matches against the guard's exact patterns; the staged guard exits 0 with an empty index. Scoped `git diff --check` exits 0. Local file links and Markdown heading anchors pass except the expected pending operations guide. The documented private paths are ignored; the env template and geography are allowed.
+**Verified.** Fifteen CLI/module help checks returned exit 0, including the ingest validation/cutover options, v2 evaluation modules, duration production mode, production actions and serving. Bun's install/run interfaces and every documented package script exist. The mapshaper cache command matches the geography implementation. Headline BSS, intervals and duration coverage match the v2 JSON. Removing the pointer restores the original v1 report SHA256 byte for byte. All five working files have zero matches against the guard's exact patterns; the staged guard exits 0 with an empty index. Scoped `git diff --check` exits 0. Local file links and Markdown heading anchors were checked; the operations guide was pending at that delivery and is now available. The documented private paths are ignored; the env template and geography are allowed.
 
-**Decisions/assumptions.** Report served combined probabilities, retain all v1 numbers, and use portable instructions. The lead chose to document the fresh-clone blocker. Model builds, external login and the installed UI were not rerun for this documentation task.
+**Decisions/assumptions.** Report served combined probabilities, retain all v1 numbers, and use portable instructions. The initial delivery documented the then-current fresh-clone blocker; the bootstrap entrypoint now resolves it. Model builds, external login and the installed UI were not rerun for that documentation task.
 
-**Open issues.** A fresh clone cannot complete model setup: the committed test2 claim blocks onset training, while production and replay need ignored evaluation artifacts. Calling `train_v2()` directly confirmed rejection before writes with `Final test2 was claimed; v2 selection and evaluation models are frozen`. The operations guide is being written separately; its links were intentionally added without depending on its content.
+**Open issues.** The earlier fresh-clone setup blocker and pending operations guide are resolved. Use `uv sync` → `uv run airalert setup` → `uv run airalert serve`, then start the dashboard as the [Quickstart](../README.md#quickstart-from-a-fresh-clone) describes. The [independent v2 audit](audit-v2.md#5-literal-fresh-clone-quickstart) completed setup in 524.08 seconds, about nine minutes, without copying ignored evaluation artifacts into the clone. This resolves the setup blocker; other findings remain recorded in that audit.
 
-**Contract change requests.** Before promising a runnable fresh clone, supply a reviewed artifact bundle or a bootstrap entrypoint that preserves the frozen test2 claim, scores and selection. No contract file was edited by D3.
+**Contract change requests.** The requested bootstrap entrypoint is implemented and preserves frozen evaluation. No outstanding setup contract change is needed. No contract file was edited by D3.
 
 **Dependencies added.** None.
 
-**README commands not verified against code.** None of the documented entrypoints or options is invented. Verification checked dispatch, help and package scripts, not a full install/build/serve workflow. The fresh-clone sequence remains blocked as described above.
+**README commands not verified against code.** None of the documented entrypoints or options is invented. The original D3 verification checked dispatch, help and package scripts. The later independent v2 audit verified the fresh-clone setup and serving workflow.
+
+## Y3 docs fixes, AGENTS.md rule 9 report
+
+**Delivered.** `README.md`, `docs/privacy.md`, `docs/overview-v2.md` and `docs/audit.md`. Corrected V2-08's setup and runtime-report descriptions, clarified the news login requirement, and removed V2-10's process identifiers and the audit's absolute repository path. No commit was made.
+
+**Verified.** Read `cli.py` and `setup.py`. Disposable checks run with `uv run --no-sync python -` returned:
+
+- `PASS: 18 documented airalert invocations match cli.py; Quickstart exact`. Each invocation's help returned exit 0. The README's first command block is exactly `uv sync`, `uv run airalert setup`, `uv run airalert serve`.
+- Six `uv run --no-sync python -m <module> <documented arguments> --help` checks returned exit 0: ingest validation and cutover backfill, production refit and forecast, duration production mode, and static geography. The documented `build_v2` callable, Python scripts and five Bun package scripts also exist.
+- The ten-line relative-link check returned `{"checked": 117, "unique_targets": 77, "broken": []}`. It checks tracked destinations and Markdown heading anchors, so a locally present ignored file cannot pass as a repository artifact.
+- `PASS: 4 files scanned; 0 PIDs, absolute machine/home paths or machine identifiers`. Public source domains and standard loopback addresses were retained.
+- `git check-ignore -v reports/v2/track_record.json` matched `.gitignore`'s `reports/v2/track_record.json` rule. Scoped `git diff --check -- README.md docs/privacy.md docs/overview-v2.md docs/audit.md` returned exit 0 with no output. Final `git diff --stat` lists only the four delivered files, with `4 files changed, 50 insertions(+), 17 deletions(-)`.
+
+The broken references found and corrected were:
+
+| Source | Old relative target | Correction |
+|---|---|---|
+| `README.md` | `reports/v2/track_record.json` | Removed the link; describe nightly runtime state and report-page notes. |
+| `docs/privacy.md` | `../README.md#prepare-models-and-serving-artifacts` | Point to `../README.md#quickstart-from-a-fresh-clone`. |
+| `docs/overview-v2.md`, ignored data/models row | `../README.md#prepare-models-and-serving-artifacts` | Point to the current Quickstart and setup audit. |
+| `docs/overview-v2.md`, legacy backtest row | `../README.md#prepare-models-and-serving-artifacts` | Point to the current Quickstart. |
+| `docs/overview-v2.md` | `../reports/v2/track_record.json` | Removed the link; describe nightly runtime state and report-page notes. |
+
+**Decisions/assumptions.** The independent v2 audit supplies the 524.08-second setup evidence. This documentation task checked commands and links without rerunning setup, model fitting, enabled-news login or the UI workflow. The v1 audit's measurements and shutdown meaning remain unchanged.
+
+**Open issues.** Historical copies of the removed machine details remain for the lead's history remediation. The shared worktree contained unrelated edits at entry; those were left to their owners. Y3 edited only its four owned documents.
+
+**Contract change requests.** None.
+
+**Dependencies added.** None.
