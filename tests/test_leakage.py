@@ -170,3 +170,22 @@ def test_checker_rejects_planted_future_end_leak() -> None:
 
     with pytest.raises(AssertionError, match="As-of mismatch in f_leak"):
         _check_at(leaky, records, t)
+
+
+def test_archive_flag_and_optional_geography_obey_record_prefix() -> None:
+    records, context, t = _synthetic()
+    records["source"] = "csv"
+    records.loc[records.started_at.ge(t), "source"] = "aiu_web"
+    records.loc[(records.raion_id == "a") & records.started_at.lt(t), "source"] = "aiu_web"
+    context = FeatureContext(context.raions, context.adjacency, context.centroids,
+                             context.regime_switch, pd.DataFrame({
+                                 "raion_id": ["a", "b", "c"], "border_km": [2., 5., 8.]}))
+
+    def builder(frame: pd.DataFrame, times: pd.DatetimeIndex) -> pd.DataFrame:
+        return build_features(frame, times, context=context)
+
+    for clock in (t, t + pd.Timedelta(microseconds=1)):
+        _check_at(builder, records, clock)
+    features = builder(records, pd.DatetimeIndex([t])).set_index("raion_id")
+    assert features.f_source_archive.to_dict() == {"a": 1., "b": 0., "c": 0.}
+    assert features.f_geo_border_km.to_dict() == {"a": 2., "b": 5., "c": 8.}

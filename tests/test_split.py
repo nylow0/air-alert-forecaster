@@ -9,8 +9,110 @@ import pytest
 
 from airalert import backtest, config, metrics
 from airalert.data import Snapshot
-from airalert.models import baseline, duration
+from airalert.models import baseline, duration, onset
 from airalert.schemas import Report, Selection
+
+
+@pytest.mark.parametrize("horizon", config.HORIZONS)
+def test_v2_split_embargo_full_kyiv_day_and_final_gate(horizon: int) -> None:
+    val, test = pd.Timestamp(config.V2_VAL_START), pd.Timestamp(config.V2_TEST_START)
+    snapshot = pd.Timestamp("2026-10-12T13:00:00Z")
+    end = backtest.v2_test_end(snapshot)
+    assert end == pd.Timestamp("2026-10-11T09:00:00Z")
+    delta = pd.Timedelta(hours=horizon)
+    rows = _frame([val - delta, val - delta + pd.Timedelta(minutes=1), val,
+                   test - delta, test - delta + pd.Timedelta(minutes=1), test,
+                   end, end + pd.Timedelta(hours=1), snapshot])
+    assert backtest.v2_assign_split(rows.t, snapshot=snapshot).tolist() == [
+        "train", "train", "val", "val", "val", "test2", "test2", "none", "latest"]
+    assert backtest.v2_eligible_mask(rows, horizon, "train", snapshot=snapshot).tolist() == [
+        True, False, False, False, False, False, False, False, False]
+    expected = [False, False, True, True, False, False, False, False, False]
+    # The unchanged outage/recovery excludes the validation seam in September.
+    actual = backtest.v2_eligible_mask(rows, horizon, "val", snapshot=snapshot)
+    assert actual.equals(pd.Series(expected) & backtest.data_gap_mask(rows, horizon))
+    with pytest.raises(ValueError, match="final=True"):
+        backtest.v2_eligible_mask(rows, horizon, "test2", snapshot=snapshot)
+    test_rows = backtest.v2_eligible_mask(rows, horizon, "test2", snapshot=snapshot, final=True)
+    assert test_rows.iloc[6] and not test_rows.iloc[7]
+
+
+def test_monotone_projection_and_paired_day_bootstrap() -> None:
+    probabilities = np.array([[0.7, 0.2, 0.6], [0.1, 0.4, 0.3]])
+    served = metrics.monotone_projection(probabilities)
+    np.testing.assert_array_equal(served, [[0.7, 0.7, 0.7], [0.1, 0.4, 0.4]])
+    np.testing.assert_array_equal(metrics.monotone_projection(served), served)
+    with pytest.raises(ValueError, match="finite"):
+        metrics.monotone_projection([[0.2, np.nan, 0.5]])
+    frame = pd.DataFrame({"t": pd.to_datetime(["2026-10-01T20:00Z", "2026-10-01T22:00Z",
+                                               "2026-10-02T01:00Z"], utc=True),
+                          "y_3": [0, 1, 0], "p_3": [0.2, 0.8, 0.2],
+                          "b0_3": [0.4, 0.6, 0.4]})
+    interval = metrics.day_block_bss(frame, 3, samples=100)
+    assert interval["days"] == 2
+    assert interval["low"] == pytest.approx(0.75)
+    assert interval["high"] == pytest.approx(0.75)
+
+
+def test_v2_selection_keeps_test_closed_and_final_claim_cannot_repeat(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    for name, child in (("V2_FEATURES_DIR", "features"), ("V2_PREDS_DIR", "preds"),
+                        ("V2_REPORTS_DIR", "reports"), ("V2_METRICS_DIR", "reports/metrics"),
+                        ("V2_ARTIFACTS_DIR", "artifacts")):
+        directory = tmp_path / child
+        directory.mkdir(parents=True, exist_ok=True)
+        monkeypatch.setattr(config, name, directory)
+    monkeypatch.setattr(config, "V2_SELECTION_PATH", config.V2_REPORTS_DIR / "selection.json")
+    monkeypatch.setattr(config, "V2_METRICS_PATH", config.V2_REPORTS_DIR / "metrics.json")
+    monkeypatch.setattr(config, "DATA_GAPS", ())
+    monkeypatch.setattr(config, "SNAPSHOT_PATH", tmp_path / "absent-snapshot.json")
+    saved = Snapshot(pd.Timestamp("2026-10-12T00:00Z"), "test",
+                     pd.Timestamp("2025-08-14T00:00Z"))
+    monkeypatch.setattr(backtest, "load_snapshot", lambda: saved)
+    monkeypatch.setattr(onset, "load_snapshot", lambda: saved)
+    outputs: dict[str, pd.DataFrame] = {}
+    for split, start in (("val", pd.Timestamp(config.V2_VAL_START)),
+                         ("test2", pd.Timestamp("2026-09-10T00:00Z")),
+                         ("latest", saved.snapshot)):
+        rows = _frame([start, start + pd.Timedelta(hours=1)])
+        rows = rows.assign(raion_id="o/r", oblast_id="o", f_active=[0., 1.],
+                           f_source_archive=[0., 1.], f_starts_24h=1., f_starts_168h=4.)
+        for horizon in config.HORIZONS:
+            rows[f"y_{horizon}"] = [0, 1]
+        if split != "latest":
+            rows.to_parquet(config.V2_FEATURES_DIR / f"{split}.parquet", index=False)
+        outputs[split] = rows if split == "val" else rows[["t", "raion_id"]]
+    for identity, probabilities in (("B0-raw", [0.3, 0.7]), ("B1-cal", [0.1, 0.9])):
+        frames = []
+        for split, rows in outputs.items():
+            predicted = rows[["t", "raion_id"]].assign(split=split)
+            for horizon in config.HORIZONS:
+                predicted[f"p_{horizon}"] = probabilities
+            frames.append(predicted)
+        pd.concat(frames).to_parquet(config.V2_PREDS_DIR / f"onset_{identity}.parquet", index=False)
+    details = {identity: {str(h): {"window": "full", "k": 1.}
+                           for h in config.HORIZONS} for identity in ("B0", "B1")}
+    real_read = pd.read_parquet
+
+    def guard(path: Path, *args: object, **kwargs: object) -> pd.DataFrame:
+        assert Path(path) != config.V2_FEATURES_DIR / "test2.parquet"
+        return real_read(path, *args, **kwargs)
+
+    monkeypatch.setattr(pd, "read_parquet", guard)
+    selection = onset.select_v2(details, outputs, elapsed_seconds=0.)
+    backtest.run_v2()
+    assert all(value["candidate"] == "B1-cal" for value in selection["horizons"].values())
+    before = config.V2_SELECTION_PATH.read_bytes()
+    monkeypatch.setattr(pd, "read_parquet", real_read)
+    report = backtest.run_v2(final=True)
+    assert len([s for s in report.onset if s.model == "selected" and s.split == "test"])
+    assert config.V2_SELECTION_PATH.read_bytes() == before
+    assert (config.V2_REPORTS_DIR / "bootstrap.json").exists()
+    with pytest.raises(RuntimeError, match="already claimed"):
+        backtest.run_v2(final=True)
+    with pytest.raises(RuntimeError, match="cannot change"):
+        onset.select_v2(details, outputs, elapsed_seconds=0.)
 
 
 def _frame(times: list[pd.Timestamp]) -> pd.DataFrame:

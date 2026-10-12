@@ -2,6 +2,7 @@
 
 Each horizon independently chooses its training window and pseudo-count. Test
 labels are never loaded: held-out and latest files supply prediction keys only.
+The v2 helper chooses its window and shrinkage inside the training period.
 """
 
 import json
@@ -77,6 +78,29 @@ def predict_rates(rows: pd.DataFrame, fitted: Climatology, k: float) -> np.ndarr
     prediction = prior.copy()
     np.divide(positives + k * prior, denominator, out=prediction, where=denominator > 0)
     return prediction
+
+
+def tune_v2(
+    training: pd.DataFrame, horizon: int, cutoff: pd.Timestamp, regime: pd.Timestamp,
+) -> tuple[str, float]:
+    """Choose B0 window/shrinkage inside training, before the calibration tail."""
+    seam = cutoff - pd.Timedelta(weeks=8)
+    matured = (training.t + pd.Timedelta(hours=horizon)).le(cutoff)
+    from airalert.backtest import v2_data_gap_mask
+
+    eligible = matured & training[f"y_{horizon}"].notna() & v2_data_gap_mask(training, horizon)
+    holdout = _calendar(training.loc[eligible & training.t.ge(seam)])
+    best: tuple[float, str, float] | None = None
+    for window, lower in (("full", pd.Timestamp(config.V2_TRAIN_START)), ("raionregime", regime)):
+        fit_rows = training.loc[eligible & training.t.ge(lower)
+                                & (training.t + pd.Timedelta(hours=horizon)).le(seam)]
+        fitted = fit_rates(_calendar(fit_rows), horizon)
+        for k in PSEUDO_COUNTS:
+            score = metrics.brier_score(holdout[f"y_{horizon}"], predict_rates(holdout, fitted, k))
+            if best is None or score < best[0]:
+                best = score, window, k
+    assert best is not None
+    return best[1], best[2]
 
 
 def _read_features(split: str, *, labels: bool) -> pd.DataFrame:

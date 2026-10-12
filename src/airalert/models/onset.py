@@ -1,8 +1,7 @@
 """Train onset models without using validation for fitting or early stopping.
 
-Validation probabilities use opposite-month isotonic fits. Seam-embargo hours
-retain raw probabilities so every forecast key exists without overlapping
-calibration labels. Test/latest use an isotonic fit on all eligible validation.
+Calibration always moves forward in time. v2 validation uses a saved train-tail
+fit, and untouched test2 uses a separate saved validation fit.
 """
 
 import hashlib
@@ -10,7 +9,7 @@ import json
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
-from time import perf_counter
+from time import perf_counter, sleep
 
 import joblib
 import lightgbm as lgb
@@ -25,7 +24,16 @@ from sklearn.preprocessing import StandardScaler
 from threadpoolctl import threadpool_limits
 
 from airalert import config, metrics
-from airalert.backtest import assign_split, scorable_mask, trainable_mask
+from airalert.backtest import (
+    assign_split,
+    scorable_mask,
+    trainable_mask,
+    v2_data_gap_mask,
+    v2_data_gaps,
+    v2_eligible_mask,
+    v2_prediction_hashes,
+    write_v2_json,
+)
 from airalert.data import load_raions, load_snapshot
 
 LOGISTIC_FEATURES = (
@@ -80,7 +88,7 @@ def training_masks(
 def calibration_masks(
     frame: pd.DataFrame, horizon: int, *, snapshot: pd.Timestamp | None = None,
 ) -> tuple[pd.Series, pd.Series, pd.Series]:
-    """Use June/July folds; neither calibration fit includes the seam embargo."""
+    """First-month fit and second-month application; exclude seam-crossing labels."""
     seam = pd.Timestamp(config.VAL_START) + pd.DateOffset(months=1)
     eligible = scorable_mask(frame, horizon, snapshot=snapshot)
     first = eligible & (frame.t + pd.Timedelta(hours=horizon)).le(seam)
@@ -91,26 +99,26 @@ def calibration_masks(
 
 def calibrate(
     validation: pd.DataFrame, raw: NDArray[np.float64], horizon: int,
-    *, snapshot: pd.Timestamp | None = None,
+    *, snapshot: pd.Timestamp | None = None, artifact_dir: Path | None = None,
 ) -> tuple[NDArray[np.float64], IsotonicRegression, dict[str, object]]:
-    """Cross-fit reported validation and fit a separate serving calibrator."""
+    """Forward-fit legacy validation; the first month retains raw probabilities."""
     first, second, seam_rows = calibration_masks(validation, horizon, snapshot=snapshot)
     if not first.any() or not second.any():
         raise ValueError("Isotonic calibration needs eligible rows in both validation months")
     labels = validation[f"y_{horizon}"].to_numpy(dtype=float, na_value=np.nan)
     first_fit = IsotonicRegression(out_of_bounds="clip").fit(raw[first], labels[first])
-    second_fit = IsotonicRegression(out_of_bounds="clip").fit(raw[second], labels[second])
     seam = pd.Timestamp(config.VAL_START) + pd.DateOffset(months=1)
     cross_fitted = raw.copy()
     apply_first = validation.t.ge(seam).to_numpy()
-    apply_second = (validation.t.lt(seam) & ~seam_rows).to_numpy()
     cross_fitted[apply_first] = first_fit.predict(raw[apply_first])
-    cross_fitted[apply_second] = second_fit.predict(raw[apply_second])
     eligible = scorable_mask(validation, horizon, snapshot=snapshot).to_numpy()
     serving = IsotonicRegression(out_of_bounds="clip").fit(raw[eligible], labels[eligible])
+    if artifact_dir is not None:
+        joblib.dump(first_fit, artifact_dir / f"calibrator_forward_{horizon}h.joblib")
+        joblib.dump(serving, artifact_dir / f"calibrator_{horizon}h.joblib")
     details: dict[str, object] = {
         "seam": seam.isoformat(), "first_fit_n": int(first.sum()),
-        "second_fit_n": int(second.sum()), "raw_seam_n": int(seam_rows.sum()),
+        "raw_first_n": int((~apply_first).sum()), "raw_seam_n": int(seam_rows.sum()),
         "serving_fit_n": int(eligible.sum()),
         "raw_val_brier": metrics.brier_score(labels[eligible], raw[eligible]),
         "cross_fitted_val_brier": metrics.brier_score(labels[eligible], cross_fitted[eligible]),
@@ -266,7 +274,7 @@ def _fit_window(
                 raw = {split: logistic.predict_proba(values)[:, 1]
                        for split, values in output_matrices.items()}
         cross_fitted, calibrator, calibration = calibrate(
-            validation, raw["val"], horizon, snapshot=snapshot,
+            validation, raw["val"], horizon, snapshot=snapshot, artifact_dir=artifact_dir,
         )
         raw_brier = float(calibration["raw_val_brier"])
         calibrated_brier = float(calibration["cross_fitted_val_brier"])
@@ -395,7 +403,7 @@ def train(model_id: str) -> None:
             pd.Timestamp(config.VAL_START) - pd.Timedelta(weeks=INNER_WEEKS)
         ).isoformat(), "max_rounds": MAX_ROUNDS, "early_stopping_rounds": EARLY_STOPPING_ROUNDS,
         "refit": "all trainable rows in the window at the inner-holdout iteration count",
-        "calibration": "opposite-month isotonic on val; raw seam embargo; all-val for serving",
+        "calibration": "forward-month isotonic; first month raw; all-val for serving",
         "selection": "sum of per-horizon validation Brier ranks; H=3 breaks ties",
     }
     results = [_fit_window(model_id, window, training, outputs, feature_names, provenance,
@@ -430,3 +438,366 @@ def train(model_id: str) -> None:
         _draw_importance(served_dir)
     print(f"{model_id} selected window={winner.window}; comparisons={comparison}; "
           f"{perf_counter() - began:.2f}s", flush=True)
+
+
+@dataclass
+class HorizonModel:
+    """The complete prediction contract for one selected horizon, saved by joblib."""
+
+    kind: str
+    fitted: object
+    features: list[str]
+    categories: dict[str, list[str]]
+    window: str
+    k: float = 0.0
+    rounds: int = 0
+
+    def __reduce__(self) -> tuple[object, tuple[object, ...]]:
+        """CLI-created bundles must reference the importable class used by the server."""
+        from airalert.models.onset import HorizonModel as PersistedHorizonModel
+
+        return PersistedHorizonModel, (self.kind, self.fitted, self.features, self.categories,
+                                       self.window, self.k, self.rounds)
+
+
+def predict_horizon(model: HorizonModel, frame: pd.DataFrame) -> NDArray[np.float64]:
+    from airalert.models import baseline
+
+    if model.kind == "B0":
+        if not isinstance(model.fitted, baseline.Climatology):
+            raise TypeError("B0 artifact must contain climatology statistics")
+        return baseline.predict_rates(baseline._calendar(frame), model.fitted, model.k)
+    if model.kind == "B1":
+        if not isinstance(model.fitted, Pipeline):
+            raise TypeError("B1 artifact must contain a fitted pipeline")
+        matrix = logistic_matrix(frame, full_history=model.window == "full")
+        with threadpool_limits(limits=4):
+            return model.fitted.predict_proba(matrix)[:, 1]
+    if not isinstance(model.fitted, lgb.Booster):
+        raise TypeError("M1 artifact must contain a LightGBM booster")
+    matrix = frame[[*model.features, "raion_id", "oblast_id"]].copy()
+    for column, categories in model.categories.items():
+        matrix[column] = pd.Categorical(matrix[column], categories=categories)
+        if matrix[column].isna().any():
+            raise ValueError(f"Unknown {column} during inference")
+    return model.fitted.predict(matrix, num_threads=4)
+
+
+def fit_horizon(
+    kind: str, frame: pd.DataFrame, horizon: int, cutoff: pd.Timestamp,
+    *, window: str, feature_names: list[str], categories: dict[str, list[str]],
+    regime: pd.Timestamp, k: float = 0.0, rounds: int = 0,
+) -> HorizonModel:
+    """Fit on matured pre-cutoff rows; choose iterations only on an inner holdout."""
+    from airalert.models import baseline
+
+    mask = (frame.t + pd.Timedelta(hours=horizon)).le(cutoff) & frame.t.lt(cutoff)
+    mask &= frame[f"y_{horizon}"].notna() & v2_data_gap_mask(frame, horizon)
+    mask &= frame.t.ge(regime if window == "raionregime" else config.V2_TRAIN_START)
+    if not mask.any():
+        raise ValueError("No matured rows available for fitting")
+    if kind == "B0":
+        columns = ["t", "raion_id", "oblast_id", f"y_{horizon}"]
+        fitted = baseline.fit_rates(baseline._calendar(frame.loc[mask, columns]), horizon)
+    elif kind == "B1":
+        fitted = _fit_logistic(logistic_matrix(frame, full_history=window == "full"),
+                               frame[f"y_{horizon}"], mask)
+    else:
+        matrix = frame[[*feature_names, "raion_id", "oblast_id"]].copy()
+        for column, values in categories.items():
+            matrix[column] = pd.Categorical(matrix[column], categories=values)
+        if rounds:
+            fitted = lgb.train(LGB_PARAMS, lgb.Dataset(
+                matrix.loc[mask], label=frame.loc[mask, f"y_{horizon}"],
+                categorical_feature=["raion_id", "oblast_id"],
+            ), num_boost_round=rounds)
+        else:
+            seam = cutoff - pd.Timedelta(weeks=INNER_WEEKS)
+            inner = mask & (frame.t + pd.Timedelta(hours=horizon)).le(seam)
+            holdout = mask & frame.t.ge(seam)
+            if not inner.any() or not holdout.any():
+                raise ValueError("Insufficient history for inner chronological stopping")
+            fitted, details = _fit_lightgbm(matrix, frame[f"y_{horizon}"], (mask, inner, holdout))
+            rounds = int(details["best_iteration"])
+    return HorizonModel(kind, fitted, feature_names, categories, window, k, rounds)
+
+
+def fit_calibrator(
+    rows: pd.DataFrame, raw: NDArray[np.float64], horizon: int, apply_from: pd.Timestamp,
+) -> tuple[IsotonicRegression, dict[str, object]]:
+    """Fail before fitting if any calibration label looks beyond its application boundary."""
+    if rows.empty or not rows.t.lt(apply_from).all():
+        raise ValueError("Calibrator fit rows must strictly precede every application row")
+    if not (rows.t + pd.Timedelta(hours=horizon)).le(apply_from).all():
+        raise ValueError("Calibration labels cross the application boundary")
+    if len(raw) != len(rows) or not rows[f"y_{horizon}"].notna().all():
+        raise ValueError("Calibration requires aligned predictions and matured labels")
+    fitted = IsotonicRegression(out_of_bounds="clip").fit(raw, rows[f"y_{horizon}"])
+    return fitted, {"n": len(rows), "min_t": rows.t.min().isoformat(),
+                    "max_t": rows.t.max().isoformat(),
+                    "max_label_end": (rows.t.max() + pd.Timedelta(hours=horizon)).isoformat(),
+                    "apply_from": apply_from.isoformat()}
+
+
+def fit_chronological(
+    kind: str, training: pd.DataFrame, horizon: int, boundary: pd.Timestamp,
+    *, window: str, feature_names: list[str], categories: dict[str, list[str]],
+    regime: pd.Timestamp, k: float = 0.0, rounds: int = 0, artifact_dir: Path | None = None,
+) -> tuple[HorizonModel, IsotonicRegression, dict[str, object]]:
+    """Calibrate forward predictions of a prefix model, then refit all matured rows."""
+    cutoff = boundary - pd.Timedelta(weeks=config.V2_CALIBRATION_WEEKS)
+    prefix = fit_horizon(kind, training, horizon, cutoff, window=window,
+                         feature_names=feature_names, categories=categories, regime=regime,
+                         k=k, rounds=rounds)
+    if artifact_dir is not None:
+        joblib.dump(prefix, artifact_dir / f"calibration_prefix_{horizon}h.joblib")
+    mask = training.t.ge(cutoff) & training.t.lt(boundary)
+    mask &= (training.t + pd.Timedelta(hours=horizon)).le(boundary)
+    mask &= training[f"y_{horizon}"].notna() & v2_data_gap_mask(training, horizon)
+    tail = training.loc[mask]
+    calibration, details = fit_calibrator(tail, predict_horizon(prefix, tail), horizon, boundary)
+    final_model = fit_horizon(kind, training, horizon, boundary, window=window,
+                              feature_names=feature_names, categories=categories, regime=regime,
+                              k=k, rounds=prefix.rounds)
+    details.update({"prefix_model_data_through": cutoff.isoformat(),
+                    "refit_data_through": boundary.isoformat(), "rounds": prefix.rounds,
+                    "calibration_predictions": "six-week forward prefix-model predictions"})
+    return final_model, calibration, details
+
+
+def train_v2() -> dict[str, object]:
+    """Compare candidates on chronological validation; lock selection before test2 reads."""
+    from airalert.models import baseline
+
+    if (config.V2_REPORTS_DIR / "test2_claim.json").exists():
+        raise RuntimeError("Final test2 was claimed; v2 selection and evaluation models are frozen")
+    began = perf_counter()
+    saved = load_snapshot()
+    training = pd.read_parquet(config.V2_FEATURES_DIR / "train.parquet")
+    validation = pd.read_parquet(config.V2_FEATURES_DIR / "val.parquet")
+    outputs = {"val": validation}
+    for split in ("test2", "latest"):
+        names = pq.read_schema(config.V2_FEATURES_DIR / f"{split}.parquet").names
+        outputs[split] = pd.read_parquet(config.V2_FEATURES_DIR / f"{split}.parquet",
+                                        columns=[n for n in names if not n.startswith("y_")])
+    universe = load_raions()
+    categories = {n: sorted(universe[n].unique()) for n in ("raion_id", "oblast_id")}
+    features = [n for n in training if n.startswith("f_")]
+    base_features = [n for n in features if not n.startswith("f_geo_")]
+    candidates = [("B0", "B0", "full", base_features),
+                  ("B1", "B1", "raionregime", base_features),
+                  ("M1", "M1", "raionregime", base_features),
+                  ("M1-full", "M1", "full", base_features)]
+    if features != base_features:
+        candidates += [("M1+geo", "M1", "raionregime", features),
+                       ("M1-full+geo", "M1", "full", features)]
+    details: dict[str, dict[str, object]] = {}
+    config.V2_PREDS_DIR.mkdir(parents=True, exist_ok=True)
+    for identity, kind, window, names in candidates:
+        artifact = config.V2_ARTIFACTS_DIR / identity
+        artifact.mkdir(parents=True, exist_ok=True)
+        raw_frames = _prediction_frames(outputs)
+        calibrated_frames = _prediction_frames(outputs)
+        details[identity] = {}
+        for horizon in config.HORIZONS:
+            k = 0.0
+            fitted_window = window
+            if kind == "B0":
+                cutoff = pd.Timestamp(config.V2_VAL_START) - pd.Timedelta(
+                    weeks=config.V2_CALIBRATION_WEEKS)
+                fitted_window, k = baseline.tune_v2(training, horizon, cutoff, saved.regime_switch)
+            model, val_calibrator, provenance = fit_chronological(
+                kind, training, horizon, pd.Timestamp(config.V2_VAL_START),
+                window=fitted_window, feature_names=names, categories=categories,
+                regime=saved.regime_switch, k=k, artifact_dir=artifact,
+            )
+            joblib.dump(model, artifact / f"model_{horizon}h.joblib")
+            joblib.dump(val_calibrator, artifact / f"calibrator_val_{horizon}h.joblib")
+            raw = {split: predict_horizon(model, rows) if len(rows) else np.empty(0)
+                   for split, rows in outputs.items()}
+            val_mask = v2_eligible_mask(validation, horizon, "val", snapshot=saved.snapshot)
+            test_calibrator, test_details = fit_calibrator(
+                validation.loc[val_mask], raw["val"][val_mask], horizon,
+                pd.Timestamp(config.V2_TEST_START),
+            )
+            joblib.dump(test_calibrator, artifact / f"calibrator_test2_{horizon}h.joblib")
+            for split in outputs:
+                raw_frames[split][f"p_{horizon}"] = raw[split]
+                calibrator = val_calibrator if split == "val" else test_calibrator
+                calibrated_frames[split][f"p_{horizon}"] = (
+                    calibrator.predict(raw[split]) if len(raw[split]) else np.empty(0)
+                )
+            details[identity][str(horizon)] = {"window": fitted_window, "k": k,
+                                               "validation_calibration": provenance,
+                                               "test2_calibration": test_details}
+            print(f"v2 {identity} H={horizon}: {perf_counter() - began:.1f}s elapsed", flush=True)
+        for suffix, frames in (("raw", raw_frames), ("cal", calibrated_frames)):
+            pd.concat(frames.values(), ignore_index=True).to_parquet(
+                config.V2_PREDS_DIR / f"onset_{identity}-{suffix}.parquet", index=False)
+        write_v2_json(artifact / "metadata.json", details[identity])
+    return select_v2(details, outputs, elapsed_seconds=perf_counter() - began)
+
+
+def select_v2(
+    details: dict[str, dict[str, object]], outputs: dict[str, pd.DataFrame],
+    *, elapsed_seconds: float,
+) -> dict[str, object]:
+    """Lock independent served-Brier horizon choices without reading any test2 targets."""
+    from airalert.backtest import v2_score_predictions
+    from airalert.schemas import Report, Selection
+
+    if (config.V2_REPORTS_DIR / "test2_claim.json").exists():
+        raise RuntimeError("Test2 is frozen; selection cannot change")
+    validation = outputs["val"]
+    saved = load_snapshot()
+    geography_available = any(n.startswith("f_geo_") for n in validation)
+    report, _ = v2_score_predictions("val")
+    choices: dict[str, dict[str, object]] = {}
+    for horizon in config.HORIZONS:
+        scores = [s for s in report.onset if s.horizon == horizon and s.row_set == "served"
+                  and s.model != "selected"]
+        chosen = min(scores, key=lambda s: (s.brier, s.model))
+        identity, _, suffix = chosen.model.rpartition("-")
+        choices[str(horizon)] = {"candidate": chosen.model, "identity": identity,
+                                  "calibrated": suffix == "cal", "val_brier": chosen.brier,
+                                  **details[identity][str(horizon)]}
+    for split, rows in outputs.items():
+        selected = rows[["t", "raion_id"]].assign(split=split).copy()
+        for horizon in config.HORIZONS:
+            candidate = choices[str(horizon)]["candidate"]
+            predicted = pd.read_parquet(config.V2_PREDS_DIR / f"onset_{candidate}.parquet",
+                                         filters=[("split", "==", split)])
+            selected[f"p_{horizon}"] = predicted[f"p_{horizon}"].to_numpy()
+        selected.to_parquet(config.V2_PREDS_DIR / f"selected_{split}.parquet", index=False)
+    pd.concat([pd.read_parquet(config.V2_PREDS_DIR / f"selected_{s}.parquet")
+               for s in outputs], ignore_index=True).to_parquet(
+                   config.V2_PREDS_DIR / "onset_selected.parquet", index=False)
+    selection: dict[str, object] = {"generated_at": pd.Timestamp.now(tz="UTC").isoformat(),
+                                    "snapshot": saved.snapshot.isoformat(), "horizons": choices,
+                                    "rule": "minimum served validation Brier per horizon",
+                                    "elapsed_seconds": elapsed_seconds,
+                                    "data_gaps": [[a.isoformat(), b.isoformat()]
+                                                  for a, b in v2_data_gaps()],
+                                    "prediction_sha256": v2_prediction_hashes(),
+                                    "geography_available": geography_available}
+    write_v2_json(config.V2_SELECTION_PATH, selection)
+    fragment = Report(generated_at=pd.Timestamp.now(tz="UTC"), selection=Selection(
+        onset="selected", duration=("D2" if (config.V2_PRODUCTION_DIR / "duration"
+                                              / "current.json").exists() else None),
+        note="Per-horizon choices locked in reports/v2/selection.json before test2 scoring."))
+    write_v2_json(config.V2_METRICS_DIR / "selection.json", fragment.model_dump(mode="json"))
+    source = validation.groupby("f_source_archive", observed=True).agg(
+        rows=("t", "size"), starts_24h=("f_starts_24h", "mean"),
+        starts_168h=("f_starts_168h", "mean"), active_share=("f_active", "mean"))
+    _, selected_rows = v2_score_predictions("val")
+    source_scores: list[dict[str, object]] = []
+    for horizon in config.HORIZONS:
+        eligible = selected_rows.loc[v2_eligible_mask(selected_rows, horizon, "val")]
+        for flag, group in eligible.groupby("f_source_archive", observed=True):
+            source_scores.append({"archive": bool(flag), "horizon": horizon, "n": len(group),
+                                   "brier": metrics.brier_score(group[f"y_{horizon}"],
+                                                                 group[f"p_{horizon}"]),
+                                   "bss": metrics.brier_skill_score(group[f"y_{horizon}"],
+                                                                     group[f"p_{horizon}"],
+                                                                     group[f"b0_{horizon}"])})
+    write_v2_json(config.V2_REPORTS_DIR / "source_shift.json", {
+        "flag": "first archive start for this raion is strictly before t",
+        "validation_groups": source.reset_index().to_dict(orient="records"),
+        "served_validation_scores": source_scores,
+        "warning": "Groups differ in date/raion mix; descriptive rather than causal comparison.",
+        "geography": [s.model_dump(mode="json") for s in report.onset
+                      if "+geo" in s.model and s.row_set == "served"],
+    })
+    print(f"Locked v2 selection: { {h: c['candidate'] for h, c in choices.items()} }", flush=True)
+    return selection
+
+
+def refresh_v2_validation() -> dict[str, object]:
+    """Refresh calibration/selection after the lead changes the gap policy, before final."""
+    if (config.V2_REPORTS_DIR / "test2_claim.json").exists():
+        raise RuntimeError("Cannot refresh after test2 scoring")
+    began = perf_counter()
+    validation = pd.read_parquet(config.V2_FEATURES_DIR / "val.parquet")
+    outputs: dict[str, pd.DataFrame] = {"val": validation}
+    details: dict[str, dict[str, object]] = {}
+    for path in sorted(config.V2_PREDS_DIR.glob("onset_*-raw.parquet")):
+        identity = path.stem.removeprefix("onset_").removesuffix("-raw")
+        artifact = config.V2_ARTIFACTS_DIR / identity
+        # Older CLI bundles named __main__.HorizonModel. In this CLI context the
+        # class is available; re-saving invokes its stable importable reducer.
+        for bundle in [*artifact.glob("model_*.joblib"),
+                       *artifact.glob("calibration_prefix_*.joblib")]:
+            model = joblib.load(bundle)
+            joblib.dump(model, bundle)
+        metadata = json.loads((artifact / "metadata.json").read_text(encoding="utf-8"))
+        raw = pd.read_parquet(path)
+        for split in ("test2", "latest"):
+            outputs[split] = raw.loc[raw.split.eq(split), ["t", "raion_id"]]
+        calibrated = raw.copy()
+        val_rows = raw.loc[raw.split.eq("val")]
+        for horizon in config.HORIZONS:
+            mask = v2_eligible_mask(validation, horizon, "val")
+            calibrator, provenance = fit_calibrator(
+                validation.loc[mask], val_rows[f"p_{horizon}"].to_numpy()[mask], horizon,
+                pd.Timestamp(config.V2_TEST_START))
+            joblib.dump(calibrator, artifact / f"calibrator_test2_{horizon}h.joblib")
+            metadata[str(horizon)]["test2_calibration"] = provenance
+            val_calibrator = joblib.load(artifact / f"calibrator_val_{horizon}h.joblib")
+            for split in ("val", "test2", "latest"):
+                selected = raw.split.eq(split)
+                fitted = val_calibrator if split == "val" else calibrator
+                if selected.any():
+                    calibrated.loc[selected, f"p_{horizon}"] = fitted.predict(
+                        raw.loc[selected, f"p_{horizon}"])
+        calibrated.to_parquet(config.V2_PREDS_DIR / f"onset_{identity}-cal.parquet", index=False)
+        write_v2_json(artifact / "metadata.json", metadata)
+        details[identity] = metadata
+    return select_v2(details, outputs, elapsed_seconds=perf_counter() - began)
+
+
+def wait_for_backfill() -> None:
+    """Watch the saved coverage at five-minute intervals for at most two hours."""
+    began = perf_counter()
+    target = pd.Timestamp.now(tz=config.KYIV_TZ).normalize().tz_convert("UTC")
+    polls: list[dict[str, object]] = []
+    while True:
+        snapshot = load_snapshot().snapshot
+        metadata = json.loads(config.SNAPSHOT_PATH.read_text(encoding="utf-8"))
+        available = (snapshot >= target and metadata.get("coverage", {}).get(
+            "archive_gate_passed", False))
+        elapsed = perf_counter() - began
+        state = "available" if available else "timeout" if elapsed >= config.V2_BACKFILL_WAIT_S \
+            else "waiting"
+        polls.append({"checked_at": pd.Timestamp.now(tz="UTC").isoformat(),
+                      "snapshot": snapshot.isoformat()})
+        write_v2_json(config.V2_REPORTS_DIR / "backfill_watch.json", {
+            "state": state, "target": target.isoformat(), "polls": polls,
+            "elapsed_seconds": elapsed, "poll_seconds": config.V2_BACKFILL_POLL_S,
+            "maximum_seconds": config.V2_BACKFILL_WAIT_S})
+        print(f"Backfill: {state}; {snapshot.isoformat()}; {elapsed:.1f}s", flush=True)
+        if state != "waiting":
+            return
+        sleep(min(config.V2_BACKFILL_POLL_S, config.V2_BACKFILL_WAIT_S - elapsed))
+
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Isolated v2 onset evaluation")
+    parser.add_argument("--final", action="store_true")
+    parser.add_argument("--score-only", action="store_true")
+    parser.add_argument("--refresh-validation", action="store_true")
+    parser.add_argument("--watch-backfill", action="store_true")
+    arguments = parser.parse_args()
+    from airalert.backtest import run_v2
+    from airalert.features import build_v2
+
+    if arguments.watch_backfill:
+        wait_for_backfill()
+    elif arguments.refresh_validation:
+        refresh_v2_validation()
+    elif not arguments.score_only:
+        build_v2()
+        train_v2()
+    if not arguments.watch_backfill:
+        run_v2(final=arguments.final)

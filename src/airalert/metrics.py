@@ -2,8 +2,10 @@
 
 import json
 from datetime import UTC, datetime
+from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from numpy.typing import ArrayLike, NDArray
 from sklearn.metrics import average_precision_score
 
@@ -101,7 +103,10 @@ def interval_coverage(y: ArrayLike, q10: ArrayLike, q90: ArrayLike) -> float:
     return float(np.mean((actual >= low) & (actual <= high)))
 
 
-def merge_reports(*, include_test: bool = True) -> Report:
+def merge_reports(
+    *, include_test: bool = True, directory: Path | None = None,
+    destination: Path | None = None, extra_fragments: list[Path] | None = None,
+) -> Report:
     """Concatenate Report fragments; only selection.json supplies model selection.
 
     Validation-only backtests set include_test=False to avoid publishing a stale
@@ -109,8 +114,10 @@ def merge_reports(*, include_test: bool = True) -> Report:
     other's fragments. The validated combined Report is replaced atomically.
     """
     merged = Report(generated_at=datetime.now(UTC))
-    for path in sorted(config.METRICS_DIR.glob("*.json")):
-        if not include_test and path == config.SCORES_TEST_PATH:
+    directory = config.METRICS_DIR if directory is None else directory
+    destination = config.METRICS_PATH if destination is None else destination
+    for path in sorted([*directory.glob("*.json"), *(extra_fragments or [])]):
+        if not include_test and path.stem in ("scores_test", "scores_test2"):
             continue
         fragment = Report.model_validate_json(path.read_text(encoding="utf-8"))
         merged.onset.extend(
@@ -120,18 +127,54 @@ def merge_reports(*, include_test: bool = True) -> Report:
             score for score in fragment.duration if include_test or score.split != "test"
         )
         merged.notes.extend(fragment.notes)
-        if path == config.SELECTION_PATH:
+        if path.name == "selection.json":
             merged.selection = fragment.selection
     onset_keys = [(s.model, s.horizon, s.split, s.row_set) for s in merged.onset]
     duration_keys = [(s.model, s.split) for s in merged.duration]
     if len(set(onset_keys)) != len(onset_keys) or len(set(duration_keys)) != len(duration_keys):
         raise ValueError("Report fragments contain duplicate score identities")
     validated = Report.model_validate(merged.model_dump())
-    config.METRICS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    temporary = config.METRICS_PATH.with_suffix(".json.tmp")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    temporary = destination.with_suffix(".json.tmp")
     temporary.write_text(
         json.dumps(validated.model_dump(mode="json"), indent=2, allow_nan=False) + "\n",
         encoding="utf-8",
     )
-    temporary.replace(config.METRICS_PATH)
+    temporary.replace(destination)
     return validated
+
+
+def monotone_projection(probabilities: ArrayLike) -> NDArray[np.float64]:
+    """Use the same cumulative maximum for validation, test2 and production."""
+    values = np.asarray(probabilities, dtype=np.float64)
+    if values.ndim != 2 or values.shape[1] != len(config.HORIZONS):
+        raise ValueError("Projection requires one column per ordered horizon")
+    if not np.isfinite(values).all() or ((values < 0) | (values > 1)).any():
+        raise ValueError("Projection requires finite probabilities in [0, 1]")
+    return np.maximum.accumulate(values, axis=1)
+
+
+def day_block_bss(
+    frame: pd.DataFrame, horizon: int, *, samples: int | None = None,
+) -> dict[str, object]:
+    """Resample whole Kyiv calendar days, pairing model and B0 error sums."""
+    samples = config.V2_BOOTSTRAP_SAMPLES if samples is None else samples
+    actual, predicted = _onset(frame[f"y_{horizon}"], frame[f"p_{horizon}"])
+    _, reference = _onset(actual, frame[f"b0_{horizon}"])
+    days = frame.t.dt.tz_convert(config.KYIV_TZ).dt.date
+    errors = pd.DataFrame({"day": days.to_numpy(), "model": (predicted - actual) ** 2,
+                           "reference": (reference - actual) ** 2})
+    blocks = errors.groupby("day", sort=True)[["model", "reference"]].sum().to_numpy()
+    if samples < 1:
+        raise ValueError("Bootstrap samples must be positive")
+    rng = np.random.default_rng(config.V2_BOOTSTRAP_SEED)
+    picked = rng.integers(0, len(blocks), size=(samples, len(blocks)))
+    sums = blocks[picked].sum(axis=1)
+    valid = sums[:, 1] > 0
+    skills = 1 - sums[valid, 0] / sums[valid, 1]
+    interval = np.quantile(skills, [0.05, 0.95]) if len(skills) else [None, None]
+    return {"horizon": horizon, "n": len(frame), "days": len(blocks), "samples": samples,
+            "seed": config.V2_BOOTSTRAP_SEED,
+            "bss": brier_skill_score(actual, predicted, reference),
+            "low": None if interval[0] is None else float(interval[0]),
+            "high": None if interval[1] is None else float(interval[1]), "confidence": 0.9}

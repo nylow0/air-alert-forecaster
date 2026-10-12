@@ -1,0 +1,11 @@
+{
+  "generated_at": "2026-10-12T17:17:47.162842Z",
+  "onset": [],
+  "duration": [],
+  "selection": {
+    "onset": "selected",
+    "duration": "D2",
+    "note": "Per-horizon choices locked in reports/v2/selection.json before test2 scoring."
+  },
+  "notes": []
+}

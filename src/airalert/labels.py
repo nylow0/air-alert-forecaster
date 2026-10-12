@@ -42,7 +42,7 @@ def build_labels(
         "t": np.tile(clock, len(ids)),
         "raion_id": np.repeat(ids, len(clock)),
     })
-    result["t"] = pd.DatetimeIndex(result.t).tz_convert("UTC").as_unit("us")
+    result["t"] = pd.to_datetime(result.t, utc=True).astype("datetime64[us, UTC]")
     starts = episodes[["raion_id", "start"]].copy()
     starts["start"] = utc_times(starts.start)
     grouped = {

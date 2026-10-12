@@ -1,0 +1,103 @@
+{
+  "generated_at": "2026-10-12T17:17:47.129005+00:00",
+  "snapshot": "2026-10-11T21:00:00+00:00",
+  "horizons": {
+    "1": {
+      "candidate": "M1+geo-cal",
+      "identity": "M1+geo",
+      "calibrated": true,
+      "val_brier": 0.08361199438107346,
+      "window": "raionregime",
+      "k": 0.0,
+      "validation_calibration": {
+        "n": 119952,
+        "min_t": "2026-06-20T00:00:00+00:00",
+        "max_t": "2026-07-31T23:00:00+00:00",
+        "max_label_end": "2026-08-01T00:00:00+00:00",
+        "apply_from": "2026-08-01T00:00:00+00:00",
+        "prefix_model_data_through": "2026-06-20T00:00:00+00:00",
+        "refit_data_through": "2026-08-01T00:00:00+00:00",
+        "rounds": 212,
+        "calibration_predictions": "six-week forward prefix-model predictions"
+      },
+      "test2_calibration": {
+        "n": 108528,
+        "min_t": "2026-08-01T00:00:00+00:00",
+        "max_t": "2026-09-07T23:00:00+00:00",
+        "max_label_end": "2026-09-08T00:00:00+00:00",
+        "apply_from": "2026-09-08T00:00:00+00:00"
+      }
+    },
+    "3": {
+      "candidate": "M1+geo-cal",
+      "identity": "M1+geo",
+      "calibrated": true,
+      "val_brier": 0.1416555745465276,
+      "window": "raionregime",
+      "k": 0.0,
+      "validation_calibration": {
+        "n": 119714,
+        "min_t": "2026-06-20T00:00:00+00:00",
+        "max_t": "2026-07-31T21:00:00+00:00",
+        "max_label_end": "2026-08-01T00:00:00+00:00",
+        "apply_from": "2026-08-01T00:00:00+00:00",
+        "prefix_model_data_through": "2026-06-20T00:00:00+00:00",
+        "refit_data_through": "2026-08-01T00:00:00+00:00",
+        "rounds": 129,
+        "calibration_predictions": "six-week forward prefix-model predictions"
+      },
+      "test2_calibration": {
+        "n": 108290,
+        "min_t": "2026-08-01T00:00:00+00:00",
+        "max_t": "2026-09-07T21:00:00+00:00",
+        "max_label_end": "2026-09-08T00:00:00+00:00",
+        "apply_from": "2026-09-08T00:00:00+00:00"
+      }
+    },
+    "12": {
+      "candidate": "M1-full-cal",
+      "identity": "M1-full",
+      "calibrated": true,
+      "val_brier": 0.11356236759441113,
+      "window": "full",
+      "k": 0.0,
+      "validation_calibration": {
+        "n": 118643,
+        "min_t": "2026-06-20T00:00:00+00:00",
+        "max_t": "2026-07-31T12:00:00+00:00",
+        "max_label_end": "2026-08-01T00:00:00+00:00",
+        "apply_from": "2026-08-01T00:00:00+00:00",
+        "prefix_model_data_through": "2026-06-20T00:00:00+00:00",
+        "refit_data_through": "2026-08-01T00:00:00+00:00",
+        "rounds": 97,
+        "calibration_predictions": "six-week forward prefix-model predictions"
+      },
+      "test2_calibration": {
+        "n": 107219,
+        "min_t": "2026-08-01T00:00:00+00:00",
+        "max_t": "2026-09-07T12:00:00+00:00",
+        "max_label_end": "2026-09-08T00:00:00+00:00",
+        "apply_from": "2026-09-08T00:00:00+00:00"
+      }
+    }
+  },
+  "rule": "minimum served validation Brier per horizon",
+  "elapsed_seconds": 2.6689638999960152,
+  "data_gaps": [],
+  "prediction_sha256": {
+    "onset_B0-cal.parquet": "cc69cb5d05acb236e21f337fbf246659ad3e3a51baf72b601a21e4db5640888c",
+    "onset_B0-raw.parquet": "711d52fd455dd2ada30d5fbb10c93a7ebe27c5a4b0d329102ba8de1fbf7d2afa",
+    "onset_B1-cal.parquet": "f07b7f0e2f94270248b337ad8594414e062ede595ac4490b5d3a985f6f6e4adf",
+    "onset_B1-raw.parquet": "c408c2cb32af055c3b734014982384c11c823099b49fa777b21c51c41b103090",
+    "onset_M1+geo-cal.parquet": "a5f619fab692636c35db2ba3664de374d033792107ecc35944aaa974ed929529",
+    "onset_M1+geo-raw.parquet": "9872456407de0c7970522170cb17026e02306373cee6f2005212c508b7102609",
+    "onset_M1-cal.parquet": "6ef14151700274b6e195a10a0c67c84dd9d6b9307f8ca57ea7cbb3c4db42312f",
+    "onset_M1-full+geo-cal.parquet": "fb425cc818783a6479e426c6dad7cb9621effcfd7f2fb03ea15e18e210d49d5d",
+    "onset_M1-full+geo-raw.parquet": "9699462b0f1e38208b4e4eac690a787e0e6381cc5707aab22d20791e524f77c7",
+    "onset_M1-full-cal.parquet": "1899f6492fd2a9cf083cff0cf75e17f837a852153698cd2a42f6e9412696f941",
+    "onset_M1-full-raw.parquet": "edcc81918ed9aecad5e061235bc65adc9d7eed47401bec1fbd82617132a9e1f4",
+    "onset_M1-raw.parquet": "35dba2353bf1321567c1e2279396772fa731cf5bb94efde922dac616a54723b6",
+    "onset_selected.parquet": "224d40a898928042a7a9041a0be2df029feb10f0d2441fdfa78adb38c1c409a8"
+  },
+  "geography_available": true
+}

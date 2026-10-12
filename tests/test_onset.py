@@ -1,7 +1,8 @@
-"""Guard the training clock, cross-fold calibration and actual Parquet publication."""
+"""Guard the training clock, forward calibration and actual Parquet publication."""
 
 from pathlib import Path
 
+import joblib
 import numpy as np
 import pandas as pd
 import pytest
@@ -11,6 +12,7 @@ from airalert.models.onset import (
     INNER_WEEKS,
     calibrate,
     calibration_masks,
+    fit_calibrator,
     training_masks,
     validate_predictions,
     write_predictions,
@@ -53,7 +55,7 @@ def test_training_excludes_future_embargo_and_corrupted_lookbacks(
     assert not training_masks(frame, horizon, snapshot=snapshot)[0].iloc[3]
 
 
-def test_validation_calibration_is_out_of_fold_and_keeps_seam_raw() -> None:
+def test_validation_calibration_moves_forward_and_keeps_first_month_raw() -> None:
     start = pd.Timestamp(config.VAL_START)
     seam = start + pd.DateOffset(months=1)
     snapshot = pd.Timestamp(config.TEST_START) + pd.Timedelta(days=40)
@@ -74,6 +76,27 @@ def test_validation_calibration_is_out_of_fold_and_keeps_seam_raw() -> None:
     np.testing.assert_array_equal(predicted[:3], altered[:3])
     assert not np.array_equal(predicted[second], altered[second])
     assert predicted[embargo][0] == raw[embargo][0]
+    np.testing.assert_array_equal(predicted[:3], raw[:3])
+
+
+def test_calibrator_chronology_maturity_and_saved_reproduction(tmp_path: Path) -> None:
+    boundary = pd.Timestamp(config.V2_VAL_START)
+    rows = pd.DataFrame({"t": [boundary - pd.Timedelta(days=2),
+                               boundary - pd.Timedelta(hours=12)], "y_12": [0, 1]})
+    fitted, provenance = fit_calibrator(rows, np.array([0.2, 0.7]), 12, boundary)
+    assert pd.Timestamp(provenance["max_t"]) < pd.Timestamp(provenance["apply_from"])
+    assert pd.Timestamp(provenance["max_label_end"]) <= boundary
+    path = tmp_path / "calibrator.joblib"
+    joblib.dump(fitted, path)
+    np.testing.assert_array_equal(fitted.predict([0.3, 0.8]),
+                                  joblib.load(path).predict([0.3, 0.8]))
+    crossing = rows.copy()
+    crossing.loc[1, "t"] = boundary - pd.Timedelta(hours=11)
+    with pytest.raises(ValueError, match="labels cross"):
+        fit_calibrator(crossing, np.array([0.2, 0.7]), 12, boundary)
+    crossing.loc[1, "t"] = boundary
+    with pytest.raises(ValueError, match="strictly precede"):
+        fit_calibrator(crossing, np.array([0.2, 0.7]), 12, boundary)
 
 
 def test_written_predictions_cover_keys_and_reject_invalid_probabilities(

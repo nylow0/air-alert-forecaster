@@ -9,6 +9,7 @@ from time import perf_counter
 import numpy as np
 import pandas as pd
 
+from airalert import config
 from airalert.config import (
     ADJACENCY_PATH,
     CENTROIDS_PATH,
@@ -33,6 +34,7 @@ class FeatureContext:
     adjacency: dict[str, list[str]]
     centroids: pd.DataFrame
     regime_switch: pd.Timestamp
+    static_features: pd.DataFrame | None = None
 
 
 def load_feature_context() -> FeatureContext:
@@ -42,6 +44,8 @@ def load_feature_context() -> FeatureContext:
         adjacency=json.loads(ADJACENCY_PATH.read_text(encoding="utf-8")),
         centroids=pd.read_csv(CENTROIDS_PATH),
         regime_switch=load_snapshot().regime_switch,
+        static_features=(pd.read_csv(config.V2_STATIC_FEATURES_PATH)
+                         if config.V2_STATIC_FEATURES_PATH.exists() else None),
     )
 
 
@@ -122,6 +126,10 @@ def build_features(
     ids = raions.raion_id.to_numpy()
     if raions.raion_id.duplicated().any():
         raise ValueError("The raion universe must contain unique IDs")
+    archive = records.loc[records.get("source", pd.Series("csv", index=records.index)).eq(
+        "aiu_web"
+    ), ["raion_id", "started_at"]].copy()
+    archive["started_at"] = utc_times(archive.started_at)
     records = records.drop_duplicates(["raion_id", "level", "started_at", "finished_at"])
     records = records.copy()
     records["started_at"] = utc_times(records.started_at)
@@ -200,7 +208,7 @@ def build_features(
         "raion_id": np.repeat(ids, len(clock)),
         "oblast_id": np.repeat(raions.oblast_id.to_numpy(), len(clock)),
     })
-    frame["t"] = pd.DatetimeIndex(frame.t).tz_convert("UTC").as_unit("us")
+    frame["t"] = pd.to_datetime(frame.t, utc=True).astype("datetime64[us, UTC]")
     for name, values in arrays.items():
         frame[name] = values.ravel()
     national = {
@@ -229,6 +237,26 @@ def build_features(
         frame[f"f_{coordinate}"] = np.repeat(
             centroids[coordinate].to_numpy(dtype=np.float32), len(clock)
         )
+    # The first archive record becomes known only after its start. Neither a
+    # future cutover nor historical scalar severity can change a past feature.
+    first_archive = archive.groupby("raion_id").started_at.min().reindex(ids)
+    archive_times = first_archive.array.asi8
+    frame["f_source_archive"] = (
+        first_archive.notna().to_numpy()[:, None] & (archive_times[:, None] < clock.asi8)
+    ).astype(np.float32).ravel()
+    if context.static_features is not None:
+        static = context.static_features
+        if static.raion_id.duplicated().any():
+            raise ValueError("Static geography must have one row per raion")
+        static = static.set_index("raion_id").reindex(ids)
+        if static.isna().any().any():
+            raise ValueError("Static geography must cover the complete universe")
+        for name in static.columns:
+            feature = name if name.startswith("f_geo_") else f"f_geo_{name}"
+            values = pd.to_numeric(static[name], errors="raise").to_numpy(dtype=np.float32)
+            if not np.isfinite(values).all():
+                raise ValueError("Static geography must be finite")
+            frame[feature] = np.repeat(values, len(clock))
     return frame
 
 
@@ -295,3 +323,32 @@ def build(*, early: bool = False) -> None:
             encoding="utf-8",
         )
     print(f"Elapsed: {perf_counter() - began:.2f}s", flush=True)
+
+
+def build_v2() -> None:
+    """Publish isolated v2 tables, retaining nullable targets and all replay hours."""
+    from airalert.backtest import v2_test_end
+
+    began = perf_counter()
+    records, episodes, metadata = load_records(), load_episodes(), load_snapshot()
+    context = load_feature_context()
+    boundary = min(pd.Timestamp(config.V2_TEST_START), metadata.snapshot)
+    clocks = {
+        "train": pd.date_range(config.V2_TRAIN_START, config.V2_VAL_START,
+                               freq="h", inclusive="left"),
+        "val": pd.date_range(config.V2_VAL_START, boundary, freq="h", inclusive="left"),
+        "test2": pd.date_range(config.V2_TEST_START, v2_test_end(metadata.snapshot), freq="h"),
+        "latest": pd.DatetimeIndex([metadata.snapshot]),
+    }
+    config.V2_FEATURES_DIR.mkdir(parents=True, exist_ok=True)
+    for split, times in clocks.items():
+        frame = build_features(records, times, context=context)
+        labels = build_labels(episodes, times, metadata.snapshot, raions=context.raions)
+        for horizon in config.HORIZONS:
+            frame[f"y_{horizon}"] = labels[f"y_{horizon}"]
+        path = config.V2_FEATURES_DIR / f"{split}.parquet"
+        staging = path.with_suffix(".parquet.tmp")
+        frame.to_parquet(staging, index=False)
+        staging.replace(path)
+        print(f"v2 {split}: {len(frame):,} rows", flush=True)
+    print(f"v2 feature build: {perf_counter() - began:.2f}s", flush=True)

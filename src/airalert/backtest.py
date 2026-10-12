@@ -4,6 +4,7 @@ Models import trainable_mask/scorable_mask instead of reproducing date policy.
 scorable_mask requires final=True to include the held-out test set.
 """
 
+import hashlib
 import json
 from datetime import UTC, datetime
 from pathlib import Path
@@ -17,6 +18,45 @@ from airalert.data import load_snapshot
 from airalert.schemas import DurationScore, OnsetScore, Report, ScoreSlice
 
 Split = Literal["train", "val", "test", "latest", "none"]
+
+
+def v2_test_end(snapshot: datetime | pd.Timestamp | None = None) -> pd.Timestamp:
+    """Stop twelve hours before the end of the last complete observed Kyiv day."""
+    observed = _snapshot(snapshot)
+    complete_end = observed.tz_convert(config.KYIV_TZ).normalize().tz_convert("UTC")
+    return complete_end - pd.Timedelta(hours=config.V2_TEST_END_OFFSET_H)
+
+
+def v2_assign_split(t: pd.Series, *, snapshot: pd.Timestamp | None = None) -> pd.Series:
+    times = _utc_times(t)
+    observed = _snapshot(snapshot)
+    result = pd.Series("none", index=times.index, dtype="str")
+    result.loc[times.ge(config.V2_TRAIN_START) & times.lt(config.V2_VAL_START)] = "train"
+    result.loc[times.ge(config.V2_VAL_START) & times.lt(config.V2_TEST_START)] = "val"
+    result.loc[times.ge(config.V2_TEST_START) & times.le(v2_test_end(observed))] = "test2"
+    result.loc[times.eq(observed)] = "latest"
+    return result
+
+
+def v2_eligible_mask(
+    frame: pd.DataFrame, horizon: int, split: str, *, final: bool = False,
+    snapshot: pd.Timestamp | None = None,
+) -> pd.Series:
+    """Central v2 split, embargo, maturity and unchanged source-gap policy."""
+    _check_horizon(horizon)
+    if split == "test2" and not final:
+        raise ValueError("test2 scoring requires final=True")
+    if split not in ("train", "val", "test2"):
+        raise ValueError(f"Unsupported v2 split {split}")
+    times = _utc_times(frame.t)
+    label = frame[f"y_{horizon}"]
+    if not label.dropna().isin([0, 1]).all():
+        raise ValueError("Onset labels must be binary or null")
+    end = times + pd.Timedelta(hours=horizon)
+    upper = {"train": config.V2_VAL_START, "val": config.V2_TEST_START,
+             "test2": _snapshot(snapshot)}[split]
+    return (v2_assign_split(times, snapshot=snapshot).eq(split) & label.notna()
+            & end.le(upper) & end.le(_snapshot(snapshot)) & v2_data_gap_mask(frame, horizon))
 
 
 def _utc_times(values: pd.Series) -> pd.Series:
@@ -101,6 +141,31 @@ def data_gap_mask(df: pd.DataFrame, horizon: int) -> pd.Series:
         label_overlap = times.lt(end) & window_end.ge(start)
         corrupted_lookback = times.ge(start) & times.lt(pd.Timestamp(end) + recovery)
         keep &= ~(label_overlap | corrupted_lookback)
+    return keep
+
+
+def v2_data_gaps() -> tuple[tuple[pd.Timestamp, pd.Timestamp], ...]:
+    """Union unresolved configured outages with reconciled snapshot coverage gaps."""
+    gaps = {(pd.Timestamp(a), pd.Timestamp(b)) for a, b in config.DATA_GAPS}
+    if config.SNAPSHOT_PATH.exists():
+        metadata = json.loads(config.SNAPSHOT_PATH.read_text(encoding="utf-8"))
+        for gap in metadata.get("coverage", {}).get("gaps", []):
+            start, end = pd.Timestamp(gap["start"]), pd.Timestamp(gap["end"])
+            if start.tzinfo is None or end.tzinfo is None or end <= start:
+                raise ValueError("Coverage gaps require aware, ordered timestamps")
+            gaps.add((start.tz_convert("UTC"), end.tz_convert("UTC")))
+    return tuple(sorted(gaps))
+
+
+def v2_data_gap_mask(df: pd.DataFrame, horizon: int) -> pd.Series:
+    """Apply the v1 overlap/recovery formula to the data-driven v2 coverage list."""
+    _check_horizon(horizon)
+    times = _utc_times(df.t)
+    end = times + pd.Timedelta(hours=horizon)
+    keep = pd.Series(True, index=df.index)
+    for start, stop in v2_data_gaps():
+        recovery = stop + pd.Timedelta(hours=config.DATA_GAP_FEATURE_RECOVERY_H)
+        keep &= ~((times.lt(stop) & end.ge(start)) | (times.ge(start) & times.lt(recovery)))
     return keep
 
 
@@ -399,3 +464,120 @@ def run(final: bool = False) -> None:
     merged = metrics.merge_reports(include_test=final)
     print(f"Validated metrics.json: {len(merged.onset)} onset, "
           f"{len(merged.duration)} duration scores")
+
+
+def write_v2_json(path: Path, value: object) -> None:
+    """Replace complete v2 metadata without exposing a partially written JSON file."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    staging = path.with_suffix(".json.tmp")
+    staging.write_text(json.dumps(value, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+    staging.replace(path)
+
+
+def v2_prediction_hashes() -> dict[str, str]:
+    """Hash complete prediction files without opening any test2 target column."""
+    hashes: dict[str, str] = {}
+    for path in sorted(config.V2_PREDS_DIR.glob("onset_*.parquet")):
+        with path.open("rb") as handle:
+            hashes[path.name] = hashlib.file_digest(handle, "sha256").hexdigest()
+    return hashes
+
+
+def v2_score_predictions(split: str, *, final: bool = False) -> tuple[Report, pd.DataFrame]:
+    """Score both unprojected and served probabilities on identical eligible rows."""
+    if split == "test2" and not final:
+        raise ValueError("test2 scoring requires final=True")
+    columns = ["t", "raion_id", "oblast_id", "f_active", "f_source_archive",
+               *(f"y_{h}" for h in config.HORIZONS)]
+    truth = pd.read_parquet(config.V2_FEATURES_DIR / f"{split}.parquet", columns=columns)
+    _validate_keys(truth, ["t", "raion_id"], f"v2 {split}")
+    report = Report(generated_at=datetime.now(UTC))
+    if truth.empty:
+        report.notes.append("test2 has no observed eligible period; no test outcomes were scored.")
+        return report, truth
+    baseline = pd.read_parquet(config.V2_PREDS_DIR / "onset_B0-raw.parquet",
+                               filters=[("split", "==", split)])
+    reference = metrics.monotone_projection(baseline[[f"p_{h}" for h in config.HORIZONS]])
+    baseline = baseline[["t", "raion_id"]].copy()
+    baseline[[f"b0_{h}" for h in config.HORIZONS]] = reference
+    truth = truth.merge(baseline, on=["t", "raion_id"], validate="one_to_one", how="left")
+    if truth.filter(like="b0_").isna().any().any():
+        raise ValueError("B0 does not cover every forecast key")
+    selected_rows = pd.DataFrame()
+    for path in sorted(config.V2_PREDS_DIR.glob("onset_*.parquet")):
+        predictions = pd.read_parquet(path, filters=[("split", "==", split)])
+        _validate_keys(predictions, ["t", "raion_id"], path.name)
+        joined = truth.merge(predictions.drop(columns="split"), on=["t", "raion_id"],
+                             validate="one_to_one", how="outer", indicator=True)
+        if not joined._merge.eq("both").all():
+            raise ValueError(f"{path.name} does not cover {split} exactly")
+        joined = joined.drop(columns="_merge")
+        model = path.stem.removeprefix("onset_")
+        for row_set in ("unprojected", "served"):
+            rows = joined.copy()
+            if row_set == "served":
+                rows[[f"p_{h}" for h in config.HORIZONS]] = metrics.monotone_projection(
+                    rows[[f"p_{h}" for h in config.HORIZONS]]
+                )
+            for horizon in config.HORIZONS:
+                eligible = rows.loc[v2_eligible_mask(rows, horizon, split, final=final)]
+                if not eligible.empty:
+                    # Report uses split=test; row_set distinguishes the untouched test2 era.
+                    named_set = f"test2-{row_set}" if split == "test2" else row_set
+                    report.onset.append(_score_onset(model, named_set, eligible, horizon,
+                                                    "test" if split == "test2" else "val"))
+            if model == "selected" and row_set == "served":
+                selected_rows = rows
+    report.notes.extend([
+        "v2 test denotes untouched test2 beginning September 8; v1 files are frozen.",
+        "BSS reference is monotone-projected B0-raw on identical eligible rows.",
+        "served rows use cumulative maximum before all scoring and selection.",
+    ])
+    return report, selected_rows
+
+
+def run_v2(*, final: bool = False) -> Report:
+    """Validation is repeatable. A durable claim permits test2 scoring only once."""
+    claim = config.V2_REPORTS_DIR / "test2_claim.json"
+    if final and claim.exists():
+        raise RuntimeError("test2 was already claimed; inspect its saved result")
+    if not final:
+        report, _ = v2_score_predictions("val")
+        write_v2_json(config.V2_METRICS_DIR / "scores_val.json", report.model_dump(mode="json"))
+    else:
+        selection_bytes = config.V2_SELECTION_PATH.read_bytes()
+        selection = json.loads(selection_bytes)
+        snapshot = load_snapshot().snapshot
+        if selection["snapshot"] != snapshot.isoformat():
+            raise ValueError("Selection snapshot differs from the data being scored")
+        if selection["data_gaps"] != [[a.isoformat(), b.isoformat()] for a, b in v2_data_gaps()]:
+            raise ValueError("Gap policy changed after selection; refresh validation before final")
+        if selection["prediction_sha256"] != v2_prediction_hashes():
+            raise ValueError("Predictions changed after selection; lock validation before final")
+        if v2_test_end(snapshot) < pd.Timestamp(config.V2_TEST_START):
+            print("No test2 coverage. Final scoring was not claimed.", flush=True)
+            return metrics.merge_reports(directory=config.V2_METRICS_DIR,
+                                         destination=config.V2_METRICS_PATH, include_test=False)
+        config.V2_REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+        with claim.open("x", encoding="utf-8") as handle:
+            json.dump({"started_at": datetime.now(UTC).isoformat(),
+                       "selection_sha256": hashlib.sha256(selection_bytes).hexdigest(),
+                       "snapshot": snapshot.isoformat()}, handle, indent=2)
+        report, served = v2_score_predictions("test2", final=True)
+        intervals = [metrics.day_block_bss(
+            served.loc[v2_eligible_mask(served, horizon, "test2", final=True)], horizon
+        ) for horizon in config.HORIZONS]
+        if config.V2_SELECTION_PATH.read_bytes() != selection_bytes:
+            raise RuntimeError("Selection changed during final scoring")
+        if selection["prediction_sha256"] != v2_prediction_hashes():
+            raise RuntimeError("Predictions changed during final scoring")
+        write_v2_json(config.V2_REPORTS_DIR / "bootstrap.json", intervals)
+        write_v2_json(config.V2_METRICS_DIR / "scores_test2.json", report.model_dump(mode="json"))
+        print("TEST2 SCORED ONCE; locked selection unchanged", flush=True)
+    merged = metrics.merge_reports(directory=config.V2_METRICS_DIR,
+                                   destination=config.V2_METRICS_PATH, include_test=final,
+                                   extra_fragments=([config.V2_REPORTS_DIR / "duration_scores.json"]
+                                       if (config.V2_REPORTS_DIR / "duration_scores.json").exists()
+                                       else []))
+    print(f"v2 report: {len(merged.onset)} onset scores", flush=True)
+    return merged
