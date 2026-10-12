@@ -11,12 +11,13 @@ TEST_START = datetime(2026, 8, 1, tzinfo=UTC)
 TEST_END_OFFSET_H = 12
 KYIV_TZ = "Europe/Kyiv"
 # Source outages: [start, end) with no alert events nationwide (4.3 days, found by A1/lead).
-# Rows whose label window (t, t+H] touches a gap, or with t in [start, end + 24h), are
+# Rows whose label window (t, t+H] touches a gap, or with t in [start, end + recovery), are
 # excluded from training and scoring; episodes overlapping a gap are excluded from duration work.
+# Recovery equals the longest feature lookback, so no scored row sees a gap-corrupted window.
 DATA_GAPS = (
     (datetime(2026, 8, 29, 6, tzinfo=UTC), datetime(2026, 9, 2, 14, tzinfo=UTC)),
 )
-DATA_GAP_FEATURE_RECOVERY_H = 24
+DATA_GAP_FEATURE_RECOVERY_H = 168  # longest feature lookback (f_starts_168h)
 # Only Luhanska occurs in the saved CSV. The other names are explicit geography exclusions.
 EXCLUDED_OBLASTS = frozenset({"luhanska", "autonomous-republic-of-crimea", "sevastopol-city"})
 SPECIAL_STATUS_OBLASTS = frozenset({"kyiv-city", "sevastopol-city"})
