@@ -160,4 +160,4 @@ The v1 results (`reports/`, `docs/report.md`) are **frozen history**. v2 extends
 Each backend feature exposes a FastAPI `APIRouter` from its own module; `api.py` (S1) includes them.
 
 ## Secrets and privacy (hard rule)
-Never write tokens, the ChatGPT/Codex auth, the owner's email, `[private home path removed]` paths, or local PIDs into a tracked file. LLM calls go through the local Codex CLI (`codex exec`), whose credentials live in `[private home path removed]` and are never read, copied or logged by this app. Local settings: `data/settings.local.json` (git-ignored).
+Never write tokens, the ChatGPT/Codex auth, the owner's email, `~` paths, or local PIDs into a tracked file. LLM calls go through the local Codex CLI (`codex exec`), whose credentials live in `[private home path removed]` and are never read, copied or logged by this app. Local settings: `data/settings.local.json` (git-ignored).

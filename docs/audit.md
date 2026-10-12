@@ -1,6 +1,6 @@
 # D1 independent audit, phase 2
 
-Audited on 2026-10-12 against committed HEAD `e1789c3`. Main repository: `.`. Retained rebuild: `[private home path removed]`.
+Audited on 2026-10-12 against committed HEAD `e1789c3`. Main repository: `.`. Retained rebuild: `%TEMP%\aaf-audit-clone`.
 
 ## Summary verdict
 
@@ -37,7 +37,7 @@ Commands in the README's build sequence were run in order, one at a time, withou
 
 | Start, UTC | Command | Exit | Wall time, seconds | Evidence / README deviation |
 |---|---|---:|---:|---|
-| clone setup, start timestamp not captured | `git clone . [private home path removed]` | 0 | 0.358 | "Cloning into ... done." New empty directory; elapsed time captured with Stopwatch. |
+| clone setup, start timestamp not captured | `git clone . %TEMP%\aaf-audit-clone` | 0 | 0.358 | "Cloning into ... done." New empty directory; elapsed time captured with Stopwatch. |
 | 10:17:23.289 | `uv sync` | 0 | 2.405 | Locked environment installed. |
 | 10:17:37.559 | `uv run airalert fetch` | 0 | 3.215 | Required source hash matched exactly. |
 | 10:17:59.459 | `uv run airalert episodes` | 0 | 3.779 | 299,275 source rows; 875,633 records; 431,094 episodes; 119 units. |
@@ -352,6 +352,6 @@ Real Playwright summaries, with 14 workflows at 1440×900 and 390×844, zero ret
 | Mock | `bunx playwright test` | `28 passed (18.7s)` | 0 |
 | Live | `$env:E2E_TARGET='live'; bunx playwright test` | `28 passed (21.9s)` | 0 |
 
-Reports and traces are retained under `web/test-results/report/{mock,live}/` and `web/test-results/artifacts/{mock,live}/`. Independently inspected screenshots are [the H=12 pre-outage notice]([private home path removed] and [mobile selection beside actual onset]([private home path removed]
+Reports and traces are retained under `web/test-results/report/{mock,live}/` and `web/test-results/artifacts/{mock,live}/`. Independently inspected screenshots are [the H=12 pre-outage notice](<local-browser-artifacts>/browser-screenshot-127-0-0-1-mv553a63-7375b491.png) and [mobile selection beside actual onset](<local-browser-artifacts>/browser-screenshot-127-0-0-1-mv554oye-f71cbb6a.png).
 
 Strict TypeScript checking of the test files and Playwright configuration passed, exit 0. I stopped the FastAPI server started with `uv run airalert serve --port 8000` and the manual Vite server on 5188; FastAPI reported "Application shutdown complete". Both Playwright Vite processes on 5187 were also removed by their test runners. The final listener check found none on 8000, 5187, or 5188. The pre-existing 5173 listener, [process identifier removed], remains untouched. No product files, fixtures, models, scores, contracts, or dependency manifests were changed. No commits or branch changes were made.

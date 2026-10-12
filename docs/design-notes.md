@@ -2,7 +2,7 @@
 
 These are distilled from the `dataviz` and `frontend-design` skills for this one app. Full references:
 - `[private home path removed]`
-- dataviz skill (read-only copy, may be absent later): `[private home path removed]` (`anti-patterns.md`, `marks-and-anatomy.md`, `interaction.md`)
+- dataviz skill (read-only copy, may be absent later): `<dataviz skill, bundled with Claude Code>` (`anti-patterns.md`, `marks-and-anatomy.md`, `interaction.md`)
 
 ## Direction
 

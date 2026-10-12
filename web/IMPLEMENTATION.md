@@ -90,8 +90,8 @@ Focused real-data browser checks used the T3 collaborative browser against the l
 
 ### Screenshots opened and described
 
-- [Pre-outage hour, 12 h horizon]([private home path removed] `2026-08-29T03:00Z`, CSS viewport 1440×900. The notice reads "The 12 h forecast window reaches into the source outage. This forecast is not scored." The map retains its amber probabilities and known active dots. Selected Kryvorizkyi has a violet ring, with the panel showing unknown 3 h and 12 h outcomes. The T3 export is 1280×800, so the lower map is outside this viewport capture.
-- [Selection next to actual onset at 390 px]([private home path removed] `2026-08-01T01:00Z`, H=3, CSS viewport 390×1100. Selected Boryspilskyi is violet, alongside white actual-onset outlines including adjacent Cherkaskyi. Both outline keys are visible under the complete map. The black mobile layout stays within the viewport. T3 exports this image at double density, 780×2200.
+- [Pre-outage hour, 12 h horizon](<local-browser-artifacts>/browser-screenshot-127-0-0-1-mv54lyox-f87b2e95.png): `2026-08-29T03:00Z`, CSS viewport 1440×900. The notice reads "The 12 h forecast window reaches into the source outage. This forecast is not scored." The map retains its amber probabilities and known active dots. Selected Kryvorizkyi has a violet ring, with the panel showing unknown 3 h and 12 h outcomes. The T3 export is 1280×800, so the lower map is outside this viewport capture.
+- [Selection next to actual onset at 390 px](<local-browser-artifacts>/browser-screenshot-127-0-0-1-mv54mz8p-7287e19f.png): `2026-08-01T01:00Z`, H=3, CSS viewport 390×1100. Selected Boryspilskyi is violet, alongside white actual-onset outlines including adjacent Cherkaskyi. Both outline keys are visible under the complete map. The black mobile layout stays within the viewport. T3 exports this image at double density, 780×2200.
 
 These are local T3 screenshot artifacts, opened with the image viewer. They are linked here for the lead to inspect.
 
@@ -277,9 +277,9 @@ The full-page D1 captures use the exact requested CSS viewports. T3 viewport scr
 - [Desktop map with selected active raion](test-results/artifacts/live/dashboard-clicking-a-polyg-8930a-replay-outcomes-and-history-desktop/map.png): real amber geometry, white onset outlines, red active dots, and Novhorod-Siverskyi beside the map. At the captured 01:00Z hour its probabilities are 0.10/0.37/0.89 and its median remaining end estimate is 13 min.
 - [Desktop report](test-results/artifacts/live/dashboard-map-selected-pan-af504-wport-and-deep-links-reload-desktop/report.png): actual validation/test tables for all six onset models, D0/D1 duration scores, corrected error labels, and separate chart-label leaders.
 - [Mobile map](test-results/artifacts/live/dashboard-clicking-a-polyg-8930a-replay-outcomes-and-history-mobile/map.png): complete map within 390 px, wrapped controls and scrubber, and the active raion panel/history stacked below without horizontal page scrolling.
-- [Hour inside the outage]([private home path removed] striped scrubber interval, source-outage notice, unknown outcomes/status, and no onset or active marks. The selected-raion outline remains a selection mark.
-- [History around the outage]([private home path removed] a grey band covers the missing observations behind the probability curve, separate from red actual-episode bands, with an explicit source-outage key.
-- [Reliability detail]([private home path removed] B0 ends at its last observed bin; short coloured label ticks sit beyond the plot. Variant IDs remain readable.
+- [Hour inside the outage](<local-browser-artifacts>/browser-screenshot-localhost-mv535huk-49c6812b.png): striped scrubber interval, source-outage notice, unknown outcomes/status, and no onset or active marks. The selected-raion outline remains a selection mark.
+- [History around the outage](<local-browser-artifacts>/browser-screenshot-localhost-mv538t10-3b8dc194.png): a grey band covers the missing observations behind the probability curve, separate from red actual-episode bands, with an explicit source-outage key.
+- [Reliability detail](<local-browser-artifacts>/browser-screenshot-localhost-mv534dzk-4f702b00.png): B0 ends at its last observed bin; short coloured label ticks sit beyond the plot. Variant IDs remain readable.
 
 The gap/detail captures are local T3 browser artifacts rather than committed files.
 

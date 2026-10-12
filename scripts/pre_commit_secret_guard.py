@@ -9,7 +9,7 @@ import sys
 
 PATTERNS = [
     ("personal email", re.compile(rb"[A-Za-z0-9._%+-]+@gmail\.com", re.IGNORECASE)),
-    ("Windows user path", re.compile(rb"[A-Z]:[\/]+Users[\/]+[^\s\"'<>]+", re.IGNORECASE)),
+    ("Windows user path", re.compile(rb"[A-Z]:[\\/]+Users[\\/]+[^\s\"'<>]+", re.IGNORECASE)),
     ("Unix home path", re.compile(rb"[private home path removed]"'<>]+", re.IGNORECASE)),
     ("GitHub token", re.compile(rb"\b(?:gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,})\b")),
     ("Telegram bot token", re.compile(rb"\b\d{8,10}:[A-Za-z0-9_-]{30,}\b")),
