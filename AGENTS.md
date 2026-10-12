@@ -66,9 +66,9 @@ Every raion that appears in the dataset's raion- or hromada-level records (any d
 | `data/processed/snapshot.json` | A1 | `{"snapshot": ISO, "csv_sha256": str, "regime_switch": ISO date}`. `snapshot` = latest timestamp in the CSV, floored to the hour. |
 | `data/geo/raions.geojson` | A2 | FeatureCollection, simplified to under 600 KB. Each feature's properties are `raion_id`, `oblast_id`, `name` (English). Polygons with no dataset raion get `raion_id: null`. |
 | `data/geo/adjacency.json`, `data/geo/centroids.csv`, `data/geo/crosswalk.csv` | A2 | Adjacency: `{raion_id: [raion_id, ...]}`. Centroids: `raion_id,lat,lon`. Crosswalk: map polygon → `raion_id`, with the match method. |
-| `data/processed/features/{train,val,test,latest}.parquet` | B1 | Keys `t`, `raion_id`, `oblast_id`. Features are named `f_*`. Labels `y_1`, `y_3`, `y_12` are nullable: null when `t + H` is past the snapshot, always null in `latest`. One row per (hourly `t` × raion in the universe). |
+| `data/processed/features/{train,val,test,latest}.parquet` | B1 | Keys `t`, `raion_id`, `oblast_id`. Features are named `f_*` and are float32, and **`f_active` (0/1, active as-of `t`) is required** because backtest slices quiet vs active on it. Labels `y_1`, `y_3`, `y_12` are nullable: null when `t + H` is past the snapshot, always null in `latest`. One row per (hourly `t` × raion in the universe). B1 publishes an early version (keys, labels and `f_active`) first, then signals with `.lead/B1_LABELS_READY` (the one `.lead/` file B1 may write). |
 | `data/processed/preds/onset_<model_id>.parquet` | each onset model | `t`, `raion_id`, `split` (`val`/`test`/`latest`), `p_1`, `p_3`, `p_12` (calibrated). |
-| `data/processed/preds/duration_<model_id>.parquet` | each duration model | `raion_id`, `start`, `split`, `q10_min`, `q50_min`, `q90_min`, for every episode starting in val, test, or still active at `latest`. |
+| `data/processed/preds/duration_<model_id>.parquet` | each duration model | `raion_id`, `start`, `split`, `q10_min`, `q50_min`, `q90_min`, for every episode with `start >= VAL_START − 7 days`, so the replay and history panel are covered. `split` is decided by the episode **start**: `train`/`val`/`test`, or `latest` for starts after the test end. Only `val`/`test` get scored. The duration episode split (start in range, the episode ends before the next split starts, no data-gap overlap, not censored) lives in `models/duration.py`. The forecast-row split, embargo and gap mask live in `backtest.py`. |
 | `data/processed/forecasts.parquet` | C2 | Exactly the `ForecastRow` fields from `schemas.py`, plus `t`. Monotonicity across horizons is enforced here. |
 | `reports/metrics/<fragment>.json` → `reports/metrics.json` | backtest (B2) | Each fragment is a partial `Report` (see `schemas.py`). `backtest` scores every preds file and writes `scores_val.json` (and `scores_test.json` with `--final`). C1 writes `selection.json` (the served models). `airalert.metrics.merge_reports()` concatenates the lists into `reports/metrics.json`. Only one writer per fragment file. Model variants are just distinct model ids (for example `M1-raionregime`), so they get scored like any other model. |
 
@@ -110,9 +110,9 @@ Each subcommand imports its target lazily, so a module that isn't built yet does
 | `src/airalert/geo.py`, `data/geo/`, `data/raw/geo/`, `docs/geo.md`, `docs/geo_map.png` | A2 |
 | `web/` (except the lead-owned files above and `web/tests/`) | A3 |
 | `docs/research/text-sources.md` | R1 |
-| `src/airalert/features.py`, `src/airalert/labels.py`, `tests/test_leakage.py`, `tests/test_labels.py`, `data/processed/features/` | B1 |
+| `src/airalert/features.py`, `src/airalert/labels.py`, `tests/test_leakage.py`, `tests/test_labels.py`, `data/processed/features/`, `docs/features.md` | B1 |
 | `src/airalert/backtest.py`, `src/airalert/metrics.py`, `src/airalert/models/baseline.py`, `tests/test_split.py`, `reports/` (except fragments owned by others), `data/processed/preds/onset_B0.parquet` | B2 |
-| `src/airalert/models/duration.py`, `tests/test_duration.py`, `data/processed/preds/duration_*`, `artifacts/D*/` | B3 |
+| `src/airalert/models/duration.py`, `tests/test_duration.py`, `data/processed/preds/duration_*`, `artifacts/D*/`, `docs/duration.md` | B3 |
 | `src/airalert/models/onset.py`, `data/processed/preds/onset_{B1,M1}*`, `artifacts/{B1,M1}*/`, `reports/metrics/selection.json`, `reports/figures/onset_*` | C1 |
 | `src/airalert/api.py`, `src/airalert/precompute.py`, `tests/test_api.py`, `data/processed/forecasts.parquet` | C2 |
 | `docs/research/text-signal.md`, `scripts/text_probe.py` | R2 |
