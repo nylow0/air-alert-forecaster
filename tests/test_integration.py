@@ -144,8 +144,81 @@ def test_duration_uses_onsets_live_closures_and_preserves_availability(
     assert view.loc["b", "observed_at"] > view.loc["b", "started_at"]
 
 
+def probe_live_capture(client: httpx.Client) -> dict[str, object]:
+    """Capture public API evidence without storing settings, credentials or process details."""
+    current = ForecastResponse.model_validate(client.get("/api/forecast").raise_for_status().json())
+    live = LiveState.model_validate(client.get("/api/live").raise_for_status().json())
+    selected = {"kharkivska/kharkivskyi", "dnipropetrovska/nikopolskyi"}
+    ages = pd.Series([(current.at - row.active_since).total_seconds() / 3600
+                      for row in current.rows if row.active], dtype=float)
+    return {"captured_at": datetime.now(UTC).isoformat(), "forecast": {
+        "at": current.at.isoformat(), "rows": [row.model_dump(mode="json")
+                                               for row in current.rows if row.raion_id in selected],
+        "active_since_age_hours": ages.describe(percentiles=[.5, .9, .99]).to_dict(),
+        "age_buckets": {"0_to_24h": int(ages.le(24).sum()),
+                        "24_to_72h": int((ages.gt(24) & ages.le(72)).sum()),
+                        "over_72h": int(ages.gt(72).sum())}}, "live": {
+        "fetched_at": live.fetched_at.isoformat() if live.fetched_at else None,
+        "stale": live.stale, "units": [unit.model_dump(mode="json")
+                                       for unit in live.units if unit.raion_id in selected]}}
+
+
+def probe_live_consistency(client: httpx.Client) -> dict[str, object]:
+    """Compare all served active flags with an independent latest-pre-hour origin oracle."""
+    from airalert import ingest, production
+
+    current = ForecastResponse.model_validate(client.get("/api/forecast").raise_for_status().json())
+    t = pd.Timestamp(current.at)
+    assert t == pd.Timestamp.now(tz="UTC").floor("h")
+    observed = production.load_observations(t)
+    assert not observed.empty, "No successful observed-before-hour poll available"
+    receipt = observed.observed_at.max()
+    # Allow one 60s poll interval plus scheduler/network jitter. A later live
+    # response belongs to a different clock and cannot revise the hourly base.
+    receipt_age = (t - receipt).total_seconds()
+    assert 0 < receipt_age <= 180, f"Pre-hour live state is stale by {receipt_age}s"
+    latest = observed.loc[observed.observed_at.eq(receipt)
+                          & observed.hazard_type.eq("air_raid")
+                          & observed.raion_id.notna() & observed.started_at.lt(t)].copy()
+    active = latest.finished_at.isna() | latest.finished_at.gt(t)
+    persistent = latest.level.eq("hromada") & (t - latest.started_at).gt(
+        pd.Timedelta(hours=ingest.PERSISTENT_LOCAL_ALERT_H))
+    expected_ids = set(latest.loc[active & ~persistent, "raion_id"])
+    universe = set(pd.read_csv(config.RAIONS_PATH).raion_id)
+    served = pd.DataFrame([row.model_dump() for row in current.rows]).set_index("raion_id")
+    assert set(served.index) == universe and len(served) == len(universe)
+    features, state, view = production.forecast_inputs(
+        pd.read_parquet(config.RECORDS_PATH), observed, t)
+    inputs = features.set_index("raion_id").f_active.astype(bool)
+    mismatches = [{"raion_id": rid, "forecast_active": bool(served.loc[rid, "active"]),
+                   "f_active": bool(inputs.loc[rid]), "live_expected": rid in expected_ids}
+                  for rid in sorted(universe)
+                  if bool(served.loc[rid, "active"]) != (rid in expected_ids)
+                  or bool(inputs.loc[rid]) != (rid in expected_ids)]
+    broad = set(latest.loc[active & latest.level.isin(["raion", "oblast"]), "raion_id"])
+    older = [{"raion_id": row.raion_id, "active_since": row.active_since.isoformat(),
+              "district_or_oblast_active": row.raion_id in broad}
+             for row in current.rows if row.active and (t - row.active_since).total_seconds()
+             > ingest.PERSISTENT_LOCAL_ALERT_H * 3600]
+    result = {"at": current.at.isoformat(), "pre_hour_receipt": receipt.isoformat(),
+              "receipt_age_seconds": receipt_age, "timing_tolerance_seconds": 180,
+              "raions": len(universe), "active": int(served.active.sum()),
+              "mismatch_count": len(mismatches), "mismatches": mismatches,
+              "excluded_persistent_raions": sorted(set(latest.loc[persistent, "raion_id"])),
+              "active_over_72h": older,
+              "duration_input_persistent_count": int(ingest.persistent_local_mask(
+                  view.loc[view.source.isin(["siren", "aiu_api"])], t).sum()),
+              "capture": probe_live_capture(client)}
+    print(json.dumps(result), flush=True)
+    assert not mismatches, f"Live/forecast mismatches: {mismatches}"
+    assert all(row["district_or_oblast_active"] for row in older)
+    assert result["duration_input_persistent_count"] == 0
+    return result
+
+
 def probe_http(client: httpx.Client) -> dict[str, object]:
     """Validate real responses and compare replay/now probabilities with their producer files."""
+    from airalert import production
     from airalert.precompute import active_state
 
     meta = Meta.model_validate(client.get("/api/meta").raise_for_status().json())
@@ -155,6 +228,10 @@ def probe_http(client: httpx.Client) -> dict[str, object]:
     assert current.at == meta.latest_at == hour and len(current.rows) == 119
     assert current.onset_model == "selected" and current.duration_model == "D2"
     issued = pd.read_parquet(config.V2_FORECASTS_DIR / f"{hour.strftime('%Y%m%dT%HZ')}.parquet")
+    repaired = (config.V2_FORECASTS_DIR / "corrections" / production.LIVE_INPUT_POLICY
+                / f"{hour.strftime('%Y%m%dT%HZ')}.parquet")
+    if repaired.exists():
+        issued = pd.read_parquet(repaired)
     served = pd.DataFrame([row.model_dump() for row in current.rows]).set_index("raion_id")
     pd.testing.assert_frame_equal(served[["p_1", "p_3", "p_12"]].sort_index(),
                                   issued.set_index("raion_id")[["p_1", "p_3", "p_12"]]
@@ -440,7 +517,9 @@ def probe_lifecycle(client: httpx.Client) -> dict[str, object]:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("probe", choices=["http", "news", "startup", "startup-server", "lifecycle"])
+    parser.add_argument("probe", choices=[
+        "http", "news", "startup", "startup-server", "lifecycle", "capture", "consistency",
+    ])
     parser.add_argument("--root", type=Path)
     parser.add_argument("--cold", action="store_true")
     args = parser.parse_args()
@@ -455,11 +534,18 @@ if __name__ == "__main__":
                 evidence = probe_http(client)
             elif args.probe == "lifecycle":
                 evidence = probe_lifecycle(client)
+            elif args.probe == "capture":
+                evidence = probe_live_capture(client)
+            elif args.probe == "consistency":
+                evidence = probe_live_consistency(client)
             else:
                 evidence = probe_news(client)
-    directory = config.DATA_DIR / "live" / "x1"
+    directory = config.DATA_DIR / "live" / (
+        "x3" if args.probe in {"capture", "consistency"} else "x1")
     directory.mkdir(parents=True, exist_ok=True)
-    (directory / f"{args.probe}.json").write_text(json.dumps(evidence, indent=2), encoding="utf-8")
+    filename = (f"capture-{datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')}.json"
+                if args.probe == "capture" else f"{args.probe}.json")
+    (directory / filename).write_text(json.dumps(evidence, indent=2), encoding="utf-8")
     if args.probe == "http":
         print(json.dumps({key: evidence[key] for key in (
             "current", "replay_checks", "history_checks", "report", "live", "auth")}), flush=True)

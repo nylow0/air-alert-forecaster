@@ -42,6 +42,8 @@ from airalert.sources.storage import atomic_json, cache_response
 # Lead-reviewed round-3 overlap and outage repair, documented in docs/ingest.md.
 # Local bootstrap policy is committed; validation results and ledgers are not.
 REVIEWED_CUTOVER = datetime(2026, 8, 29, 6, tzinfo=UTC)
+# Lead-owned config will take this constant at integration.
+PERSISTENT_LOCAL_ALERT_H = 72
 REVIEWED_VALIDATION_DAYS = tuple(
     date.fromisoformat(value) for value in (
         "2026-08-20", "2026-08-21", "2026-08-22", "2026-08-23",
@@ -137,6 +139,13 @@ def event_records(events: list[Event], locations: Locations) -> pd.DataFrame:
     for column in ("started_at", "finished_at", "source_updated_at"):
         frame[column] = pd.to_datetime(frame[column], utc=True).astype("datetime64[us, UTC]")
     return frame
+
+
+def persistent_local_mask(records: pd.DataFrame, t: pd.Timestamp) -> pd.Series:
+    """Identify long community spells in live inputs, never filter canonical history."""
+    elapsed_until = records.finished_at.fillna(t).clip(upper=t)
+    return records.level.eq("hromada") & (elapsed_until - records.started_at).gt(
+        pd.Timedelta(hours=PERSISTENT_LOCAL_ALERT_H))
 
 
 def _read_json(path: Path) -> dict[str, object]:
@@ -665,8 +674,12 @@ def polygon_state(
             coverage = "inherited"
         layer: dict[str, Layer | None] = {"red": None, "yellow": None}
         for color in layer:
-            starts = [level.since for event, _ in applicable if event.hazard == "air_raid"
-                      for level in event.levels if level.severity == color]
+            broad_starts = [level.since for event, origin_level in applicable
+                            if event.hazard == "air_raid" and origin_level in {"raion", "oblast"}
+                            for level in event.levels if level.severity == color]
+            starts = broad_starts or [level.since for event, _ in applicable
+                                      if event.hazard == "air_raid"
+                                      for level in event.levels if level.severity == color]
             if starts:
                 layer[color] = {"active": True, "since": _iso(min(starts))}
             elif coverage != "unknown":
@@ -794,9 +807,14 @@ def live_state(now: datetime, *, root: Path | None = None) -> dict[str, object]:
         observed["observed_at"] = pd.Timestamp(received_at).as_unit("us")
         observations = root / "observations" / f"{now.strftime('%Y%m%dT%H%M%S%fZ')}.parquet"
         observations.parent.mkdir(parents=True, exist_ok=True)
-        observed.to_parquet(observations, index=False)
         _save_level_observations(events, locations, received_at)
         _save_hazards(observed)
+        # Publish only complete successful polls. Empty snapshots need an explicit
+        # receipt too; a failed attempt must never become evidence of absence.
+        staging = observations.with_suffix(".part")
+        observed.to_parquet(staging, index=False)
+        atomic_json(observations.with_suffix(".json"), {"observed_at": _iso(received_at)})
+        staging.replace(observations)
     except Exception as error:
         if previous:
             state = previous

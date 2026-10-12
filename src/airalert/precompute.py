@@ -335,6 +335,15 @@ def _publish_v2(rows: pd.DataFrame, paths: Paths, metadata: dict[str, object]) -
     staging.replace(paths.forecasts)
 
 
+def _issued_frames(paths: Paths) -> list[pd.DataFrame]:
+    """Serving repairs supersede legacy display rows, preserving original issued files."""
+    files = {path.name: path for path in sorted(paths.issued.glob("*.parquet"))}
+    for path in sorted(paths.issued.glob("corrections/*/*.parquet")):
+        files[path.name] = path
+    return [pd.read_parquet(path, columns=["t", *ForecastRow.model_fields])
+            for _, path in sorted(files.items())]
+
+
 def append_issued(paths: Paths) -> dict[str, object]:
     """Extend replay with first-issued hours, never overwrite their probabilities."""
     if not paths.forecasts.exists():
@@ -345,8 +354,7 @@ def append_issued(paths: Paths) -> dict[str, object]:
         return {"issued_hours": 0}
     rows = table.to_pandas()
     saved = json.loads(paths.snapshot.read_text(encoding="utf-8"))
-    frames = [pd.read_parquet(path, columns=["t", *ForecastRow.model_fields])
-              for path in sorted(paths.issued.glob("*.parquet"))]
+    frames = _issued_frames(paths)
     if frames:
         issued = pd.concat(frames, ignore_index=True)
         rows = pd.concat([rows, issued], ignore_index=True).drop_duplicates(
@@ -371,8 +379,7 @@ def append_issued(paths: Paths) -> dict[str, object]:
 
 def run_issued(paths: Paths) -> dict[str, object]:
     """Cold-start replay contains actual issued hours, with no backward model application."""
-    frames = [pd.read_parquet(path, columns=["t", *ForecastRow.model_fields])
-              for path in sorted(paths.issued.glob("*.parquet"))]
+    frames = _issued_frames(paths)
     if not frames:
         raise FileNotFoundError("No issued forecasts; run uv run airalert setup")
     rows = pd.concat(frames, ignore_index=True)

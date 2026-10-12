@@ -22,11 +22,13 @@ from airalert import config, metrics
 from airalert.backtest import v2_data_gap_mask, write_v2_json
 from airalert.data import load_episodes, load_raions, load_records, load_snapshot
 from airalert.features import FeatureContext, build_features, load_feature_context
+from airalert.ingest import persistent_local_mask
 from airalert.labels import build_labels
 from airalert.models import duration, onset
 from airalert.schemas import ForecastRow, ProductionModel
 
 _LOCK = threading.RLock()
+LIVE_INPUT_POLICY = "persistent-local-v1"
 
 # Preserve the evaluated B0 reference settings without shipping evaluation artifacts.
 # These are the accepted v2 training-only choices, not a new tuning pass.
@@ -142,17 +144,22 @@ def refit(now: datetime) -> ProductionModel:
 
 
 def load_observations(t: pd.Timestamp) -> pd.DataFrame:
-    """Read only received-before-hour observations, including the actual receipt clock."""
+    """Use unreconciled successful receipts strictly before the prediction hour."""
     frames: list[pd.DataFrame] = []
+    boundary = load_snapshot().snapshot
+    filters = [("observed_at", "<", t.to_pydatetime())]
+    if boundary < t:
+        filters.append(("observed_at", ">=", boundary.to_pydatetime()))
     for path in sorted(config.V2_LIVE_OBSERVATIONS_DIR.glob("*.parquet")):
-        frame = pd.read_parquet(path, filters=[("observed_at", "<", t.to_pydatetime())])
+        frame = pd.read_parquet(path, filters=filters)
         if not frame.empty:
             frames.append(frame)
         elif pd.read_parquet(path, columns=["observed_at"]).empty:
-            # Empty successful polls carry no row receipt clock. Filesystem write
-            # time is a conservative availability bound until I1 adds a manifest.
-            received = pd.Timestamp(path.stat().st_mtime, unit="s", tz="UTC").as_unit("us")
-            if received < t:
+            receipt = path.with_suffix(".json")
+            received = (pd.Timestamp(json.loads(receipt.read_text(encoding="utf-8"))["observed_at"])
+                        if receipt.exists() else pd.Timestamp(
+                            path.stat().st_mtime, unit="s", tz="UTC")).as_unit("us")
+            if received < t and (boundary >= t or received >= boundary):
                 frames.append(pd.DataFrame({"observed_at": [received], "raion_id": [None],
                                             "hazard_type": ["poll"], "started_at": [pd.NaT],
                                             "finished_at": [pd.NaT]}))
@@ -164,9 +171,10 @@ def as_of_records(
 ) -> pd.DataFrame:
     """Combine record prefixes with only live snapshots received strictly before t.
 
-    A disappearing live origin ends at its first successful absent snapshot,
-    conservatively, unless a known end was explicitly observed. Failed polls
-    have no observation file, so they cannot clear alerts. Severity is unused.
+    A live spell ends at the first successful absent snapshot. Inexact siren
+    level starts are proxies, and changing a color cannot start another spell.
+    Community spells longer than 72h are excluded from all model inputs. Failed
+    polls have no observation file and cannot clear alerts.
     """
     columns = ["raion_id", "oblast_id", "level", "started_at", "finished_at", "source"]
     view = records.copy()
@@ -176,6 +184,9 @@ def as_of_records(
         view = view.loc[view.observed_at.isna() | view.observed_at.lt(t)]
     view = view.loc[view.started_at.lt(t), columns].copy()
     view.loc[view.finished_at.gt(t), "finished_at"] = pd.NaT
+    # The archive can also carry an unresolved local continuation. Exclude it
+    # only from the online view; canonical history and completed targets stay intact.
+    view = view.loc[~(view.finished_at.isna() & persistent_local_mask(view, t))].copy()
     if observations.empty:
         return view.reset_index(drop=True)
     observed = observations.loc[observations.observed_at.lt(t)].copy()
@@ -186,29 +197,44 @@ def as_of_records(
     polls = np.sort(observed.observed_at.unique())
     observed = observed.loc[observed.hazard_type.eq("air_raid") & observed.raion_id.notna()
                             & observed.started_at.lt(t)].copy()
-    # A successful complete poll can close an archive-censored alert once the
-    # raion is absent. The first absent receipt is a conservative known end.
-    for raion_id, positions in view.loc[view.finished_at.isna()].groupby("raion_id").groups.items():
-        seen = observed.loc[observed.raion_id.eq(raion_id), "observed_at"].unique()
-        absent = np.setdiff1d(polls, seen)
-        if len(absent):
-            first_absent = absent[0]
-            eligible_positions = view.loc[positions].index[view.loc[positions].started_at.lt(
-                first_absent)]
-            view.loc[eligible_positions, "finished_at"] = first_absent
-    if observed.empty:
-        return view.reset_index(drop=True)
     for column in ("started_at", "finished_at"):
         observed[column] = pd.to_datetime(observed[column], utc=True).astype("datetime64[us, UTC]")
-    keys = ["raion_id", "source", "origin_uid", "origin_event_id", "started_at"]
-    ordered = observed.sort_values("observed_at", kind="stable")
-    last = ordered.drop_duplicates(keys, keep="last").copy()
+    keys = ["raion_id", "source", "origin_uid", "origin_event_id"]
+    ordered = observed.sort_values("observed_at", kind="stable").drop_duplicates(
+        [*keys, "observed_at"], keep="last").copy()
+    ordered["_poll"] = np.searchsorted(polls, ordered.observed_at.to_numpy())
+    grouped = ordered.groupby(keys, sort=False)
+    exact = ordered.get("start_is_exact", pd.Series(True, index=ordered.index)).fillna(False)
+    changed_start = exact & ordered.started_at.ne(grouped.started_at.shift())
+    new_spell = grouped._poll.diff().gt(1) | changed_start
+    ordered["_spell"] = new_spell.groupby([ordered[key] for key in keys]).cumsum()
+    spell_keys = [*keys, "_spell"]
+    # The earliest reported level time is the conservative live onset proxy.
+    ordered["started_at"] = ordered.groupby(spell_keys, sort=False).started_at.transform("min")
+    last = ordered.drop_duplicates(spell_keys, keep="last").copy()
     positions = np.searchsorted(polls, last.observed_at.to_numpy(), side="right")
     disappeared = positions < len(polls)
     ends = last.finished_at.copy()
     ends.loc[disappeared & ends.isna()] = polls[positions[disappeared & ends.isna()]]
     last["finished_at"] = ends
     last.loc[last.finished_at.gt(t), "finished_at"] = pd.NaT
+    last = last.loc[~persistent_local_mask(last, t)].copy()
+    eligible = ordered.merge(last[spell_keys], on=spell_keys, how="inner")
+    # A successful complete poll can close an archive-censored alert once the
+    # raion is absent. The first absent receipt is a conservative known end.
+    for (raion_id, level), positions in view.loc[view.finished_at.isna()].groupby(
+        ["raion_id", "level"]
+    ).groups.items():
+        seen = eligible.loc[eligible.raion_id.eq(raion_id) & eligible.level.eq(level),
+                            "observed_at"].unique()
+        absent = np.setdiff1d(polls, seen)
+        if len(absent):
+            first_absent = absent[0]
+            eligible_positions = view.loc[positions].index[view.loc[positions].started_at.lt(
+                first_absent)]
+            view.loc[eligible_positions, "finished_at"] = first_absent
+    if last.empty:
+        return view.reset_index(drop=True)
     live = last[columns]
     # Mirrors of the same origin onset and canonical records never add another count.
     return pd.concat([view, live], ignore_index=True).drop_duplicates(
@@ -289,14 +315,22 @@ def _end_quantiles(
 
 
 def forecast(now: datetime, *, persist: bool = True) -> pd.DataFrame:
-    """Forecast floor(now) from a frozen generation and first-write stored observations."""
+    """Keep first issuance immutable; policy repairs use a separate immutable serving copy."""
     with _LOCK:
         clock = _utc(now)
         t = clock.floor("h")
         path = config.V2_FORECASTS_DIR / f"{t.strftime('%Y%m%dT%HZ')}.parquet"
         fields = list(ForecastRow.model_fields)
         if persist and path.exists():
-            return pd.read_parquet(path)[["t", *fields]]
+            stored = pd.read_parquet(path)
+            if "live_input_policy" in stored and stored.live_input_policy.eq(
+                LIVE_INPUT_POLICY).all():
+                return stored[["t", *fields]]
+            # Preserve the original issuance and its prospective scoring evidence.
+            # A late repair must not masquerade as a timely first-issued forecast.
+            path = path.parent / "corrections" / LIVE_INPUT_POLICY / path.name
+            if path.exists():
+                return pd.read_parquet(path)[["t", *fields]]
         generation = _generation()
         metadata = json.loads((generation / "metadata.json").read_text(encoding="utf-8"))
         through = pd.Timestamp(metadata["status"]["data_through"])
@@ -340,7 +374,8 @@ def forecast(now: datetime, *, persist: bool = True) -> pd.DataFrame:
                 np.column_stack(reference))
             stored["issued_at"] = max(clock, pd.Timestamp.now(tz="UTC"))
             stored["model_generation"] = generation.name
-            config.V2_FORECASTS_DIR.mkdir(parents=True, exist_ok=True)
+            stored["live_input_policy"] = LIVE_INPUT_POLICY
+            path.parent.mkdir(parents=True, exist_ok=True)
             staging = path.with_name(f".{path.stem}-{uuid.uuid4().hex}.tmp")
             stored.to_parquet(staging, index=False)
             try:

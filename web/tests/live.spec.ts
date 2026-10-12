@@ -180,7 +180,8 @@ test('maps, news, footer and Settings have separate space at mobile and desktop 
     await panel.press('Escape')
     await expect(card).toBeVisible()
     await page.getByRole('button', { name: 'Forecast', exact: true }).click()
-    await expect(page.locator('.ukraine-map')).toBeVisible()
+    // Now can cross the hourly publisher's 503 window and the UI's 10s clock tick.
+    await expect(page.locator('.ukraine-map')).toBeVisible({ timeout: 30_000 })
     const dashboard = (await page.locator('.dashboard').boundingBox())!
     const forecastNews = (await card.boundingBox())!
     if (width < 1400) expect(forecastNews.y).toBeGreaterThanOrEqual(dashboard.y + dashboard.height)
@@ -318,7 +319,7 @@ test('system footer reports API data coverage and nightly time; capture desktop/
   await page.screenshot({ path: testInfo.outputPath('live.png') })
   await noOverflow(page)
   await page.getByRole('button', { name: 'Forecast', exact: true }).click()
-  await expect(page.locator('.ukraine-map')).toBeVisible()
+  await expect(page.locator('.ukraine-map')).toBeVisible({ timeout: 30_000 })
   const forecast = await read<ForecastResponse>(page, 'forecast')
   const sample = forecast.rows.find(row => row.active) ?? forecast.rows[0]
   expect(forecast.rows.some(row => row.raion_id === sample.raion_id)).toBe(true)

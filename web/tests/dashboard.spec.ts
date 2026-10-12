@@ -35,7 +35,14 @@ let report: Report
 let live: LiveState
 
 async function api<T>(request: APIRequestContext, path: string): Promise<T> {
-  const response = await request.get(path)
+  let response = await request.get(path)
+  if (path === '/api/forecast' && response.status() === 503) {
+    // The hourly publisher explicitly advertises 503 while the new base is built.
+    await expect.poll(async () => {
+      response = await request.get(path)
+      return response.status()
+    }, { timeout: 30_000, intervals: [250, 500, 1_000, 2_000] }).not.toBe(503)
+  }
   expect(response.ok(), `${path}: HTTP ${response.status()} ${await response.text()}`).toBeTruthy()
   return await response.json() as T
 }
@@ -176,8 +183,19 @@ test.beforeAll(async ({ request }) => {
 
 test.beforeEach(async ({ page }) => {
   const receipt = page.waitForResponse(response => response.url().endsWith('/api/live'))
+  const metadata = page.waitForResponse(response => response.url().endsWith('/api/meta'))
+  const historyRaion = geo.features.find(feature => feature.properties.raion_id)?.properties.raion_id
+  // Transport uses a separately loaded list of stored hours. Map readiness alone
+  // can precede that list, especially while the live replay spans several months.
+  const storedHours = page.waitForResponse(async response => {
+    const url = new URL(response.url())
+    if (url.pathname !== `/api/raion/${historyRaion}/history`) return false
+    const loaded = await (await metadata).json() as Meta
+    return Date.parse(url.searchParams.get('to') ?? '') === Date.parse(loaded.replay.end)
+  })
   await page.goto(`/?${new URLSearchParams({ mode: 'replay', horizon: '3', at: forecast.at })}`)
   live = await (await receipt).json() as LiveState
+  expect((await storedHours).ok(), 'The stored-hour list must load before replay transport').toBeTruthy()
   await ready(page, forecast.at)
   const mockNotice = page.getByText('Development preview. Probabilities, history, and scores are synthetic fixtures.', { exact: true })
   if ((process.env.E2E_TARGET ?? 'mock') === 'mock') await expect(mockNotice).toBeVisible()
@@ -323,10 +341,11 @@ test('step buttons move one hour in either direction and stop at replay bounds',
   expect(await fills(page)).toEqual(before)
   const scrubber = page.getByRole('slider', { name: 'Replay hour', exact: true })
   await scrubber.press('Home')
-  await ready(page, meta.replay.start)
+  await ready(page, iso(Number(await scrubber.getAttribute('min'))))
   await expect(page.getByRole('button', { name: 'Step back one hour' })).toBeDisabled()
   await scrubber.press('End')
-  await ready(page, meta.replay.end)
+  // Read this page's bounds; the server can publish a new hour after beforeAll.
+  await ready(page, iso(Number(await scrubber.getAttribute('max'))))
   await expect(page.getByRole('button', { name: 'Step forward one hour' })).toBeDisabled()
 })
 
@@ -464,8 +483,8 @@ test('duration tables, model selection, and report notes match the API', async (
 
 test('Now uses the current-hour forecast and hides replay controls and outcomes', async ({ page, request }) => {
   await selectRaion(page, request)
-  await page.getByRole('button', { name: 'Now', exact: true }).click()
   const latest = await api<ForecastResponse>(request, '/api/forecast')
+  await page.getByRole('button', { name: 'Now', exact: true }).click()
   expect(latest.mode).toBe('latest')
   expect(Date.parse(latest.at)).toBe(Math.floor(Date.now() / hour) * hour)
   await expect.poll(() => new URL(page.url()).searchParams.get('mode')).toBe('latest')

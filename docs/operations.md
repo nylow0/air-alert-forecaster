@@ -8,9 +8,11 @@ nightly run that startup must retry.
 
 The current-hour forecast comes from `airalert.production.forecast`, with
 canonical history through yesterday and live observations received strictly
-before the hour. First-issued hourly files are immutable. Repeating a request,
-refitting, or restarting cannot change an already issued hour. Later observations
-first affect the following hour. Latest responses never contain actual labels.
+before the hour. First-issued hourly files are immutable. Repeating a request
+or refitting cannot rewrite an issuance. An explicit input-policy repair can
+publish a separate immutable serving correction, preserving the original file
+and its scoring evidence. Later observations first affect the following hour.
+Latest responses never contain actual labels.
 
 Missing production artifacts queue background maintenance. `/api/system`
 reports `production.onset="fitting"` while fitting. Existing complete caches
@@ -19,6 +21,33 @@ returns HTTP 503 with `Retry-After: 2`; it never substitutes a dated snapshot.
 `/api/meta.latest_at` still identifies the current UTC hour.
 
 ## Schedules and manual maintenance
+
+### Live-state consistency
+
+Forecasts exclude live community alerts older than 72 hours, while the live map
+keeps them visible and gives active district/oblast origins precedence for
+each layer's since time. The shared as-of records also feed remaining duration.
+Successful absent polls end stale origins; failures retain the last observation.
+The online view also excludes unresolved persistent archive continuations,
+and closes censored coverage by raion and source level. Reconciled history
+supersedes receipts before its boundary. See
+[ingest.md](ingest.md#persistent-local-alerts) for the exact threshold and proxy rule.
+
+Run `uv run --no-sync python tests/test_integration.py consistency` against port
+8000. It compares every universe raion's served active flag and `f_active` with
+an independent latest-pre-hour origin check and prints each mismatch. The latest
+eligible receipt must be strictly before the hour and at most 180 seconds old,
+allowing one minute polling plus network/scheduler jitter. This is receipt-age
+tolerance, not permission to use observations received after the hour. `/api/live`
+shows a newer clock; post-hour starts first affect the next hourly forecast.
+
+`uv run --no-sync python tests/test_integration.py capture` records the two
+reported raions and active-since age distribution under git-ignored
+`data/live/x3/`. Legacy hours repaired under `persistent-local-v1` have a separate
+file at `issued/corrections/persistent-local-v1/<hour>.parquet`. The original
+hourly file is preserved. Serving and replay prefer the correction, while
+prospective scoring still reads original first issuances only. Corrections
+carry their actual later issuance clock and cannot count as timely predictions.
 
 | Schedule | Work |
 |---|---|
@@ -295,3 +324,133 @@ outside X1 ownership.
 ### Dependencies added
 
 None.
+
+## X3 live-state consistency report
+
+### Delivered
+
+- `src/airalert/ingest.py`: `PERSISTENT_LOCAL_ALERT_H = 72`, shared live-spell
+  filtering, independent red/yellow district/oblast precedence, and atomic
+  successful observation publication with explicit receipt sidecars.
+- `src/airalert/production.py`: exclusion of persistent local live origins and
+  unresolved archive continuations from online inputs; origin continuity across
+  inexact color changes; closure on successful absence; archive closure by raion
+  and source level; reconciliation receipt cutoff; immutable serving repairs.
+- `src/airalert/precompute.py`: replay prefers a separately published serving
+  repair while preserving the original first issuance.
+- `tests/test_production.py`, `tests/test_integration.py`: real producer/map/D2
+  input regression, strict threshold, absent/reappearing origins, inexact starts,
+  receipt cutoffs, empty receipts, immutable repairs and the reusable real-data
+  `consistency`/`capture` probes.
+- `web/tests/dashboard.spec.ts`, `web/tests/live.spec.ts`: stored-hour readiness,
+  page-local replay bounds and synchronization with hourly publication.
+- `docs/ingest.md`, `docs/operations.md`: policy, operational probe and this evidence.
+
+### Verified
+
+All clocks below are UTC on October 12, 2026. Full selected-raion JSON is in
+`data/live/x3/capture.json` before and
+`data/live/x3/capture-20261012T190857Z.json` after. The latest consistency
+result is `data/live/x3/consistency.json`.
+
+Before, the 18:00 forecast captured at 18:54:15 returned:
+
+- Kharkivskyi: `active=true`, `active_since=2026-03-10T09:05:43Z`,
+  probabilities `0.013646 / 0.048724 / 0.048724`. Live red since
+  `2026-03-10T14:01:38.075992Z`; yellow null.
+- Nikopolskyi: `active=true`, `active_since=2026-09-17T07:22:11Z`,
+  probabilities `0.013646 / 0.041923 / 0.043043`. Live red since
+  `2026-10-11T08:33:39.714919Z`, yellow since
+  `2026-09-17T10:06:09.751296Z`.
+
+After, the corrected 19:00 forecast captured at 19:08:57 returned:
+
+- Kharkivskyi: `active=true`, `active_since=2026-10-12T18:01:13.466849Z`,
+  probabilities `0.128223 / 0.493827 / 0.799042`. Live red since the same
+  district start; yellow null. A direct source fetch identified March origin
+  UID 1284 as hromada and fresh UID 124 as district.
+- Nikopolskyi: `active=true`, `active_since=2026-10-11T08:15:43Z`,
+  probabilities `0.013646 / 0.041923 / 0.081716`. Live red/yellow starts remain
+  as above. Red is a 34-hour community alert, so it still counts. The forecast
+  component starts at an overlapping ordinary district record, 08:15:43 to
+  09:35:38, followed by the 08:33:39 community alert. The September community
+  continuations no longer contribute to forecast inputs, while yellow remains
+  visible on the live map.
+
+Across active forecast raions, before there were 49 active, with 38 ages at most
+24h, nine at 24-72h and two above 72h. Median age was 0.931h, P90 25.484h,
+P99 2,993.413h and maximum 5,192.905h. After there are 33 active, with 23 ages
+at most 24h, ten at 24-72h and none above 72h. Median age is 1.931h, P90
+26.484h, P99 32.097h and maximum 34.738h. Ordinary source changes between
+18:00 and 19:00 also affect the active count.
+
+- `uv run --no-sync python tests/test_integration.py consistency`: 119 raions,
+  33 active, `mismatch_count=0`, `active_over_72h=[]`, and zero persistent live
+  records in duration inputs. The last eligible receipt is 18:59:05.025054,
+  54.975 seconds before the hour, inside the documented 180-second tolerance.
+- `uv run --no-sync pytest -q --tb=short`: `138 passed, 1 warning in 84.25s`.
+  The warning is the existing Starlette/httpx deprecation.
+- `uv run --no-sync ruff check`: `All checks passed!`.
+- In `web/`, `$env:E2E_TARGET='live'; bun run e2e`, final code twice:
+  `41 passed (2.2m)` and `41 passed (1.9m)`. Each includes desktop/mobile step
+  controls and the real news on/off round trip, with settings restored and
+  off observed for 65 seconds.
+- `$env:E2E_TARGET='mock'; bun run e2e`: `52 passed (49.9s)`.
+- `bun run check`: zero errors and zero warnings. `git diff --check` passed;
+  only LF/CRLF notices. A scoped privacy scan found zero findings.
+- Actual browser probe on 5173: held history at 01:00 while map busy was false;
+  clicking Step forward left 01:00 unchanged. After releasing history, the
+  next click moved to 02:00. The test now waits for the required stored-hour
+  response and uses the slider's current min/max instead of suite-start Meta.
+- A diagnostic full live run across 19:00 had 38 passes and three failures in
+  other Now/layout checks. They assumed immediate publication or a 10s map
+  deadline. API publication actually took 25.5s. Those checks now respect 503
+  and the UI clock tick within a bounded 30s wait. Both subsequent complete
+  live runs passed.
+- Original 19:00 rows still match the pre-correction capture. Correction
+  publication is at 19:08:51, outside prospective scoring grace. All 119 replay
+  rows match the correction. The real 5173 page renders 119 forecast paths,
+  including Kharkivskyi `0.49` and Nikopolskyi `0.04` at 3h, with busy false.
+- The real server was restarted with
+  `uv run --no-sync airalert serve --port 8000` and left running. Port 5173 was
+  not stopped or restarted. Final checks show both listeners present, HTTP 200
+  with 119 current-hour rows, live not stale and news off.
+
+### Decisions/assumptions
+
+Only the online view excludes unresolved persistent archive rows. Contrary to
+the initial assumption, canonical Nikopolskyi data contains a censored hromada
+row from September 17. Its actual stored row, completed history, episodes,
+training artifacts and frozen reports were preserved. District/oblast age has
+no exclusion; exactly 72h community coverage still counts.
+
+Inexact live timestamps remain proxies, never labels. A successful absent poll
+ends an origin; failed polls do not. Original source identity is retained for
+live spells. Canonical rows lack origin identity, so censored archive closure
+uses raion and source level. Receipts before the published reconciliation
+boundary are superseded by history. All onset and remaining-duration inputs
+share this view.
+
+Legacy first-issued files stay immutable. The `persistent-local-v1` repair is
+a separate immutable serving file with its actual later issuance clock.
+Replay and current serving prefer it. Rolling scoring reads original first
+issuances, so a late repair cannot become prospective evidence.
+
+### Open issues
+
+The supported authenticated adapter was not exercised. Siren original onsets
+remain inexact. The UI still ignores transport clicks before its stored-hour
+list arrives; this task fixes the test's readiness assumption. An F1 follow-up
+could disable those controls while loading. Older original issued forecasts
+retain their original behavior unless a separate serving repair is published.
+No required verification remains failing.
+
+### Contract change requests
+
+Move `PERSISTENT_LOCAL_ALERT_H` from `ingest.py` to lead-owned `config.py` during
+integration. No API schema or frontend source change is required. The new
+receipt sidecars resolve the former empty-poll receipt-manifest handoff request.
+
+### Dependencies added
+
+None. No commit or git state change was made.

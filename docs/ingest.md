@@ -1,5 +1,34 @@
 # v2 ingest report, I1 round 3
 
+## Persistent local alerts
+
+A live community/hromada origin active for more than 72 hours is excluded
+from forecast records, every record-derived feature, active/active-since and
+remaining-duration inputs. Exactly 72 hours still counts. District and oblast
+origins have no age exclusion. `PERSISTENT_LOCAL_ALERT_H` in `ingest.py` is the
+single threshold pending the lead's move to config. Canonical CSV/archive
+history and labels are unchanged. The online view also excludes unresolved
+persistent hromada continuations already present in canonical archive data.
+This avoids treating a permanently alerted
+frontline community as seven months of raion-wide coverage, a state absent
+from the ended-only training history.
+
+The live map still displays persistent origins. Separately for red and yellow,
+its since time is the earliest active district/oblast layer start if there is
+one; community starts are used only when that layer has no broader origin.
+
+Successful origin snapshots received strictly before the forecast hour govern
+live availability. An absent origin closes at the first successful absent
+receipt, including after downtime. Failed polls do not clear alerts. Continuous
+inexact siren level times are live onset proxies; a color change does not add
+a start, and a reappearance after an absent poll is a new spell. These proxies
+never become onset labels. Receipts before the reconciled snapshot boundary
+are superseded by canonical history. New successful observation files have
+receipt sidecars, including empty polls; legacy empty files use write time.
+Archive-censored coverage closes when a successful poll has no eligible origin
+at its raion and source level. A community alert cannot keep an absent district
+or oblast origin open.
+
 **DATA_GAPS recommendation:** empty `config.DATA_GAPS`. The accepted archive
 fills the August 29 to September 2 outage with plausible daily activity, all
 44 complete Kyiv days through October 11 published successfully, and the

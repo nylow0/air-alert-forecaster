@@ -8,11 +8,13 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from airalert import config, production
+from airalert import config, ingest, production
 from airalert.data import Snapshot
 from airalert.features import FeatureContext
-from airalert.models import baseline, onset
+from airalert.models import baseline, duration, onset
 from airalert.schemas import ForecastRow, ProductionModel
+from airalert.sources import Event, Level
+from airalert.sources.locations import Location
 
 
 def _inputs(t: pd.Timestamp) -> tuple[pd.DataFrame, pd.DataFrame, FeatureContext]:
@@ -142,3 +144,183 @@ def test_observed_at_boundary_and_successful_absence_close_an_origin() -> None:
     b = view.loc[view.raion_id.eq("b")].iloc[0]
     assert b.finished_at == t
     assert view.loc[view.raion_id.eq("a"), "finished_at"].isna().any()
+
+
+def test_persistent_community_is_displayed_but_excluded_from_forecast(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Use the actual forecast producer and display aggregation on the same origins."""
+    t = pd.Timestamp("2026-10-12T18:00:00Z")
+    records, _, context = _install(tmp_path, monkeypatch, t)
+    community_start = t - pd.Timedelta(days=210)
+    district_start = t - pd.Timedelta(minutes=30)
+    events = [Event(
+        uid + ":air", uid, uid, "air_raid", (Level("red", start.to_pydatetime()),),
+        start.to_pydatetime(), None, start.to_pydatetime(), "siren", start_is_exact=False,
+    ) for uid, start in (("community", community_start), ("district", district_start))]
+
+    class Geography:
+        by_uid = {uid: Location(uid, uid, "x", ("a",), level)
+                  for uid, level in (("community", "hromada"), ("district", "raion"))}
+
+        def resolve(self, uid: str) -> Location:
+            return self.by_uid[uid]
+
+    geography = Geography()
+    crosswalk = pd.DataFrame({"raion_id": ["a"], "oblast_id": ["x"], "shape_id": ["shape"]})
+    monkeypatch.setattr(production, "load_records", lambda: records.iloc[:0])
+    monkeypatch.setattr(duration, "load_records", lambda: records.iloc[:0])
+    for origins, expected in ((events, district_start), (events[:1], None)):
+        observed = ingest.event_records(origins, geography)
+        observed["observed_at"] = t - pd.Timedelta(seconds=30)
+        monkeypatch.setattr(production, "load_observations",
+                            lambda time, observed=observed: observed)
+        features, state, view = production.forecast_inputs(
+            records.iloc[:0], observed, t, context=context)
+        served = production.forecast(t.to_pydatetime(), persist=False).set_index("raion_id")
+        assert bool(served.loc["a", "active"]) == (expected is not None)
+        assert bool(features.loc[features.raion_id.eq("a"), "f_active"].iloc[0]) == (
+            expected is not None)
+        assert not view.level.eq("hromada").any()
+        remaining_inputs = duration._production_records(t)
+        pd.testing.assert_frame_equal(view, remaining_inputs.drop(columns="observed_at"))
+        if expected is not None:
+            assert served.loc["a", "active_since"] == expected
+            assert state.active_since.iloc[0] == expected
+        else:
+            assert pd.isna(served.loc["a", "active_since"])
+        polygon = ingest.polygon_state(origins, geography, crosswalk, t.to_pydatetime())[0]
+        assert polygon["red"] == {"active": True, "since": (
+            district_start if expected is not None else community_start
+        ).isoformat().replace("+00:00", "Z")}
+
+
+def test_live_spells_close_on_absence_and_inexact_color_changes_do_not_add_starts() -> None:
+    t = pd.Timestamp("2026-10-12T18:00:00Z")
+    records, observed, context = _inputs(t)
+    first = observed.iloc[:1].copy()
+    first["started_at"] = t - pd.Timedelta(hours=1)
+    first["observed_at"] = t - pd.Timedelta(minutes=50)
+    first["start_is_exact"] = False
+    escalation = first.copy()
+    escalation["started_at"] = t - pd.Timedelta(minutes=40)
+    escalation["observed_at"] = t - pd.Timedelta(minutes=30)
+    absence = first.copy()
+    absence["raion_id"] = None
+    absence["hazard_type"] = "poll"
+    absence["observed_at"] = t - pd.Timedelta(minutes=20)
+    restarted = first.copy()
+    restarted["started_at"] = t - pd.Timedelta(minutes=10)
+    restarted["observed_at"] = t - pd.Timedelta(minutes=5)
+    observations = pd.concat([first, escalation, absence, restarted], ignore_index=True)
+    _, _, continuous = production.forecast_inputs(
+        records.iloc[:0], observations, t - pd.Timedelta(minutes=25), context=context)
+    assert len(continuous) == 1
+    assert continuous.started_at.iloc[0] == first.started_at.iloc[0]
+    assert continuous.finished_at.isna().all()
+    # Downtime and the first absent successful poll end the old spell, even if
+    # the source reuses the same origin/event ID for a later alert.
+    _, state, quiet = production.forecast_inputs(
+        records.iloc[:0], observations, t - pd.Timedelta(minutes=15), context=context)
+    assert not state.active.any()
+    assert quiet.finished_at.iloc[0] == absence.observed_at.iloc[0]
+    features, state, resumed = production.forecast_inputs(
+        records.iloc[:0], observations, t, context=context)
+    assert len(resumed) == 2
+    assert state.active_since.iloc[1] == restarted.started_at.iloc[0]
+    assert features.loc[features.raion_id.eq("b"), "f_starts_1h"].iloc[0] == 2
+
+
+def test_persistent_threshold_is_strict_and_broad_origins_are_retained() -> None:
+    t = pd.Timestamp("2026-10-12T18:00:00Z")
+    records, observed, _ = _inputs(t)
+    observed = observed.iloc[:1].copy()
+    observed["started_at"] = t - pd.Timedelta(hours=ingest.PERSISTENT_LOCAL_ALERT_H)
+    observed["level"] = "hromada"
+    assert len(production.as_of_records(records.iloc[:0], observed, t)) == 1
+    assert production.as_of_records(records.iloc[:0], observed, t + pd.Timedelta(
+        microseconds=1)).empty
+    observed["started_at"] = t - pd.Timedelta(days=210)
+    for level in ("raion", "oblast"):
+        observed["level"] = level
+        assert len(production.as_of_records(records.iloc[:0], observed, t)) == 1
+
+
+def test_reconciliation_supersedes_old_receipts_and_empty_poll_receipt_closes_stale_state(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    t = pd.Timestamp("2026-10-12T18:00:00Z")
+    records, observed, context = _inputs(t)
+    boundary = t - pd.Timedelta(hours=3)
+    monkeypatch.setattr(config, "V2_LIVE_OBSERVATIONS_DIR", tmp_path)
+    monkeypatch.setattr(production, "load_snapshot", lambda: Snapshot(
+        boundary, "test", context.regime_switch))
+    old = observed.iloc[:1].copy()
+    old["observed_at"] = boundary - pd.Timedelta(seconds=1)
+    old.to_parquet(tmp_path / "old.parquet", index=False)
+    assert production.load_observations(t).empty
+    live = observed.iloc[:1].copy()
+    live.to_parquet(tmp_path / "live.parquet", index=False)
+    ended = live.iloc[:0]
+    ended.to_parquet(tmp_path / "empty.parquet", index=False)
+    receipt = t - pd.Timedelta(seconds=30)
+    (tmp_path / "empty.json").write_text(json.dumps({"observed_at": receipt.isoformat()}))
+    loaded = production.load_observations(t)
+    assert len(loaded) == 2
+    view = production.as_of_records(records.iloc[:0], loaded, t)
+    assert view.finished_at.iloc[0] == receipt
+    # Exact-hour receipts are unavailable, including a completely empty poll.
+    (tmp_path / "empty.json").write_text(json.dumps({"observed_at": t.isoformat()}))
+    view = production.as_of_records(records.iloc[:0], production.load_observations(t), t)
+    assert view.finished_at.isna().all()
+
+
+def test_censored_archive_community_cannot_extend_current_live_since() -> None:
+    """The real archive can retain an unresolved persistent local continuation."""
+    t = pd.Timestamp("2026-10-12T19:00:00Z")
+    records, observed, context = _inputs(t)
+    archive = records.iloc[:1].copy()
+    archive["started_at"] = t - pd.Timedelta(days=25)
+    archive["finished_at"] = pd.Series(pd.NaT, index=archive.index, dtype="datetime64[us, UTC]")
+    archive["level"] = "hromada"
+    archive["source"] = "aiu_web"
+    live = observed.iloc[:1].copy()
+    live["raion_id"] = "a"
+    live["level"] = "hromada"
+    live["started_at"] = t - pd.Timedelta(hours=34)
+    _, state, view = production.forecast_inputs(archive, live, t, context=context)
+    assert state.active.iloc[0]
+    assert state.active_since.iloc[0] == live.started_at.iloc[0]
+    assert not view.source.eq("aiu_web").any()
+    assert archive.finished_at.isna().all()
+
+
+def test_policy_repair_preserves_first_issuance_and_replay_uses_serving_copy(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from airalert.precompute import Paths, _issued_frames
+
+    t = pd.Timestamp("2026-10-12T19:00:00Z")
+    records, observed, _ = _install(tmp_path, monkeypatch, t)
+    first = production.forecast(t.to_pydatetime())
+    original_path = next(config.V2_FORECASTS_DIR.glob("*.parquet"))
+    # Simulate a pre-policy issuance, with its original probabilities and clock.
+    legacy = pd.read_parquet(original_path).drop(columns="live_input_policy")
+    legacy.to_parquet(original_path, index=False)
+    original_bytes = original_path.read_bytes()
+    monkeypatch.setattr(production, "load_records", lambda: records.iloc[:0])
+    monkeypatch.setattr(production, "load_observations", lambda time: observed.iloc[:0])
+    repaired = production.forecast((t + pd.Timedelta(minutes=10)).to_pydatetime())
+    assert first.active.any() and not repaired.active.any()
+    assert original_path.read_bytes() == original_bytes
+    repair_path = original_path.parent / "corrections" / production.LIVE_INPUT_POLICY / (
+        original_path.name)
+    repair_bytes = repair_path.read_bytes()
+    monkeypatch.setattr(production, "load_records", lambda: records)
+    repeated = production.forecast((t + pd.Timedelta(minutes=20)).to_pydatetime())
+    pd.testing.assert_frame_equal(repeated, repaired)
+    assert repair_path.read_bytes() == repair_bytes
+    assert original_path.read_bytes() == original_bytes
+    frames = _issued_frames(Paths(issued=config.V2_FORECASTS_DIR))
+    assert len(frames) == 1
+    pd.testing.assert_frame_equal(frames[0], repaired)
