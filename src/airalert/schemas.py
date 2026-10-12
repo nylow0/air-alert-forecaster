@@ -154,3 +154,167 @@ class Report(ContractModel):
     duration: list[DurationScore] = Field(default_factory=list)
     selection: Selection | None = None
     notes: list[str] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# v2 contracts (live map, system status, optional news agent, settings, auth).
+# Mirrored in web/src/lib/types.ts. Change both together.
+# ---------------------------------------------------------------------------
+
+
+class LiveUnit(ContractModel):
+    """One of the 139 map polygons right now. A non-null `*_since` means that layer is active.
+
+    Red and yellow are independent layers (both can be active). `coverage`: observed directly,
+    inherited from an oblast-level alert (Crimea, Luhansk, Sevastopol, Chornobyl zone), or unknown.
+    """
+
+    display_key: str
+    raion_id: str | None
+    oblast_id: str
+    name: str
+    red_since: UTCDatetime | None
+    yellow_since: UTCDatetime | None
+    other_hazards: list[str]
+    coverage: Literal["observed", "inherited", "unknown"]
+
+
+class LiveState(ContractModel):
+    """Last successful poll; `stale` once a poll fails or the data is older than 3 min."""
+
+    fetched_at: UTCDatetime | None
+    source: str
+    stale: bool
+    units: list[LiveUnit]
+
+
+class ProductionModel(ContractModel):
+    onset: str
+    duration: str | None
+    trained_at: UTCDatetime | None
+    data_through: UTCDatetime | None
+
+
+class SystemStatus(ContractModel):
+    """The scheduler and data freshness, for the UI status line and debugging."""
+
+    now: UTCDatetime
+    live_fetched_at: UTCDatetime | None
+    live_stale: bool
+    data_through: UTCDatetime | None
+    ledger_watermark: date | None
+    coverage_gaps: list[Range]
+    last_nightly_at: UTCDatetime | None
+    last_nightly_ok: bool | None
+    next_nightly_at: UTCDatetime
+    production: ProductionModel
+
+
+NewsEventType = Literal[
+    "bomber_takeoff",
+    "mig31k_takeoff",
+    "drone_group",
+    "ballistic",
+    "missile_launch",
+    "all_clear",
+    "other",
+]
+
+
+class NewsSourceRef(ContractModel):
+    handle: str
+    message_id: int
+    url: str
+
+
+class NewsEvent(ContractModel):
+    """A validated, deduplicated threat incident from channel posts (never raw LLM text)."""
+
+    id: str
+    type: NewsEventType
+    status: Literal["preliminary", "reported", "cleared"]
+    oblast_ids: list[str]
+    raion_ids: list[str]
+    origin: str | None
+    heading: str | None
+    confidence: float
+    summary: str
+    published_at: UTCDatetime
+    observed_at: UTCDatetime
+    expires_at: UTCDatetime
+    sources: list[NewsSourceRef]
+
+
+class NewsAdjustmentRow(ContractModel):
+    """Experimental news-adjusted probabilities; deltas are the applied logit shifts."""
+
+    raion_id: str
+    p_1: float
+    p_3: float
+    p_12: float
+    delta_1: float
+    delta_3: float
+    delta_12: float
+    event_ids: list[str]
+
+
+class NewsModels(ContractModel):
+    extract_model: str
+    extract_effort: Literal["low", "medium", "high", "xhigh"]
+    evaluate_model: str
+    evaluate_effort: Literal["low", "medium", "high", "xhigh"]
+
+
+class NewsStatus(ContractModel):
+    enabled: bool
+    state: Literal[
+        "off",
+        "needs_codex",
+        "needs_login",
+        "starting",
+        "running",
+        "stale",
+        "error",
+        "quota_limited",
+    ]
+    message: str | None
+    last_poll_at: UTCDatetime | None
+    last_extraction_at: UTCDatetime | None
+    last_evaluation_at: UTCDatetime | None
+    news_as_of: UTCDatetime | None
+    models: NewsModels
+
+
+class NewsFeed(ContractModel):
+    """`adjustments` apply to the base forecast at `base_at` (the current hour), or are empty."""
+
+    status: NewsStatus
+    base_at: UTCDatetime | None
+    events: list[NewsEvent]
+    adjustments: list[NewsAdjustmentRow]
+
+
+class NewsChannel(ContractModel):
+    handle: str
+    title: str
+    subscribers: int
+    enabled: bool
+
+
+class Settings(ContractModel):
+    """Persisted in git-ignored data/settings.local.json. The news agent is off by default."""
+
+    news_enabled: bool = False
+    models: NewsModels
+    poll_seconds: int = 120
+    channels: list[NewsChannel]
+
+
+class AuthStatus(ContractModel):
+    """ChatGPT login via the local Codex CLI. The app never sees passwords or tokens."""
+
+    codex_installed: bool
+    logged_in: bool
+    login_in_progress: bool
+    available_models: list[str]
+    message: str | None
