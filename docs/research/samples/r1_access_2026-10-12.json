@@ -1,0 +1,1811 @@
+{
+  "checked_date_utc": "2026-10-12",
+  "method": "No login, 1.05-second minimum request-start spacing per probe client; latest, before=21, before=1; war_monitor also sequential backward pages. Preview boundaries establish visible reach, not continuous completeness.",
+  "channels": {
+    "kpszsu": [
+      {
+        "url": "https://t.me/s/kpszsu",
+        "status": 200,
+        "seconds": 0.154,
+        "title": "Повітряні Сили ЗС України / Air Force of the Armed Forces of Ukraine",
+        "older_cursor": "85481",
+        "count": 20,
+        "first": {
+          "id": 85481,
+          "date_utc": "2026-10-12T07:13:19Z",
+          "edited": false
+        },
+        "last": {
+          "id": 85501,
+          "date_utc": "2026-10-12T08:28:46Z",
+          "edited": false
+        },
+        "edited_count": 0
+      },
+      {
+        "url": "https://t.me/s/kpszsu?before=21",
+        "status": 200,
+        "seconds": 0.219,
+        "title": "Повітряні Сили ЗС України / Air Force of the Armed Forces of Ukraine",
+        "older_cursor": null,
+        "count": 19,
+        "first": {
+          "id": 1,
+          "date_utc": "2019-02-11T17:55:59Z",
+          "edited": false
+        },
+        "last": {
+          "id": 20,
+          "date_utc": "2019-02-24T15:21:30Z",
+          "edited": false
+        },
+        "edited_count": 2
+      },
+      {
+        "url": "https://t.me/s/kpszsu?before=1",
+        "status": 200,
+        "seconds": 0.072,
+        "title": "Повітряні Сили ЗС України / Air Force of the Armed Forces of Ukraine",
+        "older_cursor": null,
+        "count": 0,
+        "first": null,
+        "last": null,
+        "edited_count": 0
+      }
+    ],
+    "war_monitor": [
+      {
+        "url": "https://t.me/s/war_monitor",
+        "status": 200,
+        "seconds": 0.089,
+        "title": "monitor",
+        "older_cursor": "47536",
+        "count": 20,
+        "first": {
+          "id": 47536,
+          "date_utc": "2026-10-10T04:49:56Z",
+          "edited": false
+        },
+        "last": {
+          "id": 47555,
+          "date_utc": "2026-10-11T10:02:55Z",
+          "edited": false
+        },
+        "edited_count": 0
+      },
+      {
+        "url": "https://t.me/s/war_monitor?before=21",
+        "status": 200,
+        "seconds": 0.127,
+        "title": "monitor",
+        "older_cursor": null,
+        "count": 5,
+        "first": {
+          "id": 1,
+          "date_utc": "2022-04-25T20:08:58Z",
+          "edited": false
+        },
+        "last": {
+          "id": 18,
+          "date_utc": "2022-04-30T16:51:35Z",
+          "edited": false
+        },
+        "edited_count": 3
+      },
+      {
+        "url": "https://t.me/s/war_monitor?before=1",
+        "status": 200,
+        "seconds": 0.057,
+        "title": "monitor",
+        "older_cursor": null,
+        "count": 0,
+        "first": null,
+        "last": null,
+        "edited_count": 0
+      }
+    ],
+    "monitorwarr": [
+      {
+        "url": "https://t.me/s/monitorwarr",
+        "status": 200,
+        "seconds": 0.086,
+        "title": "monitoring",
+        "older_cursor": "42387",
+        "count": 20,
+        "first": {
+          "id": 42387,
+          "date_utc": "2026-10-12T03:00:53Z",
+          "edited": false
+        },
+        "last": {
+          "id": 42406,
+          "date_utc": "2026-10-12T08:04:11Z",
+          "edited": false
+        },
+        "edited_count": 0
+      },
+      {
+        "url": "https://t.me/s/monitorwarr?before=21",
+        "status": 200,
+        "seconds": 0.149,
+        "title": "monitoring",
+        "older_cursor": null,
+        "count": 16,
+        "first": {
+          "id": 1,
+          "date_utc": "2022-06-27T11:00:27Z",
+          "edited": false
+        },
+        "last": {
+          "id": 17,
+          "date_utc": "2022-06-27T16:50:18Z",
+          "edited": false
+        },
+        "edited_count": 4
+      },
+      {
+        "url": "https://t.me/s/monitorwarr?before=1",
+        "status": 200,
+        "seconds": 0.059,
+        "title": "monitoring",
+        "older_cursor": null,
+        "count": 0,
+        "first": null,
+        "last": null,
+        "edited_count": 0
+      }
+    ],
+    "monitoring_ua": [
+      {
+        "url": "https://t.me/s/monitoring_ua",
+        "status": 200,
+        "seconds": 0.079,
+        "title": "✙",
+        "older_cursor": null,
+        "count": 1,
+        "first": {
+          "id": 1,
+          "date_utc": "2016-02-18T12:02:32Z",
+          "edited": false
+        },
+        "last": {
+          "id": 1,
+          "date_utc": "2016-02-18T12:02:32Z",
+          "edited": false
+        },
+        "edited_count": 0
+      },
+      {
+        "url": "https://t.me/s/monitoring_ua?before=21",
+        "status": 200,
+        "seconds": 0.065,
+        "title": "✙",
+        "older_cursor": null,
+        "count": 1,
+        "first": {
+          "id": 1,
+          "date_utc": "2016-02-18T12:02:32Z",
+          "edited": false
+        },
+        "last": {
+          "id": 1,
+          "date_utc": "2016-02-18T12:02:32Z",
+          "edited": false
+        },
+        "edited_count": 0
+      },
+      {
+        "url": "https://t.me/s/monitoring_ua?before=1",
+        "status": 200,
+        "seconds": 0.07,
+        "title": "✙",
+        "older_cursor": null,
+        "count": 0,
+        "first": null,
+        "last": null,
+        "edited_count": 0
+      }
+    ],
+    "nikolaev_vanek": [
+      {
+        "url": "https://t.me/s/nikolaev_vanek",
+        "status": 200,
+        "seconds": 0.276,
+        "title": "Николаевский Ванёк",
+        "older_cursor": null,
+        "count": 2,
+        "first": {
+          "id": 1,
+          "date_utc": "2022-12-02T15:48:48Z",
+          "edited": false
+        },
+        "last": {
+          "id": 3,
+          "date_utc": "2022-12-02T15:50:24Z",
+          "edited": true
+        },
+        "edited_count": 1
+      },
+      {
+        "url": "https://t.me/s/nikolaev_vanek?before=21",
+        "status": 200,
+        "seconds": 0.067,
+        "title": "Николаевский Ванёк",
+        "older_cursor": null,
+        "count": 2,
+        "first": {
+          "id": 1,
+          "date_utc": "2022-12-02T15:48:48Z",
+          "edited": false
+        },
+        "last": {
+          "id": 3,
+          "date_utc": "2022-12-02T15:50:24Z",
+          "edited": true
+        },
+        "edited_count": 1
+      },
+      {
+        "url": "https://t.me/s/nikolaev_vanek?before=1",
+        "status": 200,
+        "seconds": 0.061,
+        "title": "Николаевский Ванёк",
+        "older_cursor": null,
+        "count": 0,
+        "first": null,
+        "last": null,
+        "edited_count": 0
+      }
+    ],
+    "kyivoda": [
+      {
+        "url": "https://t.me/s/kyivoda",
+        "status": 200,
+        "seconds": 0.097,
+        "title": "🇺🇦Київська обласна військова адміністрація",
+        "older_cursor": "61017",
+        "count": 20,
+        "first": {
+          "id": 61017,
+          "date_utc": "2026-10-12T03:45:24Z",
+          "edited": false
+        },
+        "last": {
+          "id": 61036,
+          "date_utc": "2026-10-12T07:36:14Z",
+          "edited": false
+        },
+        "edited_count": 0
+      },
+      {
+        "url": "https://t.me/s/kyivoda?before=21",
+        "status": 200,
+        "seconds": 0.244,
+        "title": "🇺🇦Київська обласна військова адміністрація",
+        "older_cursor": null,
+        "count": 12,
+        "first": {
+          "id": 1,
+          "date_utc": "2019-10-31T17:29:44Z",
+          "edited": false
+        },
+        "last": {
+          "id": 18,
+          "date_utc": "2019-11-08T18:31:39Z",
+          "edited": false
+        },
+        "edited_count": 5
+      },
+      {
+        "url": "https://t.me/s/kyivoda?before=1",
+        "status": 200,
+        "seconds": 0.059,
+        "title": "🇺🇦Київська обласна військова адміністрація",
+        "older_cursor": null,
+        "count": 0,
+        "first": null,
+        "last": null,
+        "edited_count": 0
+      }
+    ],
+    "odeskaODA": [
+      {
+        "url": "https://t.me/s/odeskaODA",
+        "status": 200,
+        "seconds": 0.163,
+        "title": "🇺🇦Олег Кіпер/Одеська ОДА (ОВА)",
+        "older_cursor": "21587",
+        "count": 10,
+        "first": {
+          "id": 21587,
+          "date_utc": "2026-10-09T09:01:12Z",
+          "edited": false
+        },
+        "last": {
+          "id": 21731,
+          "date_utc": "2026-10-12T05:28:11Z",
+          "edited": false
+        },
+        "edited_count": 1
+      },
+      {
+        "url": "https://t.me/s/odeskaODA?before=21",
+        "status": 200,
+        "seconds": 0.154,
+        "title": "🇺🇦Олег Кіпер/Одеська ОДА (ОВА)",
+        "older_cursor": null,
+        "count": 13,
+        "first": {
+          "id": 1,
+          "date_utc": "2022-03-01T04:47:08Z",
+          "edited": false
+        },
+        "last": {
+          "id": 20,
+          "date_utc": "2022-03-02T14:03:06Z",
+          "edited": false
+        },
+        "edited_count": 0
+      },
+      {
+        "url": "https://t.me/s/odeskaODA?before=1",
+        "status": 200,
+        "seconds": 0.071,
+        "title": "🇺🇦Олег Кіпер/Одеська ОДА (ОВА)",
+        "older_cursor": null,
+        "count": 0,
+        "first": null,
+        "last": null,
+        "edited_count": 0
+      }
+    ],
+    "dnipropetrovskaODA": [
+      {
+        "url": "https://t.me/s/dnipropetrovskaODA",
+        "status": 200,
+        "seconds": 0.141,
+        "title": "Олександр Ганжа / Дніпропетровська ОДА (ОВА)",
+        "older_cursor": "32546",
+        "count": 5,
+        "first": {
+          "id": 32546,
+          "date_utc": "2026-10-12T04:30:02Z",
+          "edited": false
+        },
+        "last": {
+          "id": 32556,
+          "date_utc": "2026-10-12T08:23:32Z",
+          "edited": false
+        },
+        "edited_count": 0
+      },
+      {
+        "url": "https://t.me/s/dnipropetrovskaODA?before=21",
+        "status": 200,
+        "seconds": 0.227,
+        "title": "Олександр Ганжа / Дніпропетровська ОДА (ОВА)",
+        "older_cursor": null,
+        "count": 17,
+        "first": {
+          "id": 1,
+          "date_utc": "2022-03-01T05:16:52Z",
+          "edited": false
+        },
+        "last": {
+          "id": 20,
+          "date_utc": "2022-03-03T05:30:31Z",
+          "edited": false
+        },
+        "edited_count": 0
+      },
+      {
+        "url": "https://t.me/s/dnipropetrovskaODA?before=1",
+        "status": 200,
+        "seconds": 0.066,
+        "title": "Олександр Ганжа / Дніпропетровська ОДА (ОВА)",
+        "older_cursor": null,
+        "count": 0,
+        "first": null,
+        "last": null,
+        "edited_count": 0
+      }
+    ],
+    "air_alert_ua": [
+      {
+        "url": "https://t.me/s/air_alert_ua",
+        "status": 200,
+        "seconds": 0.096,
+        "title": "Повітряна Тривога",
+        "older_cursor": "338361",
+        "count": 20,
+        "first": {
+          "id": 338361,
+          "date_utc": "2026-09-07T05:38:26Z",
+          "edited": false
+        },
+        "last": {
+          "id": 338380,
+          "date_utc": "2026-09-07T06:09:04Z",
+          "edited": false
+        },
+        "edited_count": 0
+      },
+      {
+        "url": "https://t.me/s/air_alert_ua?before=21",
+        "status": 200,
+        "seconds": 0.105,
+        "title": "Повітряна Тривога",
+        "older_cursor": null,
+        "count": 16,
+        "first": {
+          "id": 1,
+          "date_utc": "2022-03-14T13:21:12Z",
+          "edited": false
+        },
+        "last": {
+          "id": 20,
+          "date_utc": "2022-03-15T16:26:26Z",
+          "edited": false
+        },
+        "edited_count": 0
+      },
+      {
+        "url": "https://t.me/s/air_alert_ua?before=1",
+        "status": 200,
+        "seconds": 0.066,
+        "title": "Повітряна Тривога",
+        "older_cursor": null,
+        "count": 0,
+        "first": null,
+        "last": null,
+        "edited_count": 0
+      }
+    ],
+    "war_monitor_paging": [
+      {
+        "url": "https://t.me/s/war_monitor",
+        "status": 200,
+        "seconds": 0.104,
+        "title": "monitor",
+        "older_cursor": "47536",
+        "count": 20,
+        "first": {
+          "id": 47536,
+          "date_utc": "2026-10-10T04:49:56Z",
+          "edited": false
+        },
+        "last": {
+          "id": 47555,
+          "date_utc": "2026-10-11T10:02:55Z",
+          "edited": false
+        },
+        "edited_count": 0
+      },
+      {
+        "url": "https://t.me/s/war_monitor?before=47536",
+        "status": 200,
+        "seconds": 0.106,
+        "title": "monitor",
+        "older_cursor": "47516",
+        "count": 20,
+        "first": {
+          "id": 47516,
+          "date_utc": "2026-10-09T06:26:43Z",
+          "edited": false
+        },
+        "last": {
+          "id": 47535,
+          "date_utc": "2026-10-09T14:03:24Z",
+          "edited": false
+        },
+        "edited_count": 0
+      },
+      {
+        "url": "https://t.me/s/war_monitor?before=47516",
+        "status": 200,
+        "seconds": 0.102,
+        "title": "monitor",
+        "older_cursor": "47496",
+        "count": 20,
+        "first": {
+          "id": 47496,
+          "date_utc": "2026-10-08T14:21:23Z",
+          "edited": false
+        },
+        "last": {
+          "id": 47515,
+          "date_utc": "2026-10-09T06:24:21Z",
+          "edited": false
+        },
+        "edited_count": 0
+      }
+    ],
+    "vanek_nikolaev": [
+      {
+        "url": "https://t.me/s/vanek_nikolaev",
+        "status": 200,
+        "seconds": 0.195,
+        "title": "Николаевский Ванёк",
+        "older_cursor": "43321",
+        "count": 20,
+        "first": {
+          "id": 43321,
+          "date_utc": "2026-10-07T03:24:39Z",
+          "edited": false
+        },
+        "last": {
+          "id": 43340,
+          "date_utc": "2026-10-12T08:31:22Z",
+          "edited": false
+        },
+        "edited_count": 0
+      },
+      {
+        "url": "https://t.me/s/vanek_nikolaev?before=21",
+        "status": 200,
+        "seconds": 0.143,
+        "title": "Николаевский Ванёк",
+        "older_cursor": null,
+        "count": 17,
+        "first": {
+          "id": 1,
+          "date_utc": "2022-04-17T00:39:18Z",
+          "edited": false
+        },
+        "last": {
+          "id": 20,
+          "date_utc": "2022-04-17T16:17:58Z",
+          "edited": false
+        },
+        "edited_count": 1
+      },
+      {
+        "url": "https://t.me/s/vanek_nikolaev?before=1",
+        "status": 200,
+        "seconds": 0.066,
+        "title": "Николаевский Ванёк",
+        "older_cursor": null,
+        "count": 0,
+        "first": null,
+        "last": null,
+        "edited_count": 0
+      }
+    ]
+  },
+  "day_samples": [
+    {
+      "checked_at_utc": "2026-10-12T08:32:50.805879Z",
+      "channel": "war_monitor",
+      "pages": [
+        {
+          "url": "https://t.me/s/war_monitor",
+          "status": 200,
+          "seconds": 0.177,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "47536",
+          "count": 20,
+          "first": {
+            "id": 47536,
+            "date_utc": "2026-10-10T04:49:56Z",
+            "edited": false,
+            "text": "⚙ на каналі тимчасово технічні роботи, дякую за розуміння."
+          },
+          "last": {
+            "id": 47555,
+            "date_utc": "2026-10-11T10:02:55Z",
+            "edited": false,
+            "text": "⚙ на каналі тимчасово технічні роботи, дякую за розуміння."
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=23778",
+          "status": 200,
+          "seconds": 0.13,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "23758",
+          "count": 20,
+          "first": {
+            "id": 23758,
+            "date_utc": "2024-12-24T00:42:16Z",
+            "edited": false,
+            "text": "02:42\n\nДніпропетровська область:\n1х БпЛА повз Кам'янське.\nВектор на Кременчук.\n2х БпЛА у Нікопольському районі.\n1х БпЛА від Запоріжжя на Нікопольський район.\n\nПолтавська область:\n1х БпЛА на північ від Кременчука.\nРух довільний.\n2х БпЛА від Берестина у Полтавському районі.\n1х БпЛА заходить курсом на Гадяч з Харківщини.\n\nХарківська область:\n2х БпЛА через Берестинський район вектором на Полтавщину.\n4х БпЛА у Лозівському районі вектором на Павлоградський район."
+          },
+          "last": {
+            "id": 23777,
+            "date_utc": "2024-12-24T15:54:21Z",
+            "edited": false,
+            "text": "У цей Святвечір ми дякуємо нашим воїнам, які, незважаючи на всі труднощі, захищають наш спокій і свободу. Нехай Різдвяна зірка принесе вам і вашим родинам світло надії, віри та перемоги. Миру, тепла і Божого благословення кожному українцю."
+          },
+          "edited_count": 1
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=35667",
+          "status": 200,
+          "seconds": 0.119,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "35645",
+          "count": 20,
+          "first": {
+            "id": 35645,
+            "date_utc": "2025-12-12T18:09:47Z",
+            "edited": false,
+            "text": "👁 Одеса — розвідувальний БпЛА працює вздовж узбережжя.\n\nУважно до ракетних загроз."
+          },
+          "last": {
+            "id": 35666,
+            "date_utc": "2025-12-12T23:27:34Z",
+            "edited": false,
+            "text": "❗️ 2 групи Калібрів північ Одещини рух по колу.\nМожуть повернути на південь до Одеси.\n\n❗️3 групи Калібрів вектор Миколаїв/повз Миколаїв.\n\n❗️2 групи Калібрів Баштанка на Кіровоградщину."
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=41612",
+          "status": 200,
+          "seconds": 0.137,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "41592",
+          "count": 20,
+          "first": {
+            "id": 41592,
+            "date_utc": "2026-07-16T19:18:44Z",
+            "edited": false,
+            "text": "❗️ Пуски керованих авіаційних ракет у напрямку Одещина."
+          },
+          "last": {
+            "id": 41611,
+            "date_utc": "2026-07-17T02:27:29Z",
+            "edited": false,
+            "text": "⚪️ Відбій загрози балістики."
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=38640",
+          "status": 200,
+          "seconds": 0.101,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "38620",
+          "count": 20,
+          "first": {
+            "id": 38620,
+            "date_utc": "2026-04-01T12:48:01Z",
+            "edited": false,
+            "text": "Злагоджена робота вогневих груп, операторів та вцілому сил оборони.\nВпродовж доби можуть бути повторні пуски ударних БпЛА."
+          },
+          "last": {
+            "id": 38639,
+            "date_utc": "2026-04-02T12:21:12Z",
+            "edited": false,
+            "text": "💥 Вибух лунав у Чернігові.\nЗагроза балістики триває."
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=37154",
+          "status": 200,
+          "seconds": 0.13,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "37134",
+          "count": 20,
+          "first": {
+            "id": 37134,
+            "date_utc": "2026-02-02T23:26:55Z",
+            "edited": false,
+            "text": "❗️ Дніпро — 2х БпЛА на місто."
+          },
+          "last": {
+            "id": 37153,
+            "date_utc": "2026-02-02T23:57:45Z",
+            "edited": false,
+            "text": "Фастівський район увага, Наливайківка і все інше"
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=36411",
+          "status": 200,
+          "seconds": 0.146,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "36391",
+          "count": 20,
+          "first": {
+            "id": 36391,
+            "date_utc": "2026-01-08T16:39:23Z",
+            "edited": false,
+            "text": "❗️ Кривий Ріг — 1х БпЛА."
+          },
+          "last": {
+            "id": 36410,
+            "date_utc": "2026-01-08T23:32:22Z",
+            "edited": false,
+            "text": "01:30 Загальна ситуація:\n\n❗️ Групи БпЛА продовжують атаку Києва.\n\n⚠️ Нові групи БпЛА з Сумщини у напрямку Київщини."
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=36039",
+          "status": 200,
+          "seconds": 0.143,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "36019",
+          "count": 20,
+          "first": {
+            "id": 36019,
+            "date_utc": "2025-12-23T06:37:05Z",
+            "edited": false,
+            "text": "🚀 два Кинджали Шепетівка"
+          },
+          "last": {
+            "id": 36038,
+            "date_utc": "2025-12-25T01:21:55Z",
+            "edited": false,
+            "text": "❗️ Київ — 1х Харківський масив"
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=36225",
+          "status": 200,
+          "seconds": 0.107,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "36205",
+          "count": 20,
+          "first": {
+            "id": 36205,
+            "date_utc": "2025-12-30T21:38:04Z",
+            "edited": false,
+            "text": "⚠️ Загроза ударних БпЛА з Південного напрямку.  Миколаївщина: 10х БпЛА групою повз Очаків у напрямку Одещини."
+          },
+          "last": {
+            "id": 36224,
+            "date_utc": "2025-12-30T23:29:24Z",
+            "edited": false,
+            "text": "❗️ Київ — 1х Теремки/Жуляни."
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=36132",
+          "status": 200,
+          "seconds": 0.112,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "36112",
+          "count": 20,
+          "first": {
+            "id": 36112,
+            "date_utc": "2025-12-27T03:28:49Z",
+            "edited": false,
+            "text": "❗️ Кропивницький — 1х БпЛА."
+          },
+          "last": {
+            "id": 36131,
+            "date_utc": "2025-12-27T05:31:24Z",
+            "edited": false,
+            "text": "Києву бути готовими, що КР будуть повертати на столицю."
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=36086",
+          "status": 200,
+          "seconds": 0.153,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "36066",
+          "count": 20,
+          "first": {
+            "id": 36066,
+            "date_utc": "2025-12-26T23:29:11Z",
+            "edited": false,
+            "text": "☄ Балістика вектор Київщина"
+          },
+          "last": {
+            "id": 36085,
+            "date_utc": "2025-12-26T23:57:41Z",
+            "edited": false,
+            "text": "🚀 Кинджал Ніжин далі Київ"
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=36106",
+          "status": 200,
+          "seconds": 0.138,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "36086",
+          "count": 20,
+          "first": {
+            "id": 36086,
+            "date_utc": "2025-12-26T23:58:01Z",
+            "edited": false,
+            "text": "‼️ Київ — спуск Кинджалу!"
+          },
+          "last": {
+            "id": 36105,
+            "date_utc": "2025-12-27T02:37:58Z",
+            "edited": false,
+            "text": "⚠️ 2х БпЛА повз Бровари на Київ."
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=36106",
+          "status": 200,
+          "seconds": 0.099,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "36086",
+          "count": 20,
+          "first": {
+            "id": 36086,
+            "date_utc": "2025-12-26T23:58:01Z",
+            "edited": false,
+            "text": "‼️ Київ — спуск Кинджалу!"
+          },
+          "last": {
+            "id": 36105,
+            "date_utc": "2025-12-27T02:37:58Z",
+            "edited": false,
+            "text": "⚠️ 2х БпЛА повз Бровари на Київ."
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=36086",
+          "status": 200,
+          "seconds": 0.187,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "36066",
+          "count": 20,
+          "first": {
+            "id": 36066,
+            "date_utc": "2025-12-26T23:29:11Z",
+            "edited": false,
+            "text": "☄ Балістика вектор Київщина"
+          },
+          "last": {
+            "id": 36085,
+            "date_utc": "2025-12-26T23:57:41Z",
+            "edited": false,
+            "text": "🚀 Кинджал Ніжин далі Київ"
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=36066",
+          "status": 200,
+          "seconds": 0.128,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "36046",
+          "count": 20,
+          "first": {
+            "id": 36046,
+            "date_utc": "2025-12-25T20:24:51Z",
+            "edited": false,
+            "text": "Київщина:\n2х БпЛА через Вишгородський район у напрямку Житомирщини.\n1х від Переяслава на Канів."
+          },
+          "last": {
+            "id": 36065,
+            "date_utc": "2025-12-26T23:28:31Z",
+            "edited": false,
+            "text": "🟣 Загроза балістики з Північного Сходу\nБрянськ.\n \nІмовірний пуск ракет Іскандер, \nабо систем ППО С-300/С-400."
+          },
+          "edited_count": 0
+        }
+      ],
+      "median_seconds": 0.13,
+      "message_count": 34
+    },
+    {
+      "checked_at_utc": "2026-10-12T08:31:11.710070Z",
+      "channel": "war_monitor",
+      "pages": [
+        {
+          "url": "https://t.me/s/war_monitor",
+          "status": 200,
+          "seconds": 0.202,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "47536",
+          "count": 20,
+          "first": {
+            "id": 47536,
+            "date_utc": "2026-10-10T04:49:56Z",
+            "edited": false,
+            "text": "⚙ на каналі тимчасово технічні роботи, дякую за розуміння."
+          },
+          "last": {
+            "id": 47555,
+            "date_utc": "2026-10-11T10:02:55Z",
+            "edited": false,
+            "text": "⚙ на каналі тимчасово технічні роботи, дякую за розуміння."
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=23778",
+          "status": 200,
+          "seconds": 0.216,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "23758",
+          "count": 20,
+          "first": {
+            "id": 23758,
+            "date_utc": "2024-12-24T00:42:16Z",
+            "edited": false,
+            "text": "02:42\n\nДніпропетровська область:\n1х БпЛА повз Кам'янське.\nВектор на Кременчук.\n2х БпЛА у Нікопольському районі.\n1х БпЛА від Запоріжжя на Нікопольський район.\n\nПолтавська область:\n1х БпЛА на північ від Кременчука.\nРух довільний.\n2х БпЛА від Берестина у Полтавському районі.\n1х БпЛА заходить курсом на Гадяч з Харківщини.\n\nХарківська область:\n2х БпЛА через Берестинський район вектором на Полтавщину.\n4х БпЛА у Лозівському районі вектором на Павлоградський район."
+          },
+          "last": {
+            "id": 23777,
+            "date_utc": "2024-12-24T15:54:21Z",
+            "edited": false,
+            "text": "У цей Святвечір ми дякуємо нашим воїнам, які, незважаючи на всі труднощі, захищають наш спокій і свободу. Нехай Різдвяна зірка принесе вам і вашим родинам світло надії, віри та перемоги. Миру, тепла і Божого благословення кожному українцю."
+          },
+          "edited_count": 1
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=35667",
+          "status": 200,
+          "seconds": 0.137,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "35645",
+          "count": 20,
+          "first": {
+            "id": 35645,
+            "date_utc": "2025-12-12T18:09:47Z",
+            "edited": false,
+            "text": "👁 Одеса — розвідувальний БпЛА працює вздовж узбережжя.\n\nУважно до ракетних загроз."
+          },
+          "last": {
+            "id": 35666,
+            "date_utc": "2025-12-12T23:27:34Z",
+            "edited": false,
+            "text": "❗️ 2 групи Калібрів північ Одещини рух по колу.\nМожуть повернути на південь до Одеси.\n\n❗️3 групи Калібрів вектор Миколаїв/повз Миколаїв.\n\n❗️2 групи Калібрів Баштанка на Кіровоградщину."
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=41612",
+          "status": 200,
+          "seconds": 0.15,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "41592",
+          "count": 20,
+          "first": {
+            "id": 41592,
+            "date_utc": "2026-07-16T19:18:44Z",
+            "edited": false,
+            "text": "❗️ Пуски керованих авіаційних ракет у напрямку Одещина."
+          },
+          "last": {
+            "id": 41611,
+            "date_utc": "2026-07-17T02:27:29Z",
+            "edited": false,
+            "text": "⚪️ Відбій загрози балістики."
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=38640",
+          "status": 200,
+          "seconds": 0.123,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "38620",
+          "count": 20,
+          "first": {
+            "id": 38620,
+            "date_utc": "2026-04-01T12:48:01Z",
+            "edited": false,
+            "text": "Злагоджена робота вогневих груп, операторів та вцілому сил оборони.\nВпродовж доби можуть бути повторні пуски ударних БпЛА."
+          },
+          "last": {
+            "id": 38639,
+            "date_utc": "2026-04-02T12:21:12Z",
+            "edited": false,
+            "text": "💥 Вибух лунав у Чернігові.\nЗагроза балістики триває."
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=37154",
+          "status": 200,
+          "seconds": 0.101,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "37134",
+          "count": 20,
+          "first": {
+            "id": 37134,
+            "date_utc": "2026-02-02T23:26:55Z",
+            "edited": false,
+            "text": "❗️ Дніпро — 2х БпЛА на місто."
+          },
+          "last": {
+            "id": 37153,
+            "date_utc": "2026-02-02T23:57:45Z",
+            "edited": false,
+            "text": "Фастівський район увага, Наливайківка і все інше"
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=36411",
+          "status": 200,
+          "seconds": 0.113,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "36391",
+          "count": 20,
+          "first": {
+            "id": 36391,
+            "date_utc": "2026-01-08T16:39:23Z",
+            "edited": false,
+            "text": "❗️ Кривий Ріг — 1х БпЛА."
+          },
+          "last": {
+            "id": 36410,
+            "date_utc": "2026-01-08T23:32:22Z",
+            "edited": false,
+            "text": "01:30 Загальна ситуація:\n\n❗️ Групи БпЛА продовжують атаку Києва.\n\n⚠️ Нові групи БпЛА з Сумщини у напрямку Київщини."
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=36039",
+          "status": 200,
+          "seconds": 0.148,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "36019",
+          "count": 20,
+          "first": {
+            "id": 36019,
+            "date_utc": "2025-12-23T06:37:05Z",
+            "edited": false,
+            "text": "🚀 два Кинджали Шепетівка"
+          },
+          "last": {
+            "id": 36038,
+            "date_utc": "2025-12-25T01:21:55Z",
+            "edited": false,
+            "text": "❗️ Київ — 1х Харківський масив"
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=36225",
+          "status": 200,
+          "seconds": 0.119,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "36205",
+          "count": 20,
+          "first": {
+            "id": 36205,
+            "date_utc": "2025-12-30T21:38:04Z",
+            "edited": false,
+            "text": "⚠️ Загроза ударних БпЛА з Південного напрямку.  Миколаївщина: 10х БпЛА групою повз Очаків у напрямку Одещини."
+          },
+          "last": {
+            "id": 36224,
+            "date_utc": "2025-12-30T23:29:24Z",
+            "edited": false,
+            "text": "❗️ Київ — 1х Теремки/Жуляни."
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=36132",
+          "status": 200,
+          "seconds": 0.142,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "36112",
+          "count": 20,
+          "first": {
+            "id": 36112,
+            "date_utc": "2025-12-27T03:28:49Z",
+            "edited": false,
+            "text": "❗️ Кропивницький — 1х БпЛА."
+          },
+          "last": {
+            "id": 36131,
+            "date_utc": "2025-12-27T05:31:24Z",
+            "edited": false,
+            "text": "Києву бути готовими, що КР будуть повертати на столицю."
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=36152",
+          "status": 200,
+          "seconds": 0.119,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "36132",
+          "count": 20,
+          "first": {
+            "id": 36132,
+            "date_utc": "2025-12-27T05:34:17Z",
+            "edited": false,
+            "text": "❗️ 5 груп КР на Черкащині від Смілу повз Звенигородку, курс Західний."
+          },
+          "last": {
+            "id": 36151,
+            "date_utc": "2025-12-27T06:05:24Z",
+            "edited": false,
+            "text": "❗️ Київ:\n1х Феофанія.\n1х Лісовий масив.\n\n1х Бровари."
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=36172",
+          "status": 200,
+          "seconds": 0.132,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "36152",
+          "count": 20,
+          "first": {
+            "id": 36152,
+            "date_utc": "2025-12-27T06:10:33Z",
+            "edited": false,
+            "text": "На Київщині залишається щонайменше 20 БпЛА.\n\n15х БпЛА на Черкащині та Вінниччині,\n\nБлизько 8х через Прилуччину у напрямку Київщини."
+          },
+          "last": {
+            "id": 36171,
+            "date_utc": "2025-12-27T12:02:16Z",
+            "edited": false,
+            "text": "🇺🇦 У ніч на 27.12.25, згідно зі звітом Повітряних Сил, Силами оборони було знищено з числа запущених засобів ураження:\n\n⚠️ 489/519 ударних, імітаційних та розвідувальних БпЛА було збито або подавлено РЕБ.  \nВорог застосував:  \n(300×) БпЛА типу «Герань-2» / «Shahed-136»;  \n(219×) БпЛА типів «Гербера» / «Пародія» / «Молнія».\n\n🚀 6/10 аеробалістичних гіперзвукових ракет Х-47М2 «Кинджал»;  \n❗️ 4/7 крилатих ракет 9м727/729 «Іскандер-К»;  \n❗️ 19/21 крилатих ракет Х-101 / Х-55;  \n❗️ 0/2 протикорабельних крилатих ракет Х-22;\n\nВсього знешкоджено 94% БпЛА.  \nВсього знешкоджено 29/40х засобів ракетного озброєння, 73% з запущених.\n\n@war_monitor"
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=36192",
+          "status": 200,
+          "seconds": 0.136,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "36172",
+          "count": 20,
+          "first": {
+            "id": 36172,
+            "date_utc": "2025-12-27T19:08:54Z",
+            "edited": false,
+            "text": "❗️ Одеса — 2х БпЛА порт."
+          },
+          "last": {
+            "id": 36191,
+            "date_utc": "2025-12-30T00:29:36Z",
+            "edited": false,
+            "text": "☄ Балістика Харків"
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=36192",
+          "status": 200,
+          "seconds": 0.11,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "36172",
+          "count": 20,
+          "first": {
+            "id": 36172,
+            "date_utc": "2025-12-27T19:08:54Z",
+            "edited": false,
+            "text": "❗️ Одеса — 2х БпЛА порт."
+          },
+          "last": {
+            "id": 36191,
+            "date_utc": "2025-12-30T00:29:36Z",
+            "edited": false,
+            "text": "☄ Балістика Харків"
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=36172",
+          "status": 200,
+          "seconds": 0.098,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "36152",
+          "count": 20,
+          "first": {
+            "id": 36152,
+            "date_utc": "2025-12-27T06:10:33Z",
+            "edited": false,
+            "text": "На Київщині залишається щонайменше 20 БпЛА.\n\n15х БпЛА на Черкащині та Вінниччині,\n\nБлизько 8х через Прилуччину у напрямку Київщини."
+          },
+          "last": {
+            "id": 36171,
+            "date_utc": "2025-12-27T12:02:16Z",
+            "edited": false,
+            "text": "🇺🇦 У ніч на 27.12.25, згідно зі звітом Повітряних Сил, Силами оборони було знищено з числа запущених засобів ураження:\n\n⚠️ 489/519 ударних, імітаційних та розвідувальних БпЛА було збито або подавлено РЕБ.  \nВорог застосував:  \n(300×) БпЛА типу «Герань-2» / «Shahed-136»;  \n(219×) БпЛА типів «Гербера» / «Пародія» / «Молнія».\n\n🚀 6/10 аеробалістичних гіперзвукових ракет Х-47М2 «Кинджал»;  \n❗️ 4/7 крилатих ракет 9м727/729 «Іскандер-К»;  \n❗️ 19/21 крилатих ракет Х-101 / Х-55;  \n❗️ 0/2 протикорабельних крилатих ракет Х-22;\n\nВсього знешкоджено 94% БпЛА.  \nВсього знешкоджено 29/40х засобів ракетного озброєння, 73% з запущених.\n\n@war_monitor"
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=36152",
+          "status": 200,
+          "seconds": 0.094,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "36132",
+          "count": 20,
+          "first": {
+            "id": 36132,
+            "date_utc": "2025-12-27T05:34:17Z",
+            "edited": false,
+            "text": "❗️ 5 груп КР на Черкащині від Смілу повз Звенигородку, курс Західний."
+          },
+          "last": {
+            "id": 36151,
+            "date_utc": "2025-12-27T06:05:24Z",
+            "edited": false,
+            "text": "❗️ Київ:\n1х Феофанія.\n1х Лісовий масив.\n\n1х Бровари."
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=36132",
+          "status": 200,
+          "seconds": 0.107,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "36112",
+          "count": 20,
+          "first": {
+            "id": 36112,
+            "date_utc": "2025-12-27T03:28:49Z",
+            "edited": false,
+            "text": "❗️ Кропивницький — 1х БпЛА."
+          },
+          "last": {
+            "id": 36131,
+            "date_utc": "2025-12-27T05:31:24Z",
+            "edited": false,
+            "text": "Києву бути готовими, що КР будуть повертати на столицю."
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=36112",
+          "status": 200,
+          "seconds": 0.169,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "36092",
+          "count": 20,
+          "first": {
+            "id": 36092,
+            "date_utc": "2025-12-27T00:06:14Z",
+            "edited": false,
+            "text": "‼️ Київ — спуск Кинджалу!"
+          },
+          "last": {
+            "id": 36111,
+            "date_utc": "2025-12-27T03:10:27Z",
+            "edited": false,
+            "text": "❗️ Київ:\n1х Куренівка Сирець\n1х Святошин Біличі\n1х Борщагівка Жуляни"
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/war_monitor?before=36092",
+          "status": 200,
+          "seconds": 0.145,
+          "title": "monitor",
+          "description": "Моніторинг ворожої авіації. 📮 Зв'язок — private-email@example.invalid 👋 Підтримати канал — https://base.monobank.ua/monitor",
+          "older_cursor": "36072",
+          "count": 20,
+          "first": {
+            "id": 36072,
+            "date_utc": "2025-12-26T23:43:46Z",
+            "edited": false,
+            "text": "Черкаси увага по руху КР"
+          },
+          "last": {
+            "id": 36091,
+            "date_utc": "2025-12-27T00:05:30Z",
+            "edited": false,
+            "text": "🚀 Кинджал Чернігівська далі Київ"
+          },
+          "edited_count": 0
+        }
+      ],
+      "median_seconds": 0.132,
+      "message_count": 87
+    },
+    {
+      "checked_at_utc": "2026-10-12T08:36:26.179768Z",
+      "channel": "kpszsu",
+      "pages": [
+        {
+          "url": "https://t.me/s/kpszsu",
+          "status": 200,
+          "seconds": 0.172,
+          "title": "Повітряні Сили ЗС України / Air Force of the Armed Forces of Ukraine",
+          "description": "📌 УСІ ПОСИЛАННЯ НА ОФІЦІЙНІ СОЦІАЛЬНІ МЕРЕЖІ ТА КАНАЛИ ПОВІТРЯНИХ СИЛ ЗБРОЙНИХ СИЛ УКРАЇНИ (Facebook, YouTube, Tiktok, WhatsApp, Telegram, Тwitter, Viber та Іnstagram): https://sites.google.com/view/uaairforce",
+          "older_cursor": "85486",
+          "count": 20,
+          "first": {
+            "id": 85486,
+            "date_utc": "2026-10-12T07:28:14Z",
+            "edited": false,
+            "text": "🏍 Реактивний БпЛА із Дніпропетровщини у напрямку Полтавщини."
+          },
+          "last": {
+            "id": 85506,
+            "date_utc": "2026-10-12T08:33:58Z",
+            "edited": false,
+            "text": "🏍 Борщагівка!"
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/kpszsu?before=42754",
+          "status": 200,
+          "seconds": 0.12,
+          "title": "Повітряні Сили ЗС України / Air Force of the Armed Forces of Ukraine",
+          "description": "📌 УСІ ПОСИЛАННЯ НА ОФІЦІЙНІ СОЦІАЛЬНІ МЕРЕЖІ ТА КАНАЛИ ПОВІТРЯНИХ СИЛ ЗБРОЙНИХ СИЛ УКРАЇНИ (Facebook, YouTube, Tiktok, WhatsApp, Telegram, Тwitter, Viber та Іnstagram): https://sites.google.com/view/uaairforce",
+          "older_cursor": "42734",
+          "count": 20,
+          "first": {
+            "id": 42734,
+            "date_utc": "2025-09-20T03:03:38Z",
+            "edited": false,
+            "text": "🚀 Крилаті ракети на півдні Дніпропетровщини, курсом на південь."
+          },
+          "last": {
+            "id": 42753,
+            "date_utc": "2025-09-20T06:06:42Z",
+            "edited": false,
+            "text": "🛵 БпЛА у напрямку Броварського району на Київщині."
+          },
+          "edited_count": 4
+        },
+        {
+          "url": "https://t.me/s/kpszsu?before=64131",
+          "status": 200,
+          "seconds": 0.117,
+          "title": "Повітряні Сили ЗС України / Air Force of the Armed Forces of Ukraine",
+          "description": "📌 УСІ ПОСИЛАННЯ НА ОФІЦІЙНІ СОЦІАЛЬНІ МЕРЕЖІ ТА КАНАЛИ ПОВІТРЯНИХ СИЛ ЗБРОЙНИХ СИЛ УКРАЇНИ (Facebook, YouTube, Tiktok, WhatsApp, Telegram, Тwitter, Viber та Іnstagram): https://sites.google.com/view/uaairforce",
+          "older_cursor": "64111",
+          "count": 20,
+          "first": {
+            "id": 64111,
+            "date_utc": "2026-06-05T08:40:56Z",
+            "edited": false,
+            "text": "☄️ Загроза застосування балістичного озброєння з півдня!"
+          },
+          "last": {
+            "id": 64130,
+            "date_utc": "2026-06-05T13:05:35Z",
+            "edited": false,
+            "text": "🚀 КАБи на Дніпропетровщину!"
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/kpszsu?before=53443",
+          "status": 200,
+          "seconds": 0.136,
+          "title": "Повітряні Сили ЗС України / Air Force of the Armed Forces of Ukraine",
+          "description": "📌 УСІ ПОСИЛАННЯ НА ОФІЦІЙНІ СОЦІАЛЬНІ МЕРЕЖІ ТА КАНАЛИ ПОВІТРЯНИХ СИЛ ЗБРОЙНИХ СИЛ УКРАЇНИ (Facebook, YouTube, Tiktok, WhatsApp, Telegram, Тwitter, Viber та Іnstagram): https://sites.google.com/view/uaairforce",
+          "older_cursor": "53423",
+          "count": 20,
+          "first": {
+            "id": 53423,
+            "date_utc": "2026-01-23T12:47:11Z",
+            "edited": false,
+            "text": "🛵 Харківщина: БпЛА на н.п.Лозова"
+          },
+          "last": {
+            "id": 53442,
+            "date_utc": "2026-01-23T19:54:59Z",
+            "edited": false,
+            "text": "🛵 БпЛА на півночі Чернігівщини ➡️ у напрямку Семенівки."
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/kpszsu?before=48099",
+          "status": 200,
+          "seconds": 0.131,
+          "title": "Повітряні Сили ЗС України / Air Force of the Armed Forces of Ukraine",
+          "description": "📌 УСІ ПОСИЛАННЯ НА ОФІЦІЙНІ СОЦІАЛЬНІ МЕРЕЖІ ТА КАНАЛИ ПОВІТРЯНИХ СИЛ ЗБРОЙНИХ СИЛ УКРАЇНИ (Facebook, YouTube, Tiktok, WhatsApp, Telegram, Тwitter, Viber та Іnstagram): https://sites.google.com/view/uaairforce",
+          "older_cursor": "48079",
+          "count": 20,
+          "first": {
+            "id": 48079,
+            "date_utc": "2025-11-22T09:33:01Z",
+            "edited": false,
+            "text": "🚀Пуски КАБ на Дніпропетровщину та Запоріжжя."
+          },
+          "last": {
+            "id": 48098,
+            "date_utc": "2025-11-22T19:01:34Z",
+            "edited": false,
+            "text": "⚠УВАГА\n🛫 Активність ворожої тактичної авіації на південно-східному напрямку!  \n🚀Загроза застосування авіаційних засобів ураження для прифронтових областей!"
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/kpszsu?before=50771",
+          "status": 200,
+          "seconds": 0.122,
+          "title": "Повітряні Сили ЗС України / Air Force of the Armed Forces of Ukraine",
+          "description": "📌 УСІ ПОСИЛАННЯ НА ОФІЦІЙНІ СОЦІАЛЬНІ МЕРЕЖІ ТА КАНАЛИ ПОВІТРЯНИХ СИЛ ЗБРОЙНИХ СИЛ УКРАЇНИ (Facebook, YouTube, Tiktok, WhatsApp, Telegram, Тwitter, Viber та Іnstagram): https://sites.google.com/view/uaairforce",
+          "older_cursor": "50751",
+          "count": 20,
+          "first": {
+            "id": 50751,
+            "date_utc": "2025-12-25T18:49:23Z",
+            "edited": false,
+            "text": "🚀 Пуски КАБ на Донеччину."
+          },
+          "last": {
+            "id": 50770,
+            "date_utc": "2025-12-25T23:24:47Z",
+            "edited": false,
+            "text": "🛵 Ізмаїл - група БпЛА в напрямку міста."
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/kpszsu?before=52107",
+          "status": 200,
+          "seconds": 0.137,
+          "title": "Повітряні Сили ЗС України / Air Force of the Armed Forces of Ukraine",
+          "description": "📌 УСІ ПОСИЛАННЯ НА ОФІЦІЙНІ СОЦІАЛЬНІ МЕРЕЖІ ТА КАНАЛИ ПОВІТРЯНИХ СИЛ ЗБРОЙНИХ СИЛ УКРАЇНИ (Facebook, YouTube, Tiktok, WhatsApp, Telegram, Тwitter, Viber та Іnstagram): https://sites.google.com/view/uaairforce",
+          "older_cursor": "52085",
+          "count": 19,
+          "first": {
+            "id": 52085,
+            "date_utc": "2026-01-10T11:29:50Z",
+            "edited": false,
+            "text": "ПІДГОТОВКА ПОВІТРЯНИХ СИЛ ПІД ЧАС ВІЙНИ: СИСТЕМА, ЩО НАРОДЖУЄТЬСЯ В БОЮ\n--------------------\nКоротко про головне у навчанні та підготовці Повітряних Сил, про те, як гартується система в умовах війни, розповідає генерал-майор Олександр Турінський.\n--------------------\nЧитати за посиланням"
+          },
+          "last": {
+            "id": 52106,
+            "date_utc": "2026-01-10T18:44:21Z",
+            "edited": false,
+            "text": "🛵 БпЛА на Запоріжжі в напрямку Вільнянська/Славгорода."
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/kpszsu?before=51439",
+          "status": 200,
+          "seconds": 0.137,
+          "title": "Повітряні Сили ЗС України / Air Force of the Armed Forces of Ukraine",
+          "description": "📌 УСІ ПОСИЛАННЯ НА ОФІЦІЙНІ СОЦІАЛЬНІ МЕРЕЖІ ТА КАНАЛИ ПОВІТРЯНИХ СИЛ ЗБРОЙНИХ СИЛ УКРАЇНИ (Facebook, YouTube, Tiktok, WhatsApp, Telegram, Тwitter, Viber та Іnstagram): https://sites.google.com/view/uaairforce",
+          "older_cursor": "51419",
+          "count": 20,
+          "first": {
+            "id": 51419,
+            "date_utc": "2026-01-02T03:01:03Z",
+            "edited": false,
+            "text": "🛵 БпЛА на Чернігівщині курсом на Київщину (Вишгородський район)."
+          },
+          "last": {
+            "id": 51438,
+            "date_utc": "2026-01-02T09:39:15Z",
+            "edited": false,
+            "text": "🛵 БпЛА в напрямку н.п.Лозова"
+          },
+          "edited_count": 1
+        },
+        {
+          "url": "https://t.me/s/kpszsu?before=51105",
+          "status": 200,
+          "seconds": 0.144,
+          "title": "Повітряні Сили ЗС України / Air Force of the Armed Forces of Ukraine",
+          "description": "📌 УСІ ПОСИЛАННЯ НА ОФІЦІЙНІ СОЦІАЛЬНІ МЕРЕЖІ ТА КАНАЛИ ПОВІТРЯНИХ СИЛ ЗБРОЙНИХ СИЛ УКРАЇНИ (Facebook, YouTube, Tiktok, WhatsApp, Telegram, Тwitter, Viber та Іnstagram): https://sites.google.com/view/uaairforce",
+          "older_cursor": "51085",
+          "count": 20,
+          "first": {
+            "id": 51085,
+            "date_utc": "2025-12-30T02:13:22Z",
+            "edited": false,
+            "text": "🛵 БпЛА з акваторії Чорного моря курсом на Одесу."
+          },
+          "last": {
+            "id": 51104,
+            "date_utc": "2025-12-30T08:59:44Z",
+            "edited": false,
+            "text": "🚀Пуски КАБ на Запорізьку область."
+          },
+          "edited_count": 1
+        },
+        {
+          "url": "https://t.me/s/kpszsu?before=50938",
+          "status": 200,
+          "seconds": 0.116,
+          "title": "Повітряні Сили ЗС України / Air Force of the Armed Forces of Ukraine",
+          "description": "📌 УСІ ПОСИЛАННЯ НА ОФІЦІЙНІ СОЦІАЛЬНІ МЕРЕЖІ ТА КАНАЛИ ПОВІТРЯНИХ СИЛ ЗБРОЙНИХ СИЛ УКРАЇНИ (Facebook, YouTube, Tiktok, WhatsApp, Telegram, Тwitter, Viber та Іnstagram): https://sites.google.com/view/uaairforce",
+          "older_cursor": "50918",
+          "count": 20,
+          "first": {
+            "id": 50918,
+            "date_utc": "2025-12-27T05:31:52Z",
+            "edited": false,
+            "text": "🚀Декілька груп КР на Черкащині у західному напрямку."
+          },
+          "last": {
+            "id": 50937,
+            "date_utc": "2025-12-27T08:52:03Z",
+            "edited": false,
+            "text": "🛵 Житомир - в укриття!"
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/kpszsu?before=50855",
+          "status": 200,
+          "seconds": 0.114,
+          "title": "Повітряні Сили ЗС України / Air Force of the Armed Forces of Ukraine",
+          "description": "📌 УСІ ПОСИЛАННЯ НА ОФІЦІЙНІ СОЦІАЛЬНІ МЕРЕЖІ ТА КАНАЛИ ПОВІТРЯНИХ СИЛ ЗБРОЙНИХ СИЛ УКРАЇНИ (Facebook, YouTube, Tiktok, WhatsApp, Telegram, Тwitter, Viber та Іnstagram): https://sites.google.com/view/uaairforce",
+          "older_cursor": "50835",
+          "count": 20,
+          "first": {
+            "id": 50835,
+            "date_utc": "2025-12-26T20:47:37Z",
+            "edited": false,
+            "text": "🚀 Пуски КАБ на Донеччину.\n🛵 БпЛА на півдні Сумщини, на Полтавщину."
+          },
+          "last": {
+            "id": 50854,
+            "date_utc": "2025-12-26T23:29:25Z",
+            "edited": true,
+            "text": "🚀Швидкісні цілі на Київ."
+          },
+          "edited_count": 4
+        },
+        {
+          "url": "https://t.me/s/kpszsu?before=50875",
+          "status": 200,
+          "seconds": 0.121,
+          "title": "Повітряні Сили ЗС України / Air Force of the Armed Forces of Ukraine",
+          "description": "📌 УСІ ПОСИЛАННЯ НА ОФІЦІЙНІ СОЦІАЛЬНІ МЕРЕЖІ ТА КАНАЛИ ПОВІТРЯНИХ СИЛ ЗБРОЙНИХ СИЛ УКРАЇНИ (Facebook, YouTube, Tiktok, WhatsApp, Telegram, Тwitter, Viber та Іnstagram): https://sites.google.com/view/uaairforce",
+          "older_cursor": "50855",
+          "count": 20,
+          "first": {
+            "id": 50855,
+            "date_utc": "2025-12-26T23:31:54Z",
+            "edited": false,
+            "text": "На півдні Кіровоградщини, курс на північно-західний напрямок."
+          },
+          "last": {
+            "id": 50874,
+            "date_utc": "2025-12-26T23:59:17Z",
+            "edited": false,
+            "text": "Швидкісна на Київ."
+          },
+          "edited_count": 2
+        },
+        {
+          "url": "https://t.me/s/kpszsu?before=50895",
+          "status": 200,
+          "seconds": 0.122,
+          "title": "Повітряні Сили ЗС України / Air Force of the Armed Forces of Ukraine",
+          "description": "📌 УСІ ПОСИЛАННЯ НА ОФІЦІЙНІ СОЦІАЛЬНІ МЕРЕЖІ ТА КАНАЛИ ПОВІТРЯНИХ СИЛ ЗБРОЙНИХ СИЛ УКРАЇНИ (Facebook, YouTube, Tiktok, WhatsApp, Telegram, Тwitter, Viber та Іnstagram): https://sites.google.com/view/uaairforce",
+          "older_cursor": "50875",
+          "count": 20,
+          "first": {
+            "id": 50875,
+            "date_utc": "2025-12-27T00:04:36Z",
+            "edited": false,
+            "text": "🛵 БпЛА на півночі та півдні Чернігівщини, в напрямку Чернігова.\n🛵 БпЛА на півночі Миколаївщини, на Кіровоградщину."
+          },
+          "last": {
+            "id": 50894,
+            "date_utc": "2025-12-27T01:47:09Z",
+            "edited": true,
+            "text": "🛵 Група БпЛА в центрі та на заході Чернігівщини, курс на Київщину.\n🛵 Група БпЛА із заходу Сумщини на Чернігівщину, в напрямку Київщини.\n🛵 БпЛА в напрямку суходолу Одещини та Миколаївщини з Чорного моря."
+          },
+          "edited_count": 3
+        },
+        {
+          "url": "https://t.me/s/kpszsu?before=50895",
+          "status": 200,
+          "seconds": 0.091,
+          "title": "Повітряні Сили ЗС України / Air Force of the Armed Forces of Ukraine",
+          "description": "📌 УСІ ПОСИЛАННЯ НА ОФІЦІЙНІ СОЦІАЛЬНІ МЕРЕЖІ ТА КАНАЛИ ПОВІТРЯНИХ СИЛ ЗБРОЙНИХ СИЛ УКРАЇНИ (Facebook, YouTube, Tiktok, WhatsApp, Telegram, Тwitter, Viber та Іnstagram): https://sites.google.com/view/uaairforce",
+          "older_cursor": "50875",
+          "count": 20,
+          "first": {
+            "id": 50875,
+            "date_utc": "2025-12-27T00:04:36Z",
+            "edited": false,
+            "text": "🛵 БпЛА на півночі та півдні Чернігівщини, в напрямку Чернігова.\n🛵 БпЛА на півночі Миколаївщини, на Кіровоградщину."
+          },
+          "last": {
+            "id": 50894,
+            "date_utc": "2025-12-27T01:47:09Z",
+            "edited": true,
+            "text": "🛵 Група БпЛА в центрі та на заході Чернігівщини, курс на Київщину.\n🛵 Група БпЛА із заходу Сумщини на Чернігівщину, в напрямку Київщини.\n🛵 БпЛА в напрямку суходолу Одещини та Миколаївщини з Чорного моря."
+          },
+          "edited_count": 3
+        },
+        {
+          "url": "https://t.me/s/kpszsu?before=50875",
+          "status": 200,
+          "seconds": 0.092,
+          "title": "Повітряні Сили ЗС України / Air Force of the Armed Forces of Ukraine",
+          "description": "📌 УСІ ПОСИЛАННЯ НА ОФІЦІЙНІ СОЦІАЛЬНІ МЕРЕЖІ ТА КАНАЛИ ПОВІТРЯНИХ СИЛ ЗБРОЙНИХ СИЛ УКРАЇНИ (Facebook, YouTube, Tiktok, WhatsApp, Telegram, Тwitter, Viber та Іnstagram): https://sites.google.com/view/uaairforce",
+          "older_cursor": "50855",
+          "count": 20,
+          "first": {
+            "id": 50855,
+            "date_utc": "2025-12-26T23:31:54Z",
+            "edited": false,
+            "text": "На півдні Кіровоградщини, курс на північно-західний напрямок."
+          },
+          "last": {
+            "id": 50874,
+            "date_utc": "2025-12-26T23:59:17Z",
+            "edited": false,
+            "text": "Швидкісна на Київ."
+          },
+          "edited_count": 2
+        },
+        {
+          "url": "https://t.me/s/kpszsu?before=50855",
+          "status": 200,
+          "seconds": 0.094,
+          "title": "Повітряні Сили ЗС України / Air Force of the Armed Forces of Ukraine",
+          "description": "📌 УСІ ПОСИЛАННЯ НА ОФІЦІЙНІ СОЦІАЛЬНІ МЕРЕЖІ ТА КАНАЛИ ПОВІТРЯНИХ СИЛ ЗБРОЙНИХ СИЛ УКРАЇНИ (Facebook, YouTube, Tiktok, WhatsApp, Telegram, Тwitter, Viber та Іnstagram): https://sites.google.com/view/uaairforce",
+          "older_cursor": "50835",
+          "count": 20,
+          "first": {
+            "id": 50835,
+            "date_utc": "2025-12-26T20:47:37Z",
+            "edited": false,
+            "text": "🚀 Пуски КАБ на Донеччину.\n🛵 БпЛА на півдні Сумщини, на Полтавщину."
+          },
+          "last": {
+            "id": 50854,
+            "date_utc": "2025-12-26T23:29:25Z",
+            "edited": true,
+            "text": "🚀Швидкісні цілі на Київ."
+          },
+          "edited_count": 4
+        },
+        {
+          "url": "https://t.me/s/kpszsu?before=50835",
+          "status": 200,
+          "seconds": 0.103,
+          "title": "Повітряні Сили ЗС України / Air Force of the Armed Forces of Ukraine",
+          "description": "📌 УСІ ПОСИЛАННЯ НА ОФІЦІЙНІ СОЦІАЛЬНІ МЕРЕЖІ ТА КАНАЛИ ПОВІТРЯНИХ СИЛ ЗБРОЙНИХ СИЛ УКРАЇНИ (Facebook, YouTube, Tiktok, WhatsApp, Telegram, Тwitter, Viber та Іnstagram): https://sites.google.com/view/uaairforce",
+          "older_cursor": "50815",
+          "count": 20,
+          "first": {
+            "id": 50815,
+            "date_utc": "2025-12-26T13:13:02Z",
+            "edited": false,
+            "text": "🛵 БпЛА в напрямку н.п.Бар на Вінниччині."
+          },
+          "last": {
+            "id": 50834,
+            "date_utc": "2025-12-26T20:30:33Z",
+            "edited": false,
+            "text": "🛵 БпЛА на півдні від Сум, курс на н.п.Тростянець."
+          },
+          "edited_count": 4
+        },
+        {
+          "url": "https://t.me/s/kpszsu?before=50815",
+          "status": 200,
+          "seconds": 0.129,
+          "title": "Повітряні Сили ЗС України / Air Force of the Armed Forces of Ukraine",
+          "description": "📌 УСІ ПОСИЛАННЯ НА ОФІЦІЙНІ СОЦІАЛЬНІ МЕРЕЖІ ТА КАНАЛИ ПОВІТРЯНИХ СИЛ ЗБРОЙНИХ СИЛ УКРАЇНИ (Facebook, YouTube, Tiktok, WhatsApp, Telegram, Тwitter, Viber та Іnstagram): https://sites.google.com/view/uaairforce",
+          "older_cursor": "50795",
+          "count": 20,
+          "first": {
+            "id": 50795,
+            "date_utc": "2025-12-26T09:28:14Z",
+            "edited": false,
+            "text": "Швидкісна ціль на Черкащині на Умань."
+          },
+          "last": {
+            "id": 50814,
+            "date_utc": "2025-12-26T13:08:29Z",
+            "edited": false,
+            "text": "🛵 БпЛА на Суми з півночі."
+          },
+          "edited_count": 0
+        },
+        {
+          "url": "https://t.me/s/kpszsu?before=50795",
+          "status": 200,
+          "seconds": 0.108,
+          "title": "Повітряні Сили ЗС України / Air Force of the Armed Forces of Ukraine",
+          "description": "📌 УСІ ПОСИЛАННЯ НА ОФІЦІЙНІ СОЦІАЛЬНІ МЕРЕЖІ ТА КАНАЛИ ПОВІТРЯНИХ СИЛ ЗБРОЙНИХ СИЛ УКРАЇНИ (Facebook, YouTube, Tiktok, WhatsApp, Telegram, Тwitter, Viber та Іnstagram): https://sites.google.com/view/uaairforce",
+          "older_cursor": "50775",
+          "count": 20,
+          "first": {
+            "id": 50775,
+            "date_utc": "2025-12-26T02:47:18Z",
+            "edited": false,
+            "text": "🛵 Ворожий БпЛА  в р-ні. Шостки, курс східний."
+          },
+          "last": {
+            "id": 50794,
+            "date_utc": "2025-12-26T09:17:54Z",
+            "edited": false,
+            "text": "Швидкісна на Миколаївщині, курс на Кіровоградщину."
+          },
+          "edited_count": 1
+        },
+        {
+          "url": "https://t.me/s/kpszsu?before=50775",
+          "status": 200,
+          "seconds": 0.11,
+          "title": "Повітряні Сили ЗС України / Air Force of the Armed Forces of Ukraine",
+          "description": "📌 УСІ ПОСИЛАННЯ НА ОФІЦІЙНІ СОЦІАЛЬНІ МЕРЕЖІ ТА КАНАЛИ ПОВІТРЯНИХ СИЛ ЗБРОЙНИХ СИЛ УКРАЇНИ (Facebook, YouTube, Tiktok, WhatsApp, Telegram, Тwitter, Viber та Іnstagram): https://sites.google.com/view/uaairforce",
+          "older_cursor": "50755",
+          "count": 20,
+          "first": {
+            "id": 50755,
+            "date_utc": "2025-12-25T20:06:51Z",
+            "edited": false,
+            "text": "🛵 БпЛА в р-ні. Київського водосховища, курс західний."
+          },
+          "last": {
+            "id": 50774,
+            "date_utc": "2025-12-26T01:51:02Z",
+            "edited": false,
+            "text": "🚀Пуски КАБ на Харківщину."
+          },
+          "edited_count": 0
+        }
+      ],
+      "median_seconds": 0.12,
+      "message_count": 104
+    }
+  ],
+  "other_access": [
+    {
+      "url": "https://www.ukrinform.net/rss/block-lastnews",
+      "status": 200,
+      "items": 30,
+      "timestamp_missing": 0,
+      "oldest_raw": "Sun, 11 Oct 2026 19:52:00 +0300",
+      "newest_raw": "Mon, 12 Oct 2026 11:05:00 +0300"
+    },
+    {
+      "url": "https://understandingwar.org/feed/",
+      "status": 403
+    },
+    {
+      "url": "https://understandingwar.org/research/russia-ukraine/russian-offensive-campaign-assessment-december-27-2025/",
+      "status": 403
+    },
+    {
+      "url": "https://www.ukrinform.net/rss",
+      "status": 404
+    }
+  ]
+}
